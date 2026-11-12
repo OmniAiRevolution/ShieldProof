@@ -3,100 +3,195 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#070913">
+  <meta name="theme-color" content="#050814">
   <title>SHIELDPROOF — AI Trap &amp; Proof Shield</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root {
-      --bg: #070913;
-      --surface: #10162b;
-      --surface-2: #17203d;
+      --bg: #050814;
+      --surface: rgba(14, 21, 43, 0.86);
+      --surface-2: rgba(23, 33, 66, 0.9);
       --primary: #3b82f6;
-      --primary-glow: rgba(59, 130, 246, 0.28);
+      --cyan: #22d3ee;
       --ok: #34d399;
       --warn: #fbbf24;
       --err: #fb7185;
       --text: #f8fafc;
       --muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.08);
+      --border: rgba(56, 189, 248, 0.16);
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); overscroll-behavior-y: contain; user-select: none; }
+    html, body {
+      margin: 0; padding: 0; background: var(--bg); color: var(--text);
+      overscroll-behavior-y: contain; user-select: none; overflow-x: hidden;
+    }
     input, textarea { user-select: text; }
-    body { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+    body { padding-bottom: calc(84px + env(safe-area-inset-bottom)); position: relative; min-height: 100vh; }
+
+    /* Fond Cyber-Grid + Orbes animées */
+    .cyber-bg {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.32;
+      animation: floatOrb 9s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 240px; height: 240px; background: #2563eb; top: -60px; left: -60px; }
+    .orb-2 { width: 220px; height: 220px; background: #06b6d4; bottom: 80px; right: -70px; animation-delay: -4s; }
+    @keyframes floatOrb {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(24px, 32px, 0) scale(1.12); }
+    }
 
     header {
       position: sticky; top: 0; z-index: 20;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 16px; background: rgba(7, 9, 19, 0.9);
-      backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 12px 14px; background: rgba(5, 8, 20, 0.85);
+      backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
     }
-    .logo { font-size: 18px; font-weight: 900; letter-spacing: 0.4px; }
-    .logo span { color: var(--primary); }
-    .sub { font-size: 10px; color: var(--ok); margin-top: 2px; font-weight: 600; }
-    .lang-bar { display: flex; gap: 4px; }
+    .logo { font-size: 18px; font-weight: 900; letter-spacing: 0.5px; }
+    .logo span { color: var(--cyan); text-shadow: 0 0 14px rgba(34, 211, 238, 0.45); }
+    .sub {
+      font-size: 10px; color: var(--ok); margin-top: 2px; font-weight: 600;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
+      box-shadow: 0 0 8px var(--ok); animation: pulseDot 1.6s infinite;
+    }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.75); } }
+
+    .lang-bar { display: flex; gap: 4px; flex-shrink: 0; }
     .lang-pill {
       background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
-      padding: 5px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+      padding: 6px 8px; border-radius: 8px; font-size: 11px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; transition: transform 0.15s var(--ease);
     }
-    .lang-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .lang-pill:active { transform: scale(0.92); }
+    .lang-pill.active { background: var(--primary); color: #fff; border-color: var(--cyan); box-shadow: 0 0 12px rgba(59,130,246,0.4); }
 
     main { padding: 14px; max-width: 640px; margin: 0 auto; }
     .anim { animation: fadeUp 0.25s var(--ease); }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 18px; padding: 16px; margin-bottom: 14px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+      background: var(--surface); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 18px; padding: 16px;
+      margin-bottom: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
+
+    /* Scanner Futuriste Animé */
     .hero-scan {
-      display: block; text-align: center; padding: 28px 16px; border-radius: 20px;
-      border: 2px dashed rgba(59, 130, 246, 0.6);
-      background: radial-gradient(circle at top, rgba(59,130,246,0.16), rgba(16,22,43,0.9));
+      position: relative; overflow: hidden; display: block; text-align: center;
+      padding: 28px 16px; border-radius: 20px;
+      border: 1.5px solid rgba(34, 211, 238, 0.38);
+      background: radial-gradient(circle at 50% 25%, rgba(34, 211, 238, 0.14), rgba(10, 16, 36, 0.92));
       cursor: pointer; transition: transform 0.15s var(--ease);
     }
     .hero-scan:active { transform: scale(0.97); }
     .hero-scan input { display: none; }
-    .scan-icon {
-      width: 58px; height: 58px; margin: 0 auto 10px; border-radius: 18px;
-      background: var(--primary); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 8px 24px var(--primary-glow);
+
+    /* Faisceau laser qui balaie */
+    .scan-laser {
+      position: absolute; left: 0; right: 0; height: 2px; top: 0;
+      background: linear-gradient(90deg, transparent, var(--cyan), #fff, var(--cyan), transparent);
+      box-shadow: 0 0 14px 2px rgba(34, 211, 238, 0.55);
+      opacity: 0.65; pointer-events: none;
+      animation: laserSweep 3.4s ease-in-out infinite;
     }
+    @keyframes laserSweep {
+      0% { transform: translateY(8px); opacity: 0; }
+      15% { opacity: 0.8; }
+      85% { opacity: 0.8; }
+      100% { transform: translateY(200px); opacity: 0; }
+    }
+
+    /* Anneaux radar autour de l'icône */
+    .radar-wrap { position: relative; width: 76px; height: 76px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
+    .radar-ring {
+      position: absolute; inset: 0; border-radius: 22px;
+      border: 1.5px solid rgba(34, 211, 238, 0.55);
+      animation: radarPulse 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    }
+    .radar-ring-2 { animation-delay: 1.2s; }
+    @keyframes radarPulse {
+      0% { transform: scale(0.85); opacity: 0.85; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+    .scan-icon {
+      position: relative; z-index: 2; width: 58px; height: 58px; border-radius: 18px;
+      background: linear-gradient(135deg, #2563eb, #06b6d4); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 22px rgba(34, 211, 238, 0.45);
+    }
+
+    /* Télémétrie Futuriste Accueil */
+    .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .hud-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 13px; position: relative; overflow: hidden;
+    }
+    .hud-card::after {
+      content: ""; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.07), transparent);
+      animation: shimmer 4.5s infinite;
+    }
+    @keyframes shimmer { 0% { left: -100%; } 45%, 100% { left: 160%; } }
+    .hud-val { font-size: 20px; font-weight: 800; margin-top: 4px; color: #fff; }
+
+    .ai-modules { display: flex; flex-direction: column; gap: 8px; }
+    .ai-mod {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      cursor: pointer; transition: transform 0.15s var(--ease), border-color 0.2s;
+    }
+    .ai-mod:active { transform: scale(0.98); border-color: var(--cyan); }
+    .mod-icon {
+      width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(59, 130, 246, 0.16); color: var(--cyan);
+      border: 1px solid rgba(34, 211, 238, 0.28);
+    }
+    .mod-title { font-size: 13px; font-weight: 700; }
+    .mod-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
     .progress-wrap { margin-top: 12px; }
     .progress-bar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--ok)); transition: width 0.2s; }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--cyan), var(--ok)); transition: width 0.2s; }
 
     .mode-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
     .mode-btn {
       padding: 10px; border-radius: 12px; text-align: center; font-size: 12px; font-weight: 700;
       background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); cursor: pointer;
     }
-    .mode-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .mode-btn.active { background: linear-gradient(135deg, #2563eb, #0891b2); color: #fff; border-color: var(--cyan); }
 
     .field { margin-bottom: 12px; }
     .field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
     input, textarea, select {
       width: 100%; padding: 11px 12px; border-radius: 12px;
-      background: rgba(0,0,0,0.35); border: 1px solid var(--border); color: #fff; font-size: 14px; outline: none;
+      background: rgba(0,0,0,0.42); border: 1px solid var(--border); color: #fff; font-size: 14px; outline: none;
     }
+    input:focus, textarea:focus { border-color: var(--cyan); }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .btn {
       width: 100%; padding: 13px 14px; border: none; border-radius: 13px;
-      background: var(--primary); color: #fff; font-weight: 700; font-size: 14px;
+      background: linear-gradient(135deg, #2563eb, #0891b2); color: #fff; font-weight: 700; font-size: 14px;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       cursor: pointer; margin-top: 8px; text-decoration: none;
       transition: transform 0.15s var(--ease);
     }
     .btn:active { transform: scale(0.97); }
     .btn-tonal { background: var(--surface-2); border: 1px solid var(--border); color: #fff; }
-    .btn-ok { background: var(--ok); color: #042f1e; }
+    .btn-ok { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
     .btn-warn { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.45); color: var(--warn); }
     .btn-danger { background: rgba(251, 113, 133, 0.14); border: 1px solid rgba(251, 113, 133, 0.4); color: var(--err); }
     .btn-sm { width: auto; padding: 8px 11px; font-size: 12px; border-radius: 10px; margin-top: 0; }
@@ -108,10 +203,10 @@
 
     .hash-box {
       font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; word-break: break-all;
-      background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; border: 1px solid var(--border); color: var(--ok);
+      background: rgba(0,0,0,0.45); padding: 10px; border-radius: 10px; border: 1px solid var(--border); color: var(--ok);
     }
     .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-    .stat-card { background: var(--surface-2); border-radius: 14px; padding: 12px; border: 1px solid var(--border); }
+    .stat-card { background: var(--surface); border-radius: 14px; padding: 12px; border: 1px solid var(--border); }
     .stat-val { font-size: 20px; font-weight: 800; margin-top: 4px; }
 
     .thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
@@ -122,30 +217,35 @@
     nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
       display: flex; justify-content: space-around; align-items: center;
-      background: rgba(11, 15, 31, 0.95); backdrop-filter: blur(16px);
+      background: rgba(7, 11, 26, 0.94); backdrop-filter: blur(16px);
       border-top: 1px solid var(--border);
       padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
     }
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; }
     .nav-pill { padding: 4px 14px; border-radius: 99px; transition: all 0.2s var(--ease); }
     .nav-item.active { color: #fff; }
-    .nav-item.active .nav-pill { background: rgba(59, 130, 246, 0.25); color: var(--primary); }
+    .nav-item.active .nav-pill { background: rgba(34, 211, 238, 0.2); color: var(--cyan); }
     svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     .hidden { display: none !important; }
     #toast {
       position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%);
-      background: #17203d; border: 1px solid var(--primary); color: #fff;
+      background: #131c3a; border: 1px solid var(--cyan); color: #fff;
       padding: 10px 18px; border-radius: 99px; font-size: 13px; font-weight: 600; display: none; z-index: 30;
     }
   </style>
 </head>
 <body>
 
+<div class="cyber-bg">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
 <header>
-  <div>
+  <div style="min-width:0;">
     <div class="logo">SHIELD<span>PROOF</span></div>
-    <div class="sub" id="lbl-sub">AI Trap &amp; Proof Shield • 100% Local</div>
+    <div class="sub"><span class="live-dot"></span><span id="lbl-sub">AI Shield • 100% Local</span></div>
   </div>
   <div class="lang-bar">
     <button class="lang-pill active" data-lang="fr" onclick="setLang('fr')">FR</button>
@@ -158,12 +258,17 @@
 <main>
   <!-- ONGLET 1 : SCANNER IA AUTOMATIQUE -->
   <section id="view-scan" class="anim">
-    <div class="card">
+    <div class="card" style="padding:12px;">
       <label class="hero-scan" for="scan-input">
-        <div class="scan-icon">
-          <svg style="width:28px;height:28px;" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <div class="scan-laser"></div>
+        <div class="radar-wrap">
+          <div class="radar-ring"></div>
+          <div class="radar-ring radar-ring-2"></div>
+          <div class="scan-icon">
+            <svg style="width:28px;height:28px;" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
         </div>
-        <div style="font-size:16px;font-weight:800;" id="lbl-hero-title">1 Photo — L'IA s'occupe de tout</div>
+        <div style="font-size:17px;font-weight:800;" id="lbl-hero-title">1 Photo — L'IA s'occupe de tout</div>
         <div class="muted" style="margin-top:6px;" id="lbl-hero-sub">Capture d'essai gratuit / abonnement OU photo de caution / colis / voiture.</div>
         <input type="file" id="scan-input" accept="image/*" onchange="handleSmartScan(event)">
       </label>
@@ -171,6 +276,48 @@
       <div id="scan-progress" class="progress-wrap hidden">
         <div class="muted" id="lbl-ocr-status">Analyse IA locale en cours...</div>
         <div class="progress-bar" style="margin-top:6px;"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- TÉLÉMÉTRIE FUTURISTE (REMPLIT L'ACCUEIL UTILEMENT) -->
+    <div id="home-hud" class="anim">
+      <div class="hud-grid">
+        <div class="hud-card" onclick="switchTab('subs', 1)" style="cursor:pointer;">
+          <div class="muted" id="lbl-hud-subs">Alertes actives</div>
+          <div class="hud-val" style="color:var(--warn);" id="home-subs-val">0</div>
+        </div>
+        <div class="hud-card" onclick="switchTab('proofs', 2)" style="cursor:pointer;">
+          <div class="muted" id="lbl-hud-proofs">Preuves SHA-256</div>
+          <div class="hud-val" style="color:var(--cyan);" id="home-proofs-val">0</div>
+        </div>
+      </div>
+
+      <div class="ai-modules">
+        <div class="ai-mod" onclick="document.getElementById('scan-input').click()">
+          <div class="mod-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div style="flex:1;">
+            <div class="mod-title" id="lbl-mod1-title">Détecteur OCR Anti-Pièges</div>
+            <div class="mod-desc" id="lbl-mod1-desc">Lit le prix caché, alarme 48h avant (.ics) &amp; lettre juridique.</div>
+          </div>
+          <span class="live-dot"></span>
+        </div>
+
+        <div class="ai-mod" onclick="switchTab('proofs', 2)">
+          <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div style="flex:1;">
+            <div class="mod-title" id="lbl-mod2-title">Sceau Cryptographique SHA-256</div>
+            <div class="mod-desc" id="lbl-mod2-desc">Certifie voitures, Airbnb &amp; colis contre la retouche IA.</div>
+          </div>
+          <span class="live-dot"></span>
+        </div>
+
+        <div class="ai-mod" onclick="switchTab('proofs', 2)">
+          <div class="mod-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div style="flex:1;">
+            <div class="mod-title" id="lbl-mod3-title">Vérificateur d'Authenticité</div>
+            <div class="mod-desc" id="lbl-mod3-desc">Prouvez en 1 clic si une photo a été modifiée par IA.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -264,11 +411,11 @@
     <div class="stat-grid">
       <div class="stat-card">
         <div class="muted" id="lbl-stat-active">À surveiller / an</div>
-        <div class="stat-val" style="color:var(--warn);" id="stat-risk-val">0 €</div>
+        <div class="stat-val" style="color:var(--warn);" id="stat-risk-val">0 /yr</div>
       </div>
       <div class="stat-card">
         <div class="muted" id="lbl-stat-saved">Argent sauvé (résiliés)</div>
-        <div class="stat-val" style="color:var(--ok);" id="stat-saved-val">0 €</div>
+        <div class="stat-val" style="color:var(--ok);" id="stat-saved-val">0 /yr</div>
       </div>
     </div>
     <div id="subs-list"></div>
@@ -298,7 +445,7 @@
     </div>
     <div class="card">
       <div style="font-weight:800;font-size:15px;">SHIELDPROOF — 0 € Local Edition</div>
-      <div class="muted" style="margin-top:6px;" id="lbl-privacy-note">OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.</div>
+      <div class="muted" style="margin-top:6px;">OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.</div>
     </div>
   </section>
 </main>
@@ -329,7 +476,6 @@
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }
 
-  // --- DATABASE (IndexedDB) ---
   function openDb() {
     return new Promise((resolve, reject) => {
       const req = indexedDB.open('shieldproof_db', 1);
@@ -380,7 +526,6 @@
     });
   }
 
-  // --- KNOWN SERVICES CANCEL DB ---
   const SERVICES_DB = [
     { keys: ['netflix'], name: 'Netflix', url: 'https://www.netflix.com/cancelplan' },
     { keys: ['spotify'], name: 'Spotify', url: 'https://www.spotify.com/account/subscription/' },
@@ -398,14 +543,17 @@
     { keys: ['basic-fit', 'basicfit'], name: 'Basic-Fit', url: 'https://my.basic-fit.com/' }
   ];
 
-  // --- I18N (FR / EN / AR / ZH) ---
   let lang = localStorage.getItem('sp_lang') || 'fr';
   const I18N = {
     fr: {
-      sub: 'Bouclier IA Anti-Pièges & Preuves • 100% Local',
+      sub: 'IA Locale Active • 100% Privé',
       heroTitle: "1 Photo — L'IA s'occupe de tout",
       heroSub: "Capture d'essai gratuit / abonnement OU photo de caution / colis / voiture.",
-      ocrRunning: 'Lecture IA locale (OCR)...',
+      hudSubs: 'Alertes actives', hudProofs: 'Preuves SHA-256',
+      mod1Title: 'Détecteur OCR Anti-Pièges', mod1Desc: 'Lit prix caché, alarme 48h (.ics) & lettre juridique.',
+      mod2Title: 'Sceau Cryptographique SHA-256', mod2Desc: 'Certifie voitures, Airbnb & colis contre retouche IA.',
+      mod3Title: "Vérificateur d'Authenticité", mod3Desc: 'Prouvez en 1 clic si une photo a été modifiée par IA.',
+      ocrRunning: 'Analyse IA laser en cours...',
       aiDetected: "Analysé automatiquement par l'IA",
       modeSub: 'Piège Abonnement', modeProof: 'Preuve Certifiée',
       subName: 'Service détecté', subPrice: 'Prix détecté', subCurr: 'Devise',
@@ -433,13 +581,17 @@
       authFail: '❌ NON RECONNU : Image modifiée par IA/éditeur ou absente de votre coffre.',
       savedToast: 'Enregistré + Alarme générée !', copiedToast: 'Copié !',
       confirmClear: 'Tout supprimer définitivement ?',
-      letterTemplate: (name, date) => `Objet : Demande de résiliation immédiate – ${name}\n\nMadame, Monsieur,\n\nConformément aux dispositions applicables du droit de la consommation (Loi Chatel / droit de rétractation), je vous demande par la présente de résilier immédiatement mon abonnement / essai gratuit « ${name} » et de stopper tout renouvellement automatique avant le ${date}.\n\nMerci de me confirmer cette résiliation par retour d'e-mail.\n\nCordialement.`
+      letterTemplate: (name, date) => `Objet : Demande de résiliation immédiate – ${name}\n\nMadame, Monsieur,\n\nConformément aux dispositions applicables du droit de la consommation, je vous demande par la présente de résilier immédiatement mon abonnement / essai gratuit « ${name} » et de stopper tout renouvellement automatique avant le ${date}.\n\nMerci de me confirmer cette résiliation par retour d'e-mail.\n\nCordialement.`
     },
     en: {
-      sub: 'AI Trap & Proof Shield • 100% Local',
+      sub: 'Local AI Active • 100% Private',
       heroTitle: '1 Photo — AI Handles Everything',
       heroSub: 'Screenshot of free trial / subscription OR photo of rental car / package / deposit.',
-      ocrRunning: 'Running local AI OCR...',
+      hudSubs: 'Active alerts', hudProofs: 'SHA-256 proofs',
+      mod1Title: 'OCR Trap Detector', mod1Desc: 'Extracts hidden price, 48h alarm (.ics) & legal email.',
+      mod2Title: 'SHA-256 Crypto Seal', mod2Desc: 'Certifies rental cars, Airbnb & packages against AI edits.',
+      mod3Title: 'Authenticity Verifier', mod3Desc: 'Prove in 1 tap if an image was altered by AI.',
+      ocrRunning: 'Laser AI analysis running...',
       aiDetected: 'Auto-detected by AI',
       modeSub: 'Subscription Trap', modeProof: 'Certified Proof',
       subName: 'Detected service', subPrice: 'Detected price', subCurr: 'Currency',
@@ -470,10 +622,14 @@
       letterTemplate: (name, date) => `Subject: Immediate Cancellation Request – ${name}\n\nHello,\n\nUnder applicable consumer protection laws, please cancel my "${name}" subscription / free trial immediately and disable any automatic renewal prior to ${date}.\n\nPlease confirm cancellation by reply.\n\nThank you.`
     },
     ar: {
-      sub: 'درع الذكاء الاصطناعي المحلي • 100% خصوصية',
+      sub: 'الذكاء المحلي نشط • 100% خصوصية',
       heroTitle: 'صورة واحدة — الذكاء الاصطناعي يتكفل بكل شيء',
-      heroSub: 'لقطة شاشة لاشتراك مجاني أو صورة لسيارة إيجار / شقة / طرد.',
-      ocrRunning: 'جاري التحليل المحلي...',
+      heroSub: 'لقطة اشتراك مجاني أو صورة لسيارة إيجار / شقة / طرد.',
+      hudSubs: 'تنبيهات نشطة', hudProofs: 'إثباتات موثقة',
+      mod1Title: 'كاشف فخاخ الاشتراكات', mod1Desc: 'يقرأ السعر ويجهز منبه 48 ساعة ورسالة الإلغاء.',
+      mod2Title: 'ختم SHA-256 ضد التعديل', mod2Desc: 'يوثق صور السيارات والعقارات والطرود ضد التزوير.',
+      mod3Title: 'مدقق أصالة الصور', mod3Desc: 'اكشف بنقرة واحدة هل تم تعديل الصورة بالذكاء الاصطناعي.',
+      ocrRunning: 'جاري التحليل بالذكاء الاصطناعي...',
       aiDetected: 'تم الكشف تلقائياً بالذكاء الاصطناعي',
       modeSub: 'فخ اشتراك', modeProof: 'إثبات موثق',
       subName: 'الخدمة المكتشفة', subPrice: 'السعر', subCurr: 'العملة',
@@ -501,13 +657,17 @@
       authFail: '❌ غير متطابقة: تم تعديل الصورة أو غير موجودة.',
       savedToast: 'تم الحفظ وتجهيز المنبه!', copiedToast: 'تم النسخ!',
       confirmClear: 'هل تريد حذف جميع البيانات؟',
-      letterTemplate: (name, date) => `الموضوع: طلب إلغاء فوري للاشتراك – ${name}\n\nتحية طيبة،\n\nأرجو إلغاء اشتراكي / الفترة التجريبية في خدمة "${name}" فوراً وإيقاف التجديد التلقائي قبل تاريخ ${date}.\n\nيرجى تأكيد الإلغاء.\nشكراً لكم.`
+      letterTemplate: (name, date) => `الموضوع: طلب إلغاء فوري للاشتراك – ${name}\n\nتحية طيبة،\n\nأرجو إلغاء اشتراكي في خدمة "${name}" فوراً وإيقاف التجديد التلقائي قبل تاريخ ${date}.\n\nيرجى تأكيد الإلغاء.\nشكراً لكم.`
     },
     zh: {
-      sub: 'AI 反套路与存证盾 • 100% 本地',
+      sub: '本地 AI 已就绪 • 100% 隐私',
       heroTitle: '只需一张图 — AI 全自动处理',
-      heroSub: '上传订阅/免费试用截图，或租车/退房/快递开箱防伪拍照。',
-      ocrRunning: '本地 AI 识别中...',
+      heroSub: '上传订阅/免费试用截图，或租车/退房/快递防伪拍照。',
+      hudSubs: '扣费预警', hudProofs: 'SHA-256 存证',
+      mod1Title: 'OCR 订阅陷阱识别', mod1Desc: '自动识别价格、生成48小时闹钟及取消邮件。',
+      mod2Title: 'SHA-256 防篡改印章', mod2Desc: '为租车、民宿押金和快递开箱提供防修图证明。',
+      mod3Title: 'AI 修图真伪校验', mod3Desc: '一键比对照片是否被 AI 篡改。',
+      ocrRunning: '激光 AI 识别中...',
       aiDetected: 'AI 已自动识别',
       modeSub: '订阅防扣费', modeProof: '防篡改存证',
       subName: '识别到的服务', subPrice: '金额', subCurr: '币种',
@@ -540,7 +700,6 @@
   };
 
   let currentScan = null;
-  let currentMode = 'SUB';
 
   function toast(msg) {
     const el = document.getElementById('toast');
@@ -550,6 +709,7 @@
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
+
   function setLang(l) {
     lang = l;
     localStorage.setItem('sp_lang', l);
@@ -559,387 +719,6 @@
     document.getElementById('lbl-sub').textContent = t.sub;
     document.getElementById('lbl-hero-title').textContent = t.heroTitle;
     document.getElementById('lbl-hero-sub').textContent = t.heroSub;
-    document.getElementById('lbl-ai-detected').textContent = t.aiDetected;
-    document.getElementById('lbl-mode-sub').textContent = t.modeSub;
-    document.getElementById('lbl-mode-proof').textContent = t.modeProof;
-    document.getElementById('lbl-sub-name').textContent = t.subName;
-    document.getElementById('lbl-sub-price').textContent = t.subPrice;
-    document.getElementById('lbl-sub-curr').textContent = t.subCurr;
-    document.getElementById('lbl-sub-date').textContent = t.subDate;
-    document.getElementById('lbl-sub-annual').textContent = t.subAnnual;
-    document.getElementById('lbl-sub-letter').textContent = t.subLetter;
-    document.getElementById('txt-official-link').textContent = t.officialLink;
-    document.getElementById('txt-save-sub').textContent = t.saveSub;
-    document.getElementById('lbl-proof-title').textContent = t.proofTitle;
-    document.getElementById('lbl-proof-cat').textContent = t.proofCat;
-    document.getElementById('lbl-proof-hash').textContent = t.proofHash;
-    document.getElementById('lbl-proof-time').textContent = t.proofTime;
-    document.getElementById('txt-save-proof').textContent = t.saveProof;
-    document.getElementById('lbl-stat-active').textContent = t.statActive;
-    document.getElementById('lbl-stat-saved').textContent = t.statSaved;
-    document.getElementById('lbl-verify-title').textContent = t.verifyTitle;
-    document.getElementById('lbl-verify-sub').textContent = t.verifySub;
-    document.getElementById('txt-verify-btn').textContent = t.verifyBtn;
-    document.getElementById('lbl-export-title').textContent = t.expTitle;
-    document.getElementById('lbl-export-sub').textContent = t.expSub;
-    document.getElementById('txt-exp-json').textContent = t.expJson;
-    document.getElementById('txt-clear-all').textContent = t.clearAll;
-    ['scan','subs','proofs','settings'].forEach((id, i) => document.getElementById('nav-' + id).textContent = t.nav[i]);
-    renderSubs();
-    renderProofs();
-  }
-
-  function switchTab(name, idx) {
-    ['scan','subs','proofs','settings'].forEach((v) => document.getElementById('view-' + v).classList.toggle('hidden', v !== name));
-    document.querySelectorAll('.nav-item').forEach((n, i) => n.classList.toggle('active', i === idx));
-    if (name === 'subs') renderSubs();
-    if (name === 'proofs') renderProofs();
-  }
-
-  async function sha256Hex(buffer) {
-    const digest = await crypto.subtle.digest('SHA-256', buffer);
-    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  function makeThumb(file) {
-    return new Promise((resolve) => {
-      const r = new FileReader();
-      r.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const c = document.createElement('canvas');
-          const max = 420;
-          let w = img.width, h = img.height;
-          if (w > max || h > max) {
-            const ratio = Math.min(max / w, max / h);
-            w = Math.round(w * ratio); h = Math.round(h * ratio);
-          }
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/jpeg', 0.72));
-        };
-        img.src = e.target.result;
-      };
-      r.readAsDataURL(file);
-    });
-  }
-
-  function analyzeOcrText(text) {
-    const lower = (text || '').toLowerCase();
-    const matchedService = SERVICES_DB.find((s) => s.keys.some((k) => lower.includes(k)));
-    const hasSubWords = /(trial|essai|renew|renouvel|subscription|abonnement|\/mo|\/mois|month|billing|factur|cancel|résilier|plan)/i.test(lower);
-    const isSub = Boolean(matchedService || hasSubWords);
-
-    let price = '';
-    const priceMatch = text.match(/(?:€|\$|£|SAR|¥)\s?(\d+(?:[.,]\d{1,2})?)|(\d+(?:[.,]\d{1,2})?)\s?(?:€|\$|EUR|USD|SAR)/i);
-    if (priceMatch) price = (priceMatch[1] || priceMatch[2] || '').replace(',', '.');
-
-    let curr = 'EUR';
-    if (/\$|USD/i.test(text)) curr = 'USD';
-    else if (/SAR/i.test(text)) curr = 'SAR';
-    else if (/¥|CNY/i.test(text)) curr = 'CNY';
-
-    let days = 7;
-    const daysMatch = lower.match(/(\d+)\s*(?:day|days|jour|jours)/);
-    if (daysMatch) days = Math.min(365, Math.max(1, parseInt(daysMatch[1], 10)));
-    const targetDate = new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
-
-    const hasAutoRenew = /(auto-?renew|reconduction|renouvellement automatique|automatically)/i.test(lower);
-    const hasTrial = /(free trial|essai gratuit|0\s?€|\$0)/i.test(lower);
-
-    let proofCat = 'OTHER';
-    if (/(car|rental|voiture|kilom|vehicle|auto)/i.test(lower)) proofCat = 'RENTAL_CAR';
-    else if (/(airbnb|apartment|lease|bail|loyer|room)/i.test(lower)) proofCat = 'APARTMENT';
-    else if (/(order|tracking|colis|delivery|vinted|amazon|package)/i.test(lower)) proofCat = 'PACKAGE';
-    else if (/(contract|contrat|devis|terms|invoice)/i.test(lower)) proofCat = 'CONTRACT';
-
-    return {
-      isSub,
-      serviceName: matchedService ? matchedService.name : (isSub ? 'Abonnement détecté' : ''),
-      cancelUrl: matchedService ? matchedService.url : '',
-      price, curr, targetDate, hasAutoRenew, hasTrial, proofCat
-    };
-  }
-
-  async function handleSmartScan(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const t = I18N[lang];
-    const prog = document.getElementById('scan-progress');
-    const fill = document.getElementById('progress-fill');
-    const statusLbl = document.getElementById('lbl-ocr-status');
-    prog.classList.remove('hidden');
-    document.getElementById('scan-result').classList.add('hidden');
-    fill.style.width = '10%';
-    statusLbl.textContent = t.ocrRunning;
-
-    const arrayBuffer = await file.arrayBuffer();
-    const hash = await sha256Hex(arrayBuffer);
-    const thumb = await makeThumb(file);
-    const nowIso = new Date().toISOString();
-
-    let ocrText = '';
-    try {
-      if (typeof Tesseract !== 'undefined') {
-        const res = await Tesseract.recognize(file, 'eng+fra', {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              fill.style.width = `${Math.max(15, Math.round(m.progress * 100))}%`;
-            }
-          }
-        });
-        ocrText = res.data.text || '';
-      }
-    } catch (_) {
-      ocrText = '';
-    }
-
-    fill.style.width = '100%';
-    prog.classList.add('hidden');
-
-    const ai = analyzeOcrText(ocrText);
-    currentScan = { file, hash, thumb, nowIso, ai, ocrText };
-
-    const thumbEl = document.getElementById('scan-thumb');
-    thumbEl.src = thumb;
-    thumbEl.classList.remove('hidden');
-
-    document.getElementById('sub-name').value = ai.serviceName;
-    document.getElementById('sub-price').value = ai.price;
-    document.getElementById('sub-curr').value = ai.curr;
-    document.getElementById('sub-date').value = ai.targetDate;
-    updateAnnualCost();
-    document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate);
-
-    const traps = [];
-    if (ai.hasAutoRenew) traps.push(`<span class="badge badge-err">${esc(t.trapAutoRenew)}</span>`);
-    if (ai.hasTrial) traps.push(`<span class="badge badge-warn">${esc(t.trapTrial)}</span>`);
-    document.getElementById('trap-alerts').innerHTML = traps.join(' ');
-
-    const linkWrap = document.getElementById('official-cancel-wrap');
-    if (ai.cancelUrl) {
-      document.getElementById('official-cancel-link').href = ai.cancelUrl;
-      linkWrap.classList.remove('hidden');
-    } else {
-      linkWrap.classList.add('hidden');
-    }
-
-    document.getElementById('proof-title').value = file.name.replace(/\.[^.]+$/, '') || `Preuve ${nowIso.slice(0,10)}`;
-    document.getElementById('proof-cat').value = ai.proofCat;
-    document.getElementById('proof-hash-preview').textContent = hash;
-    document.getElementById('proof-time').value = nowIso;
-
-    switchDetectedMode(ai.isSub ? 'SUB' : 'PROOF');
-    document.getElementById('scan-result').classList.remove('hidden');
-  }
-
-  function switchDetectedMode(mode) {
-    currentMode = mode;
-    document.getElementById('mode-sub-btn').classList.toggle('active', mode === 'SUB');
-    document.getElementById('mode-proof-btn').classList.toggle('active', mode === 'PROOF');
-    document.getElementById('form-sub').classList.toggle('hidden', mode !== 'SUB');
-    document.getElementById('form-proof').classList.toggle('hidden', mode !== 'PROOF');
-  }
-
-  function updateAnnualCost() {
-    const p = parseFloat(document.getElementById('sub-price').value) || 0;
-    const c = document.getElementById('sub-curr').value;
-    document.getElementById('sub-annual').value = p > 0 ? `${(p * 12).toFixed(2)} ${c}` : '0';
-  }
-
-  function downloadIcsAlarm(name, dateStr, priceText) {
-    const dt = new Date(dateStr + 'T09:00:00');
-    dt.setDate(dt.getDate() - 2); // 48h avant !
-    const pad = (n) => String(n).padStart(2, '0');
-    const stamp = `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}T090000`;
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//SHIELDPROOF//EN',
-      'BEGIN:VEVENT',
-      `UID:sp-${Date.now()}@shieldproof`,
-      `DTSTART:${stamp}`,
-      `SUMMARY:CANCEL ${name} (${priceText})`,
-      `DESCRIPTION:ShieldProof Alert: Cancel ${name} before charge on ${dateStr}.`,
-      'BEGIN:VALARM',
-      'TRIGGER:-PT0M',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:Cancel subscription now!',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].join('\r\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
-    a.download = `cancel_${name.replace(/[^a-z0-9]/gi, '_')}.ics`;
-    a.click();
-  }
-
-  async function saveSubAndAlarm() {
-    const name = document.getElementById('sub-name').value.trim() || 'Subscription';
-    const price = parseFloat(document.getElementById('sub-price').value) || 0;
-    const curr = document.getElementById('sub-curr').value;
-    const date = document.getElementById('sub-date').value;
-    const letter = document.getElementById('sub-letter').value;
-
-    await dbPut('subs', {
-      id: Date.now(),
-      name, price, curr, date, letter,
-      cancelUrl: currentScan?.ai?.cancelUrl || '',
-      thumb: currentScan?.thumb || '',
-      cancelled: false
-    });
-    if (date) downloadIcsAlarm(name, date, `${price} ${curr}`);
-    toast(I18N[lang].savedToast);
-    switchTab('subs', 1);
-  }
-
-  async function saveProof() {
-    if (!currentScan) return;
-    await dbPut('proofs', {
-      id: Date.now(),
-      certId: 'SP-' + Date.now().toString(36).toUpperCase(),
-      title: document.getElementById('proof-title').value.trim() || 'Sealed Proof',
-      cat: document.getElementById('proof-cat').value,
-      hash: currentScan.hash,
-      timestamp: currentScan.nowIso,
-      thumb: currentScan.thumb,
-      fileName: currentScan.file.name,
-      fileSize: currentScan.file.size
-    });
-    toast(I18N[lang].savedToast);
-    switchTab('proofs', 2);
-  }
-
-  async function renderSubs() {
-    const t = I18N[lang];
-    const list = await dbAll('subs');
-    const riskAnnual = list.filter((s) => !s.cancelled).reduce((a, s) => a + (s.price * 12), 0);
-    const savedAnnual = list.filter((s) => s.cancelled).reduce((a, s) => a + (s.price * 12), 0);
-    document.getElementById('stat-risk-val').textContent = `${riskAnnual.toFixed(0)} /yr`;
-    document.getElementById('stat-saved-val').textContent = `${savedAnnual.toFixed(0)} /yr`;
-
-    const box = document.getElementById('subs-list');
-    if (!list.length) { box.innerHTML = `<div class="card muted">${esc(t.emptySubs)}</div>`; return; }
-    box.innerHTML = list.map((s) => `
-      <div class="card">
-        <div class="flex">
-          ${s.thumb ? `<img class="thumb" src="${s.thumb}" alt="">` : ''}
-          <div style="flex:1;">
-            <strong>${esc(s.name)}</strong>
-            <div class="muted">${s.price} ${esc(s.curr)}/mo • ${esc(s.date)}</div>
-            <span class="badge ${s.cancelled ? 'badge-ok' : 'badge-warn'}">${s.cancelled ? '✓' : '⏳'} ${(s.price*12).toFixed(0)} ${esc(s.curr)}/yr</span>
-          </div>
-        </div>
-        <div class="actions">
-          ${!s.cancelled ? `<button class="btn btn-ok btn-sm" onclick="markSubCancelled(${s.id})">${esc(t.cancelBtn)}</button>` : ''}
-          <button class="btn btn-tonal btn-sm" onclick="copySubLetter(${s.id})">${esc(t.copyBtn)}</button>
-          <button class="btn btn-tonal btn-sm" onclick="reAlarm(${s.id})">${esc(t.alarmBtn)}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteSub(${s.id})">${esc(t.delBtn)}</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  async function markSubCancelled(id) {
-    const list = await dbAll('subs');
-    const item = list.find((x) => x.id === id);
-    if (!item) return;
-    item.cancelled = true;
-    await dbPut('subs', item);
-    renderSubs();
-  }
-  async function copySubLetter(id) {
-    const list = await dbAll('subs');
-    const item = list.find((x) => x.id === id);
-    if (item) navigator.clipboard.writeText(item.letter).then(() => toast(I18N[lang].copiedToast));
-  }
-  async function reAlarm(id) {
-    const list = await dbAll('subs');
-    const item = list.find((x) => x.id === id);
-    if (item && item.date) downloadIcsAlarm(item.name, item.date, `${item.price} ${item.curr}`);
-  }
-  async function deleteSub(id) { await dbDel('subs', id); renderSubs(); }
-
-  async function renderProofs() {
-    const t = I18N[lang];
-    const list = await dbAll('proofs');
-    const box = document.getElementById('proofs-list');
-    if (!list.length) { box.innerHTML = `<div class="card muted">${esc(t.emptyProofs)}</div>`; return; }
-    box.innerHTML = list.map((p) => `
-      <div class="card">
-        <div class="flex">
-          ${p.thumb ? `<img class="thumb" src="${p.thumb}" alt="">` : ''}
-          <div style="flex:1; min-width:0;">
-            <strong>${esc(p.title)}</strong>
-            <div class="muted">${esc(p.certId)} • ${esc(p.timestamp.slice(0,16).replace('T',' '))}</div>
-            <div class="muted" style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;">SHA256: ${esc(p.hash.slice(0,18))}...</div>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn btn-tonal btn-sm" onclick="downloadCertificate(${p.id})">${esc(t.certBtn)}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProof(${p.id})">${esc(t.delBtn)}</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  async function downloadCertificate(id) {
-    const list = await dbAll('proofs');
-    const p = list.find((x) => x.id === id);
-    if (!p) return;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(p.certId)}</title>
-      <style>body{font-family:sans-serif;max-width:720px;margin:30px auto;padding:20px;border:2px solid #111;}
-      .hash{font-family:monospace;background:#f1f5f9;padding:12px;word-break:break-all;} img{max-width:100%;max-height:380px;margin-top:16px;}</style>
-      </head><body><h2>SHIELDPROOF — INTEGRITY CERTIFICATE</h2>
-      <p><strong>Certificate ID:</strong> ${esc(p.certId)}</p>
-      <p><strong>Title:</strong> ${esc(p.title)} (${esc(p.cat)})</p>
-      <p><strong>UTC Timestamp:</strong> ${esc(p.timestamp)}</p>
-      <p><strong>Original File:</strong> ${esc(p.fileName)} (${p.fileSize} bytes)</p>
-      <p><strong>SHA-256 Cryptographic Seal:</strong></p><div class="hash">${esc(p.hash)}</div>
-      ${p.thumb ? `<img src="${p.thumb}">` : ''}
-      <p style="font-size:12px;color:#555;margin-top:20px;">Generated locally via Web Crypto SHA-256. Any 1-pixel alteration to the original image file changes the SHA-256 hash above.</p>
-      </body></html>`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-    a.download = `${p.certId}_certificate.html`;
-    a.click();
-  }
-
-  async function verifyPhotoFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const t = I18N[lang];
-    const hash = await sha256Hex(await file.arrayBuffer());
-    const list = await dbAll('proofs');
-    const match = list.find((p) => p.hash === hash);
-    const box = document.getElementById('verify-result');
-    box.classList.remove('hidden');
-    box.innerHTML = match
-      ? `<div class="badge badge-ok" style="display:block;padding:10px;">${esc(t.authOk)}<br><small>${esc(match.certId)} • ${esc(match.timestamp)}</small></div>`
-      : `<div class="badge badge-err" style="display:block;padding:10px;">${esc(t.authFail)}</div>`;
-  }
-
-  async function deleteProof(id) { await dbDel('proofs', id); renderProofs(); }
-
-  async function exportBackupJson() {
-    const subs = await dbAll('subs');
-    const proofs = (await dbAll('proofs')).map(({ thumb, ...rest }) => rest);
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify({ app: 'SHIELDPROOF', subs, proofs }, null, 2)], { type: 'application/json' }));
-    a.download = 'shieldproof_backup.json';
-    a.click();
-  }
-
-  async function clearAllDb() {
-    if (!confirm(I18N[lang].confirmClear)) return;
-    await dbClearAll();
-    renderSubs();
-    renderProofs();
-    toast('OK');
-  }
-
-  setLang(lang);
-</script>
-</body>
-  </html>
+    document.getElementById('lbl-hud-subs').textContent = t.hudSubs;
+    document.getElementById('lbl-hud-proofs').textContent = t.hudProofs;
+    document.getElementById('lbl-mod1-title').textContent = t.mo
