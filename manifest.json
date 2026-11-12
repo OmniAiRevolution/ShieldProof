@@ -1,0 +1,19 @@
+{
+  "name": "SHIELDPROOF — AI Wallet & Proof Shield",
+  "short_name": "ShieldProof",
+  "description": "Automatic AI subscription trap shield and cryptographic photo proof vault.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#070913",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
