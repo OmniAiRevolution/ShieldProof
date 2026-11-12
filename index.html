@@ -26,12 +26,11 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
     html, body {
       margin: 0; padding: 0; background: var(--bg); color: var(--text);
-      overscroll-behavior-y: contain; user-select: none; overflow-x: hidden;
+      user-select: none;
     }
     input, textarea { user-select: text; }
-    body { padding-bottom: calc(84px + env(safe-area-inset-bottom)); position: relative; min-height: 100vh; }
+    body { padding-bottom: calc(92px + env(safe-area-inset-bottom)); position: relative; }
 
-    /* Fond Cyber-Grid + Orbes animées */
     .cyber-bg {
       position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
       background-image:
@@ -87,7 +86,6 @@
       margin-bottom: 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
 
-    /* Scanner Futuriste Animé */
     .hero-scan {
       position: relative; overflow: hidden; display: block; text-align: center;
       padding: 28px 16px; border-radius: 20px;
@@ -98,7 +96,6 @@
     .hero-scan:active { transform: scale(0.97); }
     .hero-scan input { display: none; }
 
-    /* Faisceau laser qui balaie */
     .scan-laser {
       position: absolute; left: 0; right: 0; height: 2px; top: 0;
       background: linear-gradient(90deg, transparent, var(--cyan), #fff, var(--cyan), transparent);
@@ -113,7 +110,6 @@
       100% { transform: translateY(200px); opacity: 0; }
     }
 
-    /* Anneaux radar autour de l'icône */
     .radar-wrap { position: relative; width: 76px; height: 76px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
     .radar-ring {
       position: absolute; inset: 0; border-radius: 22px;
@@ -132,7 +128,6 @@
       box-shadow: 0 0 22px rgba(34, 211, 238, 0.45);
     }
 
-    /* Télémétrie Futuriste Accueil */
     .hud-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .hud-card {
       background: var(--surface); border: 1px solid var(--border);
@@ -256,7 +251,6 @@
 </header>
 
 <main>
-  <!-- ONGLET 1 : SCANNER IA AUTOMATIQUE -->
   <section id="view-scan" class="anim">
     <div class="card" style="padding:12px;">
       <label class="hero-scan" for="scan-input">
@@ -279,7 +273,6 @@
       </div>
     </div>
 
-    <!-- TÉLÉMÉTRIE FUTURISTE (REMPLIT L'ACCUEIL UTILEMENT) -->
     <div id="home-hud" class="anim">
       <div class="hud-grid">
         <div class="hud-card" onclick="switchTab('subs', 1)" style="cursor:pointer;">
@@ -321,7 +314,6 @@
       </div>
     </div>
 
-    <!-- RÉSULTAT AUTO IA -->
     <div id="scan-result" class="card anim hidden">
       <div class="flex" style="justify-content:space-between;">
         <span class="badge badge-ok" id="lbl-ai-detected">Détecté automatiquement par l'IA</span>
@@ -333,7 +325,6 @@
         <div class="mode-btn" id="mode-proof-btn" onclick="switchDetectedMode('PROOF')">📸 <span id="lbl-mode-proof">Preuve Certifiée</span></div>
       </div>
 
-      <!-- FORMULAIRE AUTO ABONNEMENT -->
       <div id="form-sub">
         <div id="trap-alerts" style="margin-bottom:10px;"></div>
         <div class="field">
@@ -377,7 +368,6 @@
         <button class="btn btn-ok" onclick="saveSubAndAlarm()">⏰ <span id="txt-save-sub">Sauvegarder + Alarme Calendrier (.ics)</span></button>
       </div>
 
-      <!-- FORMULAIRE AUTO PREUVE -->
       <div id="form-proof" class="hidden">
         <div class="field">
           <label id="lbl-proof-title">Titre de la preuve</label>
@@ -406,7 +396,6 @@
     </div>
   </section>
 
-  <!-- ONGLET 2 : ABONNEMENTS & ALERTES -->
   <section id="view-subs" class="anim hidden">
     <div class="stat-grid">
       <div class="stat-card">
@@ -421,7 +410,6 @@
     <div id="subs-list"></div>
   </section>
 
-  <!-- ONGLET 3 : COFFRE PREUVES & VÉRIFICATION -->
   <section id="view-proofs" class="anim hidden">
     <div class="card">
       <div style="font-weight:800;font-size:15px;" id="lbl-verify-title">🔍 Vérifier si une photo a été retouchée</div>
@@ -435,7 +423,6 @@
     <div id="proofs-list"></div>
   </section>
 
-  <!-- ONGLET 4 : EXPORT & PRO -->
   <section id="view-settings" class="anim hidden">
     <div class="card">
       <div style="font-weight:800;font-size:15px;" id="lbl-export-title">Exports &amp; Sauvegarde locale</div>
@@ -771,6 +758,7 @@
     if (name === 'scan') renderHomeHud();
     if (name === 'subs') renderSubs();
     if (name === 'proofs') renderProofs();
+    window.scrollTo({ top: 0 });
   }
 
   async function sha256Hex(buffer) {
