@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#050814">
-  <title>SHIELDPROOF — AI Trap &amp; Proof Shield</title>
+  <title>SHIELDPROOF v7.5.0 — AI Trap &amp; Proof Shield</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --bg: #050814;
@@ -49,7 +50,7 @@
     header {
       position: sticky; top: 0; z-index: 20;
       display: flex; justify-content: space-between; align-items: center; gap: 8px;
-      padding: 12px 14px; background: rgba(5, 8, 20, 0.85);
+      padding: 12px 14px; background: rgba(5, 8, 20, 0.88);
       backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
     }
     .logo { font-size: 18px; font-weight: 900; letter-spacing: 0.5px; }
@@ -138,6 +139,20 @@
     @keyframes shimmer { 0% { left: -100%; } 45%, 100% { left: 160%; } }
     .hud-val { font-size: 20px; font-weight: 800; margin-top: 4px; color: #fff; }
 
+    .plan-bar {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 11px 14px; border-radius: 14px; margin-bottom: 12px;
+      background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(34,211,238,0.09));
+      border: 1px solid rgba(34, 211, 238, 0.35); cursor: pointer;
+    }
+    .pack-card {
+      border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+      background: var(--surface-2); margin-bottom: 10px;
+    }
+    .pack-card.featured { border-color: var(--cyan); box-shadow: 0 0 18px rgba(34, 211, 238, 0.16); }
+    .pack-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; }
+    .pack-price { color: var(--ok); font-size: 16px; white-space: nowrap; }
+
     .ai-modules { display: flex; flex-direction: column; gap: 8px; }
     .ai-mod {
       display: flex; align-items: center; gap: 12px; padding: 12px 14px;
@@ -181,6 +196,30 @@
       padding: 10px 14px 14px; font-size: 12.5px; color: #cbd5e1;
       line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05);
       white-space: pre-line;
+    }
+
+    .version-footer {
+      margin-top: 20px; text-align: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 10px 12px;
+    }
+    .version-footer summary { list-style: none; cursor: pointer; font-size: 11px; color: var(--muted); font-weight: 700; }
+    .version-footer summary::-webkit-details-marker { display: none; }
+    .version-badge { color: var(--cyan); }
+    .changelog-box {
+      text-align: start; margin-top: 10px; padding-top: 10px;
+      border-top: 1px solid var(--border); font-size: 11.5px; color: #cbd5e1; line-height: 1.55;
+    }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 40;
+      background: rgba(3, 6, 16, 0.84); backdrop-filter: blur(8px);
+      display: flex; align-items: flex-end; justify-content: center; padding: 12px;
+    }
+    .modal-sheet {
+      width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto;
+      background: #0d142a; border: 1px solid rgba(34, 211, 238, 0.4);
+      border-radius: 22px; padding: 18px; animation: fadeUp 0.22s var(--ease);
     }
 
     .progress-wrap { margin-top: 12px; }
@@ -235,6 +274,7 @@
     .flex { display: flex; gap: 12px; align-items: center; }
     .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
     .muted { font-size: 12px; color: var(--muted); line-height: 1.45; }
+    .highlight-card { border-color: var(--ok) !important; box-shadow: 0 0 22px rgba(52, 211, 153, 0.25); }
 
     nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 20;
@@ -253,10 +293,10 @@
     #toast {
       position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%);
       background: #131c3a; border: 1px solid var(--cyan); color: #fff;
-      padding: 10px 18px; border-radius: 99px; font-size: 13px; font-weight: 600; display: none; z-index: 30;
+      padding: 10px 18px; border-radius: 99px; font-size: 13px; font-weight: 600;
+      display: none; z-index: 50; max-width: 90vw; text-align: center;
     }
 
-    /* Vue d'impression PDF native (0 €) */
     #print-cert { display: none; }
     @media print {
       body { background: #fff !important; color: #111 !important; padding: 0 !important; }
@@ -402,12 +442,20 @@
           <label id="lbl-proof-time">Horodatage universel (UTC)</label>
           <input type="text" id="proof-time" readonly>
         </div>
-        <button class="btn btn-ok" onclick="saveProof()">🔒 <span id="txt-save-proof">Sceller dans le Coffre + Partager</span></button>
+        <button class="btn btn-ok" onclick="saveProof()">🔒 <span id="txt-save-proof">Sceller dans le Coffre + Envoyer PDF/Photo</span></button>
       </div>
     </div>
 
-    <!-- HUD + MODULES + FAQ -->
+    <!-- HUD + PACKS + MODULES + FAQ + VERSION -->
     <div id="home-hud" class="anim">
+      <div class="plan-bar" onclick="openProModal()">
+        <div>
+          <div style="font-size:13px;font-weight:800;" id="lbl-plan-status"></div>
+          <div class="muted" id="lbl-plan-sub"></div>
+        </div>
+        <span class="badge badge-ok" id="lbl-plan-cta">Packs / Pro</span>
+      </div>
+
       <div class="hud-grid">
         <div class="hud-card" onclick="switchTab('subs', 1)" style="cursor:pointer;">
           <div class="muted" id="lbl-hud-subs">Alertes actives</div>
@@ -454,6 +502,13 @@
         </div>
         <div id="faq-list"></div>
       </div>
+
+      <details class="version-footer">
+        <summary>
+          <span class="version-badge">SHIELDPROOF v7.5.0</span> • <span id="lbl-updated-date"></span> ▾
+        </summary>
+        <div class="changelog-box" id="lbl-changelog"></div>
+      </details>
     </div>
   </section>
 
@@ -486,17 +541,24 @@
     <div id="proofs-list"></div>
   </section>
 
-  <!-- ONGLET 4 : EXPORT -->
+  <!-- ONGLET 4 : EXPORT & PACKS -->
   <section id="view-settings" class="anim hidden">
+    <div class="card">
+      <div style="font-weight:800;font-size:15px;" id="lbl-packs-title"></div>
+      <div class="muted" style="margin:4px 0 10px;" id="lbl-packs-desc"></div>
+      <button class="btn" onclick="openProModal()">💎 <span id="txt-open-packs"></span></button>
+    </div>
+
     <div class="card">
       <div style="font-weight:800;font-size:15px;" id="lbl-export-title">Exports &amp; Sauvegarde locale</div>
       <div class="muted" style="margin:4px 0 10px;" id="lbl-export-sub">Vos photos originales et abonnements restent 100 % sur votre téléphone (zéro accès bancaire).</div>
       <button class="btn btn-tonal" onclick="exportBackupJson()">⬇️ <span id="txt-exp-json">Exporter sauvegarde JSON</span></button>
       <button class="btn btn-danger" onclick="clearAllDb()">🗑️ <span id="txt-clear-all">Effacer toutes les données</span></button>
     </div>
+
     <div class="card">
-      <div style="font-weight:800;font-size:15px;">SHIELDPROOF — 0 € Local Edition</div>
-      <div class="muted" style="margin-top:6px;" id="lbl-privacy-foot">OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.</div>
+      <div style="font-weight:800;font-size:15px;">SHIELDPROOF v7.5.0 — by AITECHPRO</div>
+      <div class="muted" style="margin-top:6px;" id="lbl-privacy-foot"></div>
     </div>
   </section>
 </main>
@@ -520,12 +582,64 @@
   </div>
 </nav>
 
-<!-- ZONE IMPRESSION PDF NATIVE -->
-<div id="print-cert"></div>
+<!-- MODALE PACKS & CLÉ DE LICENCE GUMROAD -->
+<div id="pro-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeProModal()">
+  <div class="modal-sheet">
+    <div class="flex" style="justify-content:space-between;margin-bottom:10px;">
+      <strong style="font-size:17px;" id="lbl-modal-title"></strong>
+      <button class="btn btn-tonal btn-sm" onclick="closeProModal()">✕</button>
+    </div>
+    <p class="muted" id="lbl-modal-sub"></p>
 
+    <div class="pack-card">
+      <div class="pack-head">
+        <span id="lbl-pack1-name"></span>
+        <span class="pack-price" id="lbl-pack1-price"></span>
+      </div>
+      <div class="muted" style="margin:4px 0 8px;" id="lbl-pack1-desc"></div>
+      <button class="btn btn-tonal btn-sm" style="width:100%;" onclick="openGumroadCheckout('pack10')">
+        🛒 <span id="txt-buy-pack1"></span>
+      </button>
+    </div>
+
+    <div class="pack-card featured">
+      <div class="pack-head">
+        <span id="lbl-pack2-name"></span>
+        <span class="pack-price" id="lbl-pack2-price"></span>
+      </div>
+      <div class="muted" style="margin:4px 0 8px;" id="lbl-pack2-desc"></div>
+      <button class="btn btn-ok btn-sm" style="width:100%;" onclick="openGumroadCheckout('unlimited')">
+        ⚡ <span id="txt-buy-pack2"></span>
+      </button>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label id="lbl-license-input"></label>
+      <input type="text" id="in-license-key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX">
+    </div>
+    <button class="btn" id="btn-activate-key" onclick="activateGumroadKey()">🔓 <span id="txt-activate-key"></span></button>
+  </div>
+</div>
+
+<div id="print-cert"></div>
 <div id="toast"></div>
 
 <script>
+  // =========================================================================
+  // ⚙️ CONFIGURATION UNIQUE DES PRIX & GUMROAD (Modifiez ici en 1 seule fois !)
+  // =========================================================================
+  const GUMROAD_CONFIG = {
+    pack10Price: '4,99 € TTC',
+    proPrice: '20,00 € TTC',
+    verifyProxyUrl: '',   // Ex: 'https://shieldproof-verify.votre-compte.workers.dev'
+    pack10Url: '',        // Ex: 'https://aitechpro.gumroad.com/l/pack10'
+    pack10ProductId: '',  // Ex: 'WJ3xqLN8aPbnaTRsSrU8oA=='
+    proUrl: '',           // Ex: 'https://aitechpro.gumroad.com/l/pro'
+    proProductId: ''      // Ex: 'K9abc123XYZ=='
+  };
+
+  const APP_VERSION = '7.5.0';
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }
@@ -580,6 +694,23 @@
     });
   }
 
+  function getLicenseState() {
+    try { return JSON.parse(localStorage.getItem('sp_license') || '{}'); }
+    catch (_) { return {}; }
+  }
+  function saveLicenseState(patch) {
+    const current = {
+      proUnlimited: false,
+      credits: 0,
+      freeUsed: 0,
+      activatedKeys: [],
+      ...getLicenseState(),
+      ...patch
+    };
+    localStorage.setItem('sp_license', JSON.stringify(current));
+    return current;
+  }
+
   const SERVICES_DB = [
     { keys: ['netflix'], name: 'Netflix', url: 'https://www.netflix.com/cancelplan' },
     { keys: ['spotify'], name: 'Spotify', url: 'https://www.spotify.com/account/subscription/' },
@@ -598,50 +729,52 @@
   ];
 
   let lang = localStorage.getItem('sp_lang') || 'fr';
+  let proofsCache = [];
+  let currentScan = null;
+  let lastCreatedProofId = null;
+
+  const P10 = GUMROAD_CONFIG.pack10Price;
+  const PPRO = GUMROAD_CONFIG.proPrice;
+
   const I18N = {
     fr: {
       sub: 'IA Locale Active • 100% Privé',
       heroTitle: "1 Photo — L'IA s'occupe de tout",
       heroSub: "Capture d'essai gratuit / abonnement OU photo de caution / colis / voiture.",
+      planFreeAvail: '1 Preuve Gratuite disponible',
+      planFreeUsed: '0 crédit restant — Choisir un Pack',
+      planCredits: (n) => `${n} crédit(s) SHA-256 restant(s)`,
+      planPro: 'Pass Illimité Pro Actif ✓',
+      planSub: `Packs dès ${P10} • Illimité ${PPRO}`,
+      planCta: 'Packs / Pro',
       hudSubs: 'Alertes actives', hudProofs: 'Preuves SHA-256',
       mod1Title: 'Détecteur OCR Anti-Pièges', mod1Desc: 'Lit prix caché, alarme 48h (.ics) & lettre juridique.',
       mod2Title: 'Sceau Cryptographique SHA-256', mod2Desc: 'Certifie voitures, Airbnb & colis contre retouche IA.',
       mod3Title: "Vérificateur d'Authenticité", mod3Desc: 'Prouvez en 1 clic si une photo a été modifiée par IA.',
       faqTitle: 'FAQ — Questions fréquentes',
+      updatedDate: 'Mise à jour : 13/11/2026',
+      changelog: `• v${APP_VERSION} : Envoi direct de vrai certificat PDF & Image sur WhatsApp/E-mail, horodatage local + UTC, Pack 10 (${P10}) & Pass Illimité (${PPRO}), FAQ multilingue.`,
       faqs: [
-        {
-          q: 'Comment marche le SHA-256 ?',
-          a: "Imaginez le SHA-256 comme l’ADN mathématique unique d’un fichier.\n\nQuand vous mettez une photo dans SHIELDPROOF, le téléphone lit les millions d'octets qui composent cette photo et les transforme en un code unique de 64 caractères (ex. 8f4a9c...21b0).\n\n• Effet papillon : si quelqu’un modifie 1 seul pixel (retouche IA, rayure ajoutée, filtre, recadrage d’1 mm, photo compressée par WhatsApp), le code de 64 caractères change complètement du tout au tout.\n• Sens unique : impossible de fabriquer une fausse photo qui donne le même code SHA-256."
-        },
-        {
-          q: 'Comment fonctionne le Scanner IA et comment tester l’authenticité ?',
-          a: "1) Sceller l’original : dans Scanner IA, choisissez une photo déjà dans votre Galerie. L’app enregistre la date/heure exactes et calcule son SHA-256. Appuyez sur 🔒 Sceller dans le Coffre + Partager.\n\n2) Vérifier la vraie photo (✅ Vert) : allez dans l’onglet Preuves → Importer une photo à vérifier → reprenez la même photo. Résultat : ✅ AUTHENTIQUE.\n\n3) Test avec une photo modifiée / retouchée par IA (❌ Rouge) : modifiez une copie de cette photo puis importez-la. Résultat : ❌ NON RECONNU — preuve qu’elle ne correspond pas à l’original !"
-        },
-        {
-          q: 'Comment horodater ma preuve gratuitement à 100 % sur WhatsApp ou E-mail ?',
-          a: "Juste après avoir scellé la photo, appuyez sur 📲 WhatsApp ou ✉️ E-mail (0 €) et envoyez-vous le récapitulatif avec la date, l’heure et le SHA-256 (ou partagez l’image PNG du certificat). Le serveur WhatsApp / E-mail prouve gratuitement la date exacte de réception !"
-        },
-        {
-          q: 'Est-ce que l’application a accès à ma banque ou envoie mes photos ?',
-          a: "Jamais. SHIELDPROOF ne demande ni carte bancaire, ni mot de passe, ni compte. L'analyse OCR et le SHA-256 tournent à 100 % sur votre téléphone."
-        },
-        {
-          q: 'Comment l’IA protège-t-elle contre les essais gratuits pièges ?',
-          a: "Prenez une capture d’écran de l'essai gratuit : l’IA lit le service, le prix, calcule le coût annuel caché, rédige la lettre de résiliation et génère une alarme calendrier (.ics) 48h avant."
-        },
-        {
-          q: 'Dans quels cas utiliser les Preuves Certifiées ?',
-          a: "Location de voiture (caution), état des lieux Airbnb/appartement, emballage ou ouverture de colis (Vinted, eBay, Amazon, Temu) contre les faux litiges."
-        },
-        {
-          q: 'L’application fonctionne-t-elle hors-ligne (Mode Avion) ?',
-          a: "Oui ! Après le premier chargement (et une première lecture OCR pour la mise en cache), le coffre, le SHA-256, les certificats PDF/PNG et les alarmes marchent hors-ligne."
-        },
-        {
-          q: 'Comment sauvegarder mes preuves si je change de téléphone ?',
-          a: "Conservez vos photos originales dans votre Galerie et utilisez Export → Exporter sauvegarde JSON."
-        }
+        { q: 'Comment marche le SHA-256 ?', a: "Imaginez le SHA-256 comme l’ADN mathématique unique d’un fichier.\n\nQuand vous mettez une photo dans SHIELDPROOF, le téléphone lit les millions d'octets de la photo et crée un code unique de 64 caractères (ex. 8f4a9c...21b0).\n\n• Effet papillon : 1 seul pixel modifié (retouche IA, rayure ajoutée, filtre, recadrage) change complètement le code.\n• Sens unique : impossible de fabriquer une fausse photo donnant le même code." },
+        { q: 'Comment fonctionne le Scanner IA et comment tester l’authenticité ?', a: "1) Sceller l’original : choisissez une photo de votre Galerie, appuyez sur 🔒 Sceller.\n2) Vérifier la vraie photo (✅ Vert) : dans Preuves → Importer une photo à vérifier → reprenez la même photo.\n3) Test avec une photo modifiée / retouchée par IA (❌ Rouge) : modifiez une copie et importez-la : ❌ NON RECONNU !" },
+        { q: 'Comment envoyer le PDF ou la photo certificat sur WhatsApp ou E-mail (0 €) ?', a: "Dans Preuves, appuyez sur 📲 Envoyer PDF ou 🖼️ Envoyer Image : Android ouvre le menu de partage pour attacher le vrai fichier PDF (ou l'image avec la photo + date/heure + SHA-256) directement dans WhatsApp ou Gmail !" },
+        { q: 'Combien coûte l’application ?', a: `Votre 1ère certification SHA-256 + le Scanner OCR anti-abonnements sont gratuits (0 €). Pour sceller plus de preuves : Pack 10 preuves à ${P10} ou Pass Illimité à vie à ${PPRO}, sans aucun abonnement.` },
+        { q: 'Est-ce que l’application a accès à ma banque ou envoie mes photos ?', a: "Jamais. Zéro carte bancaire, zéro compte, zéro serveur. Tout tourne à 100 % sur votre téléphone." },
+        { q: 'Comment l’IA protège-t-elle contre les essais gratuits pièges ?', a: "Elle lit le prix, le service, calcule le coût annuel, rédige la lettre de résiliation et génère une alarme calendrier (.ics) 48h avant." },
+        { q: 'Dans quels cas utiliser les Preuves Certifiées ?', a: "Location de voiture (caution), état des lieux Airbnb/appartement, emballage/ouverture de colis (Vinted, eBay, Amazon, Temu)." },
+        { q: 'L’application fonctionne-t-elle hors-ligne (Mode Avion) ?', a: "Oui, après le premier chargement et mise en cache." }
       ],
+      modalTitle: 'Débloquer plus de Preuves SHA-256',
+      modalSub: 'Votre 1ère certification SHA-256 est offerte. Choisissez un pack sans abonnement :',
+      pack1Name: 'Pack 10 Preuves', pack1Desc: '10 certifications SHA-256 + PDF + envoi WhatsApp/Mail.', buyPack1: `Choisir ce Pack (${P10})`,
+      pack2Name: 'Pass Illimité Pro (À vie)', pack2Desc: 'Preuves SHA-256, certificats PDF/PNG & alertes illimités pour toujours.', buyPack2: `Passer en Illimité (${PPRO})`,
+      licenseInput: 'Déjà acheté ? Collez votre Clé de Licence Gumroad :', activateKey: 'Activer ma licence',
+      packsTitle: 'Packs & Licence Pro', packsDesc: '1ère preuve SHA-256 gratuite. Débloquez plus de preuves sans abonnement mensuel.', openPacks: `Voir les Packs (${P10} / ${PPRO})`,
+      checkoutNotReady: "Lien Gumroad non configuré par l'éditeur (ajoutez vos URL dans GUMROAD_CONFIG).",
+      keyInvalid: 'Clé de licence invalide, remboursée ou expirée.',
+      keyAlreadyUsed: 'Cette clé a déjà été activée sur cet appareil.',
+      keySuccessPro: 'Pass Illimité Pro activé !',
+      keySuccessPack: '+10 Preuves SHA-256 ajoutées !',
       ocrRunning: 'Analyse IA laser en cours...',
       aiDetected: "Analysé automatiquement par l'IA",
       modeSub: 'Piège Abonnement', modeProof: 'Preuve Certifiée',
@@ -653,70 +786,65 @@
       proofTitle: 'Titre de la preuve', proofCat: 'Type de litige potentiel',
       proofLocalTime: 'Date & Heure exactes de capture',
       proofHash: 'Empreinte SHA-256 (anti-retouche IA)', proofTime: 'Horodatage universel (UTC)',
-      saveProof: 'Sceller dans le Coffre + Partager',
+      saveProof: 'Sceller dans le Coffre + Envoyer PDF/Photo',
       statActive: 'À surveiller / an', statSaved: 'Argent sauvé (résiliés)',
       verifyTitle: '🔍 Vérifier si une photo a été retouchée',
       verifySub: "Importez une image pour vérifier si elle correspond à 100 % à l'original scellé.",
       verifyBtn: 'Importer une photo à vérifier',
       expTitle: 'Exports & Confidentialité', expSub: 'Stockage 100 % local sur votre téléphone, sans accès bancaire.',
       expJson: 'Exporter sauvegarde JSON', clearAll: 'Effacer toutes les données',
-      privacyFoot: 'OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.',
+      privacyFoot: 'OCR Tesseract.js local + SHA-256 Web Crypto + PDF & Calendrier .ics natifs. Aucun serveur externe ne reçoit vos images.',
       nav: ['Scanner IA', 'Alertes', 'Preuves', 'Export'],
       cancelBtn: 'Marquer résilié', copyBtn: 'Copier lettre', alarmBtn: 'Alarme .ics',
-      waBtn: 'WhatsApp', mailBtn: 'E-mail', pdfBtn: 'PDF', imgBtn: 'Image / Partager', delBtn: 'Supprimer',
+      pdfShareBtn: 'Envoyer PDF (WhatsApp/Mail)', imgShareBtn: 'Envoyer Image', waTextBtn: 'Texte', mailBtn: 'E-mail', delBtn: 'Supprimer',
       emptySubs: 'Aucun abonnement scanné pour le moment.',
       emptyProofs: 'Aucune preuve photo scellée pour le moment.',
       trapAutoRenew: '⚠️ Renouvellement automatique détecté',
       trapTrial: '⏳ Essai gratuit détecté (risque d’oubli)',
       authOk: '✅ AUTHENTIQUE : Image 100 % identique à l’original scellé !',
       authFail: '❌ NON RECONNU : Image modifiée par IA/éditeur ou absente de votre coffre.',
-      savedToast: 'Scellé ! Partagez-le sur WhatsApp ou E-mail pour fixer la date.', copiedToast: 'Copié !',
-      confirmClear: 'Tout supprimer définitivement ?',
+      savedToast: 'Scellé ! Appuyez sur « Envoyer PDF » ou « Envoyer Image ».', copiedToast: 'Copié !',
+      confirmClear: 'Effacer vos preuves et abonnements locaux ?',
       letterTemplate: (name, date) => `Objet : Demande de résiliation immédiate – ${name}\n\nMadame, Monsieur,\n\nConformément aux dispositions applicables du droit de la consommation, je vous demande par la présente de résilier immédiatement mon abonnement / essai gratuit « ${name} » et de stopper tout renouvellement automatique avant le ${date}.\n\nMerci de me confirmer cette résiliation par retour d'e-mail.\n\nCordialement.`
     },
     en: {
       sub: 'Local AI Active • 100% Private',
       heroTitle: '1 Photo — AI Handles Everything',
       heroSub: 'Screenshot of free trial / subscription OR photo of rental car / package / deposit.',
+      planFreeAvail: '1 Free Proof available',
+      planFreeUsed: '0 credits left — Choose a Pack',
+      planCredits: (n) => `${n} SHA-256 credit(s) left`,
+      planPro: 'Unlimited Pro Pass Active ✓',
+      planSub: `Packs from ${P10} • Unlimited ${PPRO}`,
+      planCta: 'Packs / Pro',
       hudSubs: 'Active alerts', hudProofs: 'SHA-256 proofs',
       mod1Title: 'OCR Trap Detector', mod1Desc: 'Extracts hidden price, 48h alarm (.ics) & legal email.',
       mod2Title: 'SHA-256 Crypto Seal', mod2Desc: 'Certifies rental cars, Airbnb & packages against AI edits.',
       mod3Title: 'Authenticity Verifier', mod3Desc: 'Prove in 1 tap if an image was altered by AI.',
       faqTitle: 'FAQ — Frequently Asked Questions',
+      updatedDate: 'Updated: 2026-11-13',
+      changelog: `• v${APP_VERSION}: Direct real PDF & Image sharing to WhatsApp/Email, Local + UTC date/time, 10-Proof Pack (${P10}) & Lifetime Pro (${PPRO}), 4-language FAQ.`,
       faqs: [
-        {
-          q: 'How does SHA-256 work? (Simple explanation)',
-          a: "Think of SHA-256 as a file's unique mathematical DNA.\n\nWhen you scan a photo in SHIELDPROOF, your phone reads its exact bytes and turns them into a unique 64-character fingerprint (e.g. 8f4a9c...21b0).\n\n• Butterfly effect: if someone alters even 1 single pixel (AI edit, fake scratch, filter, 1mm crop, or WhatsApp compression), the 64-character code changes completely.\n• One-way math: it is impossible to fake another image with the same SHA-256 hash."
-        },
-        {
-          q: 'How does the AI Scanner & Authenticity test work?',
-          a: "1) Seal the original: pick a photo from your Gallery. The app stamps the exact date/time and computes its SHA-256. Tap 🔒 Seal in Vault + Share.\n\n2) Verify the real photo (✅ Green): go to Proofs → Pick photo to verify → choose the same Gallery file. Result: ✅ AUTHENTIC.\n\n3) Test with an AI-edited copy (❌ Red): edit a copy and upload it. Result: ❌ NOT VERIFIED — instant proof it is not the sealed original!"
-        },
-        {
-          q: 'How do I timestamp my proof for free ($0) via WhatsApp or Email?',
-          a: 'Right after sealing a photo, tap 📲 WhatsApp or ✉️ Email ($0) to send the certificate summary (or PNG certificate image) to yourself or the counterparty. Your email/WhatsApp server creates a free third-party timestamp!'
-        },
-        {
-          q: 'Does SHIELDPROOF access my bank or upload photos?',
-          a: 'Never. No bank login, no account, no cloud upload. OCR and SHA-256 run 100% locally on your phone.'
-        },
-        {
-          q: 'How does it stop free-trial traps?',
-          a: 'Screenshot any trial checkout screen: AI extracts the service, price, yearly cost, drafts a legal cancellation email, and creates a 48h-before calendar alarm (.ics).'
-        },
-        {
-          q: 'When should I use Certified Proofs?',
-          a: 'Rental car walkarounds, Airbnb/apartment move-in inspections, and e-commerce packing/unboxing (Vinted, eBay, Amazon, Temu).'
-        },
-        {
-          q: 'Does it work offline (Airplane Mode)?',
-          a: 'Yes! Once loaded online (and after one OCR scan caches the engine), vault, SHA-256, PDF/PNG certificates, and alarms work offline.'
-        },
-        {
-          q: 'How do I back up my proofs?',
-          a: 'Keep original photos in your Gallery and use Export → Export JSON backup.'
-        }
+        { q: 'How does SHA-256 work?', a: "Think of SHA-256 as a file's unique mathematical DNA. Any 1-pixel edit (AI edit, filter, crop) completely changes the 64-character code." },
+        { q: 'How does the Authenticity Verifier work?', a: "1) Seal an original Gallery photo.\n2) Verify the real photo: ✅ AUTHENTIC.\n3) Verify an AI-edited copy: ❌ NOT VERIFIED!" },
+        { q: 'How do I send the PDF or Image certificate on WhatsApp / Email ($0)?', a: "Tap 📲 Send PDF or 🖼️ Send Image in Proofs: Android opens the native share sheet so you can attach the actual PDF or PNG certificate inside WhatsApp or Gmail!" },
+        { q: 'How much does SHIELDPROOF cost?', a: `Your 1st SHA-256 proof + OCR subscription scanner are free (€0). Extra packs: 10-Proof Pack (${P10}) or Lifetime Unlimited (${PPRO}) with zero monthly subscription.` },
+        { q: 'Does SHIELDPROOF access my bank or upload photos?', a: 'Never. Zero bank login, zero cloud upload.' },
+        { q: 'How does it stop free-trial traps?', a: 'AI extracts price/date, drafts a legal cancellation email, and creates a 48h calendar alarm (.ics).' },
+        { q: 'When should I use Certified Proofs?', a: 'Rental cars, Airbnb move-ins, and e-commerce packing/unboxing.' },
+        { q: 'Does it work offline?', a: 'Yes, once cached.' }
       ],
+      modalTitle: 'Unlock More SHA-256 Proofs',
+      modalSub: 'Your 1st SHA-256 proof is free. Pick a one-time pack (no subscription):',
+      pack1Name: '10-Proof Pack', pack1Desc: '10 SHA-256 certifications + PDF + WhatsApp/Email share.', buyPack1: `Get 10-Proof Pack (${P10})`,
+      pack2Name: 'Lifetime Unlimited Pro', pack2Desc: 'Unlimited SHA-256 proofs, PDF/PNG certificates & alerts forever.', buyPack2: `Go Unlimited (${PPRO})`,
+      licenseInput: 'Already purchased? Paste your Gumroad License Key:', activateKey: 'Activate License',
+      packsTitle: 'Packs & Pro License', packsDesc: '1st SHA-256 proof free. Unlock more proofs with zero monthly fees.', openPacks: `View Packs (${P10} / ${PPRO})`,
+      checkoutNotReady: 'Gumroad links not configured yet in GUMROAD_CONFIG.',
+      keyInvalid: 'Invalid, refunded, or expired license key.',
+      keyAlreadyUsed: 'This license key was already activated on this device.',
+      keySuccessPro: 'Lifetime Unlimited Pro activated!',
+      keySuccessPack: '+10 SHA-256 proofs added!',
       ocrRunning: 'Laser AI analysis running...',
       aiDetected: 'Auto-detected by AI',
       modeSub: 'Subscription Trap', modeProof: 'Certified Proof',
@@ -728,46 +856,65 @@
       proofTitle: 'Proof title', proofCat: 'Dispute category',
       proofLocalTime: 'Exact Capture Date & Time',
       proofHash: 'SHA-256 fingerprint (anti-AI tampering)', proofTime: 'Universal Timestamp (UTC)',
-      saveProof: 'Seal in Vault + Share',
+      saveProof: 'Seal in Vault + Send PDF/Photo',
       statActive: 'At risk / year', statSaved: 'Money saved',
       verifyTitle: '🔍 Verify if a photo was edited by AI',
       verifySub: 'Upload any photo to prove it matches 100% of the sealed original file.',
       verifyBtn: 'Pick photo to verify',
       expTitle: 'Exports & Privacy', expSub: '100% local on your phone. Zero bank login required.',
       expJson: 'Export JSON backup', clearAll: 'Erase all local data',
-      privacyFoot: 'Local Tesseract.js OCR + Web Crypto SHA-256 + native .ics alarms. Zero images sent to external servers.',
+      privacyFoot: 'Local Tesseract.js OCR + Web Crypto SHA-256 + native PDF & .ics alarms.',
       nav: ['AI Scan', 'Alerts', 'Proofs', 'Export'],
       cancelBtn: 'Mark Cancelled', copyBtn: 'Copy email', alarmBtn: 'Alarm .ics',
-      waBtn: 'WhatsApp', mailBtn: 'Email', pdfBtn: 'PDF', imgBtn: 'Image / Share', delBtn: 'Delete',
+      pdfShareBtn: 'Send PDF (WhatsApp/Mail)', imgShareBtn: 'Send Image', waTextBtn: 'Text', mailBtn: 'Email', delBtn: 'Delete',
       emptySubs: 'No subscriptions scanned yet.',
       emptyProofs: 'No sealed photo proofs yet.',
       trapAutoRenew: '⚠️ Auto-renewal clause detected',
       trapTrial: '⏳ Free trial trap detected',
       authOk: '✅ AUTHENTIC: 100% identical to your sealed original photo!',
       authFail: '❌ NOT VERIFIED: Photo was altered or is not in your vault.',
-      savedToast: 'Sealed! Share on WhatsApp or Email to lock the timestamp.', copiedToast: 'Copied!',
-      confirmClear: 'Permanently delete all local items?',
-      letterTemplate: (name, date) => `Subject: Immediate Cancellation Request – ${name}\n\nHello,\n\nUnder applicable consumer protection laws, please cancel my "${name}" subscription / free trial immediately and disable any automatic renewal prior to ${date}.\n\nPlease confirm cancellation by reply.\n\nThank you.`
+      savedToast: 'Sealed! Tap Send PDF or Send Image for WhatsApp/Email.', copiedToast: 'Copied!',
+      confirmClear: 'Permanently delete local proofs and alerts?',
+      letterTemplate: (name, date) => `Subject: Immediate Cancellation Request – ${name}\n\nHello,\n\nPlease cancel my "${name}" subscription / free trial immediately before ${date}.\n\nThank you.`
     },
     ar: {
       sub: 'الذكاء المحلي نشط • 100% خصوصية',
       heroTitle: 'صورة واحدة — الذكاء الاصطناعي يتكفل بكل شيء',
       heroSub: 'لقطة اشتراك مجاني أو صورة لسيارة إيجار / شقة / طرد.',
+      planFreeAvail: 'إثبات واحد مجاني متاح',
+      planFreeUsed: 'انتهى الرصيد المجاني — اختر باقة',
+      planCredits: (n) => `متبقي ${n} إثبات(ات) SHA-256`,
+      planPro: 'النسخة غير المحدودة مفعلة ✓',
+      planSub: `باقات تبدأ من ${P10} • غير محدود ${PPRO}`,
+      planCta: 'الباقات / Pro',
       hudSubs: 'تنبيهات نشطة', hudProofs: 'إثباتات موثقة',
       mod1Title: 'كاشف فخاخ الاشتراكات', mod1Desc: 'يقرأ السعر ويجهز منبه 48 ساعة ورسالة الإلغاء.',
       mod2Title: 'ختم SHA-256 ضد التعديل', mod2Desc: 'يوثق صور السيارات والعقارات والطرود ضد التزوير.',
       mod3Title: 'مدقق أصالة الصور', mod3Desc: 'اكشف بنقرة واحدة هل تم تعديل الصورة بالذكاء الاصطناعي.',
       faqTitle: 'الأسئلة الشائعة (FAQ)',
+      updatedDate: 'تحديث: 13/11/2026',
+      changelog: `• v${APP_VERSION}: إرسال ملف PDF وصورة الشهادة عبر واتساب والإيميل، التوقيت المحلي وUTC، باقات ${P10} و${PPRO}.`,
       faqs: [
-        { q: 'كيف يعمل تشفير SHA-256؟', a: 'تخيل SHA-256 كالحمض النووي الرقمي الفريد للملف. أي تعديل ولو لبكسل واحد يغيّر الكود المكون من 64 حرفاً بالكامل.' },
-        { q: 'كيف أختبر الماسح الذكي وأثبت تعديل الصورة؟', a: '1) احفظ الصورة الأصلية من المعرض.\n2) اختبر نفس الصورة: ستظهر ✅ أصلية 100%.\n3) عدّل نسخة منها وأعد فحصها: ستظهر ❌ غير متطابقة!' },
-        { q: 'كيف أوثق التاريخ مجاناً عبر واتساب أو الإيميل؟', a: 'بعد الحفظ، اضغط على زر 📲 واتساب أو ✉️ إيميل (0€) لإرسال الشهادة لنفسك فوراً لتثبيت التاريخ على خادم خارجي مجاناً.' },
-        { q: 'هل يرفع صوري أو يطلب حسابي البنكي؟', a: 'لا أبداً. كل التحليل والتشفير محلي 100% على هاتفك.' },
-        { q: 'كيف يحميني من فخ الفترات التجريبية؟', a: 'يقرأ السعر والتاريخ ويجهز رسالة الإلغاء ومنبه قبل الخصم بـ 48 ساعة.' },
-        { q: 'متى أستخدم الإثبات الموثق؟', a: 'لإيجار السيارات، تسليم شقق Airbnb، وتغليف الطرود.' },
-        { q: 'هل يعمل بدون إنترنت؟', a: 'نعم بعد الفتح الأول، الخزنة وSHA-256 وPDF تعمل بدون إنترنت.' },
-        { q: 'كيف أحفظ نسختي؟', a: 'احتفظ بالصور الأصلية واستخدم تصدير JSON.' }
+        { q: 'كيف يعمل SHA-256؟', a: 'كالحمض النووي الرقمي للملف: أي تعديل لبكسل واحد يغيّر البصمة بالكامل.' },
+        { q: 'كيف أختبر أصالة الصورة؟', a: 'احفظ الصورة الأصلية ثم افحص نفس الصورة (✅) ثم نسخة معدلة (❌).' },
+        { q: 'كيف أرسل ملف PDF أو الصورة عبر واتساب والإيميل مجاناً؟', a: 'اضغط على 📲 إرسال PDF أو 🖼️ إرسال صورة ليفتح لك قائمة المشاركة وإرفاق الملف مباشرة في واتساب أو البريد!' },
+        { q: 'ما هي الأسعار؟', a: `أول إثبات مجاني تماماً، ثم باقة 10 إثباتات بـ ${P10} أو نسخة مدى الحياة بـ ${PPRO} بدون اشتراك شهري.` },
+        { q: 'هل يطلب حسابي البنكي؟', a: 'لا أبداً، كل شيء محلي 100%.' },
+        { q: 'كيف يحميني من الاشتراكات؟', a: 'يجهز رسالة الإلغاء ومنبه قبل الخصم بـ 48 ساعة.' },
+        { q: 'متى أستخدم الإثبات؟', a: 'إيجار السيارات، الشقق، والطرود.' },
+        { q: 'هل يعمل بدون إنترنت؟', a: 'نعم بعد التحميل الأول.' }
       ],
+      modalTitle: 'تفعيل باقة إثباتات SHA-256',
+      modalSub: 'أول إثبات مجاني. اختر باقة دفع لمرة واحدة بدون اشتراك:',
+      pack1Name: 'باقة 10 إثباتات', pack1Desc: '10 شهادات SHA-256 + PDF + واتساب.', buyPack1: `شراء الباقة (${P10})`,
+      pack2Name: 'النسخة غير المحدودة (مدى الحياة)', pack2Desc: 'شهادات وتنبيهات غير محدودة للأبد.', buyPack2: `تفعيل غير محدود (${PPRO})`,
+      licenseInput: 'لديك مفتاح ترخيص Gumroad؟ ألصقه هنا:', activateKey: 'تفعيل المفتاح',
+      packsTitle: 'الباقات والترخيص', packsDesc: 'الإثبات الأول مجاني. افتح المزيد بدون اشتراك شهري.', openPacks: `عرض الباقات (${P10} / ${PPRO})`,
+      checkoutNotReady: 'روابط Gumroad غير مفعلة بعد في GUMROAD_CONFIG.',
+      keyInvalid: 'مفتاح الترخيص غير صالح أو مسترد.',
+      keyAlreadyUsed: 'تم استخدام هذا المفتاح مسبقاً على هذا الجهاز.',
+      keySuccessPro: 'تم تفعيل النسخة غير المحدودة!',
+      keySuccessPack: 'تمت إضافة +10 إثباتات!',
       ocrRunning: 'جاري التحليل بالذكاء الاصطناعي...',
       aiDetected: 'تم الكشف تلقائياً بالذكاء الاصطناعي',
       modeSub: 'فخ اشتراك', modeProof: 'إثبات موثق',
@@ -779,46 +926,65 @@
       proofTitle: 'عنوان الإثبات', proofCat: 'نوع النزاع',
       proofLocalTime: 'تاريخ ووقت الالتقاط الدقيق',
       proofHash: 'بصمة SHA-256 ضد التعديل', proofTime: 'التوقيت العالمي (UTC)',
-      saveProof: 'حفظ في الخزنة + مشاركة',
+      saveProof: 'حفظ في الخزنة + إرسال PDF/صورة',
       statActive: 'مهدد بالخصم / سنة', statSaved: 'المبلغ الموفر',
       verifyTitle: '🔍 تحقق من عدم تعديل الصورة',
       verifySub: 'أدخل صورة للتأكد من مطابقتها 100% للأصل المحفوظ.',
       verifyBtn: 'اختر صورة للتحقق',
       expTitle: 'التصدير والخصوصية', expSub: 'تخزين محلي بالكامل بدون ربط بنكي.',
       expJson: 'تصدير نسخة JSON', clearAll: 'مسح جميع البيانات',
-      privacyFoot: 'تحليل محلي بالكامل وتشفير SHA-256 داخل المتصفح دون إرسال أي صور.',
+      privacyFoot: 'تحليل محلي وتشفير SHA-256 وإصدار PDF محلياً دون خوادم.',
       nav: ['مسح ذكي', 'تنبيهات', 'إثباتات', 'إعدادات'],
       cancelBtn: 'تم الإلغاء', copyBtn: 'نسخ الرسالة', alarmBtn: 'منبه .ics',
-      waBtn: 'واتساب', mailBtn: 'إيميل', pdfBtn: 'PDF', imgBtn: 'صورة / مشاركة', delBtn: 'حذف',
+      pdfShareBtn: 'إرسال PDF (واتساب)', imgShareBtn: 'إرسال صورة', waTextBtn: 'نص', mailBtn: 'إيميل', delBtn: 'حذف',
       emptySubs: 'لا توجد اشتراكات محفوظة.',
       emptyProofs: 'لا توجد إثباتات محفوظة.',
       trapAutoRenew: '⚠️ تم رصد تجديد تلقائي',
       trapTrial: '⏳ فترة تجريبية مجانية',
       authOk: '✅ صورة أصلية 100% لم يتم تعديلها!',
       authFail: '❌ غير متطابقة: تم تعديل الصورة أو غير موجودة.',
-      savedToast: 'تم الحفظ! شاركه عبر واتساب أو إيميل لتثبيت الوقت.', copiedToast: 'تم النسخ!',
+      savedToast: 'تم الحفظ! اضغط إرسال PDF أو صورة للمشاركة.', copiedToast: 'تم النسخ!',
       confirmClear: 'هل تريد حذف جميع البيانات؟',
-      letterTemplate: (name, date) => `الموضوع: طلب إلغاء فوري للاشتراك – ${name}\n\nتحية طيبة،\n\nأرجو إلغاء اشتراكي في خدمة "${name}" فوراً وإيقاف التجديد التلقائي قبل تاريخ ${date}.\n\nيرجى تأكيد الإلغاء.\nشكراً لكم.`
+      letterTemplate: (name, date) => `الموضوع: طلب إلغاء فوري للاشتراك – ${name}\n\nأرجو إلغاء اشتراكي في "${name}" قبل ${date}.`
     },
     zh: {
       sub: '本地 AI 已就绪 • 100% 隐私',
       heroTitle: '只需一张图 — AI 全自动处理',
       heroSub: '上传订阅/免费试用截图，或租车/退房/快递防伪拍照。',
+      planFreeAvail: '1 次免费存证可用',
+      planFreeUsed: '免费次数已用完 — 选择套餐',
+      planCredits: (n) => `剩余 ${n} 次 SHA-256 存证`,
+      planPro: '终身无限版已激活 ✓',
+      planSub: `${P10} 起一次性买断 • 无限版 ${PPRO}`,
+      planCta: '套餐 / Pro',
       hudSubs: '扣费预警', hudProofs: 'SHA-256 存证',
       mod1Title: 'OCR 订阅陷阱识别', mod1Desc: '自动识别价格、生成48小时闹钟及取消邮件。',
       mod2Title: 'SHA-256 防篡改印章', mod2Desc: '为租车、民宿押金和快递开箱提供防修图证明。',
       mod3Title: 'AI 修图真伪校验', mod3Desc: '一键比对照片是否被 AI 篡改。',
       faqTitle: '常见问题 (FAQ)',
+      updatedDate: '更新日期：2026-11-13',
+      changelog: `• v${APP_VERSION}：支持 WhatsApp/邮件直接发送 PDF 与证书图片、本地与 UTC 时间戳、${P10} 与 ${PPRO} 买断套餐。`,
       faqs: [
-        { q: 'SHA-256 防篡改指纹如何工作？', a: '相当于照片的数字 DNA。只要被 AI 修图或修改 1 像素，64 位指纹就会彻底改变。' },
-        { q: '如何测试 AI 扫描与防伪校验？', a: '1) 从相册选原图封存。\n2) 上传同一原图：显示 ✅ 原图通过。\n3) 上传 AI 修改后的副本：显示 ❌ 验证失败！' },
-        { q: '如何 0 费用通过 WhatsApp/邮件固定时间戳？', a: '封存后点击 📲 WhatsApp 或 ✉️ 邮件，把摘要或证书图片发给自己，即可免费在第三方服务器留下接收时间记录！' },
-        { q: '会绑定银行卡或上传照片吗？', a: '绝不，100% 手机本地运行。' },
-        { q: '如何防自动续费陷阱？', a: 'AI 识别扣费日期并生成提前 48 小时日历闹钟与取消邮件。' },
-        { q: '适用哪些防伪存证场景？', a: '租车验车、民宿退房押金、贵重快递打包开箱。' },
-        { q: '支持离线模式吗？', a: '支持，缓存后可在飞行模式下使用。' },
-        { q: '如何备份数据？', a: '保留原图并使用 JSON 导出备份。' }
+        { q: 'SHA-256 如何工作？', a: '照片的数字 DNA，修改 1 像素就会彻底改变 64 位指纹。' },
+        { q: '如何测试真伪校验？', a: '封存相册原图后，原图校验为 ✅，修改副本校验为 ❌。' },
+        { q: '如何将 PDF 或证书图片直接发到 WhatsApp / 邮件？', a: '点击 📲 发送 PDF 或 🖼️ 发送图片，系统会调起手机分享菜单并直接附加文件！' },
+        { q: '价格是多少？', a: `首张存证免费，10次包 ${P10} 或终身无限版 ${PPRO}（无月费）。` },
+        { q: '会上传照片或读取银行卡吗？', a: '绝不，100% 本地运行。' },
+        { q: '如何防自动续费？', a: '生成扣费前 48 小时日历闹钟与取消邮件。' },
+        { q: '适用场景？', a: '租车、退房押金、快递开箱防伪。' },
+        { q: '支持离线吗？', a: '支持。' }
       ],
+      modalTitle: '解锁更多 SHA-256 存证',
+      modalSub: '首张 SHA-256 存证免费。一次性购买套餐（无月租）：',
+      pack1Name: '10 次存证包', pack1Desc: '10 次 SHA-256 存证 + PDF + WhatsApp/邮件分享。', buyPack1: `购买 10 次包 (${P10})`,
+      pack2Name: '终身无限版 Pro', pack2Desc: '无限次 SHA-256 存证、PDF/图片证书与提醒。', buyPack2: `解锁终身无限版 (${PPRO})`,
+      licenseInput: '已购买？请粘贴 Gumroad 授权密钥：', activateKey: '激活密钥',
+      packsTitle: '套餐与授权', packsDesc: '首张存证免费，买断制无月费。', openPacks: `查看套餐 (${P10} / ${PPRO})`,
+      checkoutNotReady: '尚未配置 GUMROAD_CONFIG 购买链接。',
+      keyInvalid: '密钥无效、已退款或已过期。',
+      keyAlreadyUsed: '此密钥已在本设备上激活过。',
+      keySuccessPro: '终身无限版 Pro 已激活！',
+      keySuccessPack: '已成功充值 +10 次存证！',
       ocrRunning: '激光 AI 识别中...',
       aiDetected: 'AI 已自动识别',
       modeSub: '订阅防扣费', modeProof: '防篡改存证',
@@ -830,30 +996,28 @@
       proofTitle: '存证标题', proofCat: '纠纷类型',
       proofLocalTime: '精确本地拍照日期与时间',
       proofHash: 'SHA-256 防 AI 修图指纹', proofTime: '世界标准时间戳 (UTC)',
-      saveProof: '加密保存 + 分享',
+      saveProof: '加密保存 + 发送 PDF/图片',
       statActive: '年潜在扣费', statSaved: '已省金额',
       verifyTitle: '🔍 验证照片是否被 AI 修改',
       verifySub: '上传照片即可比对是否与原图完全一致（0 像素改动）。',
       verifyBtn: '选择照片验证',
       expTitle: '导出与隐私', expSub: '无需绑定银行卡，100% 本地存储。',
       expJson: '导出 JSON 备份', clearAll: '清空本地数据',
-      privacyFoot: '本地 Tesseract.js OCR + Web Crypto SHA-256 + 原生日历提醒，不上传任何图片。',
+      privacyFoot: '本地 OCR + SHA-256 + 原生 PDF 导出，不上传任何图片。',
       nav: ['AI 扫描', '扣费预警', '存证箱', '设置'],
       cancelBtn: '标记已取消', copyBtn: '复制邮件', alarmBtn: '日历闹钟',
-      waBtn: 'WhatsApp', mailBtn: '邮件', pdfBtn: 'PDF', imgBtn: '图片 / 分享', delBtn: '删除',
+      pdfShareBtn: '发送 PDF (WhatsApp/邮件)', imgShareBtn: '发送图片', waTextBtn: '纯文字', mailBtn: '邮件', delBtn: '删除',
       emptySubs: '暂无订阅记录。',
       emptyProofs: '暂无防伪存证。',
       trapAutoRenew: '⚠️ 检测到自动续费条款',
       trapTrial: '⏳ 检测到免费试用陷阱',
       authOk: '✅ 原图验证通过：100% 未经修改！',
       authFail: '❌ 验证失败：图片已被修改或不在本地存证库中。',
-      savedToast: '已封存！建议通过 WhatsApp 或邮件发给自己固定时间。', copiedToast: '已复制！',
+      savedToast: '已封存！点击发送 PDF 或图片即可分享。', copiedToast: '已复制！',
       confirmClear: '确定永久删除所有本地数据？',
-      letterTemplate: (name, date) => `主题：立即取消订阅申请 – ${name}\n\n您好：\n\n请立即取消我的「${name}」订阅/免费试用，并在 ${date} 之前停止所有自动续费扣款。\n\n请回复确认取消结果，谢谢！`
+      letterTemplate: (name, date) => `主题：立即取消订阅申请 – ${name}\n\n请在 ${date} 前取消「${name}」订阅。`
     }
   };
-
-  let currentScan = null;
 
   function formatLocalDateTime(dateObj) {
     const pad = (n) => String(n).padStart(2, '0');
@@ -863,7 +1027,7 @@
   function toast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg; el.style.display = 'block';
-    setTimeout(() => el.style.display = 'none', 2800);
+    setTimeout(() => el.style.display = 'none', 3200);
   }
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -881,6 +1045,81 @@
     document.body.appendChild(ta); ta.focus(); ta.select();
     try { document.execCommand('copy'); } catch (_) {}
     document.body.removeChild(ta);
+  }
+
+  function openProModal() {
+    document.getElementById('pro-modal').classList.remove('hidden');
+  }
+  function closeProModal() {
+    document.getElementById('pro-modal').classList.add('hidden');
+  }
+  function openGumroadCheckout(plan) {
+    const url = plan === 'unlimited' ? GUMROAD_CONFIG.proUrl : GUMROAD_CONFIG.pack10Url;
+    if (!url) {
+      toast(I18N[lang].checkoutNotReady);
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
+  }
+
+  async function verifyKeyWithProduct(productId, key, increment) {
+    if (!productId || !GUMROAD_CONFIG.verifyProxyUrl) return { ok: false };
+    try {
+      const res = await fetch(GUMROAD_CONFIG.verifyProxyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          product_id: productId,
+          license_key: key,
+          increment_uses_count: increment ? 'true' : 'false'
+        })
+      });
+      const data = await res.json();
+      const p = data.purchase || {};
+      const active = Boolean(data.success) && !p.refunded && !p.chargebacked && !p.disputed && !p.subscription_cancelled_at;
+      return { ok: active, uses: data.uses || 1 };
+    } catch (_) {
+      return { ok: false };
+    }
+  }
+
+  async function activateGumroadKey() {
+    const t = I18N[lang];
+    const key = document.getElementById('in-license-key').value.trim();
+    if (!key) return;
+    if (!GUMROAD_CONFIG.verifyProxyUrl) {
+      toast(t.checkoutNotReady);
+      return;
+    }
+    const lic = saveLicenseState({});
+    if (lic.activatedKeys.includes(key)) {
+      toast(t.keyAlreadyUsed);
+      return;
+    }
+    const btn = document.getElementById('btn-activate-key');
+    btn.disabled = true;
+
+    const proCheck = await verifyKeyWithProduct(GUMROAD_CONFIG.proProductId, key, false);
+    if (proCheck.ok) {
+      saveLicenseState({ proUnlimited: true, activatedKeys: [...lic.activatedKeys, key] });
+      btn.disabled = false;
+      closeProModal();
+      renderHomeHud();
+      toast(t.keySuccessPro);
+      return;
+    }
+
+    const packCheck = await verifyKeyWithProduct(GUMROAD_CONFIG.pack10ProductId, key, true);
+    btn.disabled = false;
+    if (packCheck.ok && packCheck.uses <= 2) {
+      saveLicenseState({ credits: (lic.credits || 0) + 10, activatedKeys: [...lic.activatedKeys, key] });
+      closeProModal();
+      renderHomeHud();
+      toast(t.keySuccessPack);
+      return;
+    }
+
+    toast(t.keyInvalid);
   }
 
   function renderFaq() {
@@ -907,6 +1146,8 @@
     document.getElementById('lbl-sub').textContent = t.sub;
     document.getElementById('lbl-hero-title').textContent = t.heroTitle;
     document.getElementById('lbl-hero-sub').textContent = t.heroSub;
+    document.getElementById('lbl-plan-sub').textContent = t.planSub;
+    document.getElementById('lbl-plan-cta').textContent = t.planCta;
     document.getElementById('lbl-hud-subs').textContent = t.hudSubs;
     document.getElementById('lbl-hud-proofs').textContent = t.hudProofs;
     document.getElementById('lbl-mod1-title').textContent = t.mod1Title;
@@ -915,6 +1156,23 @@
     document.getElementById('lbl-mod2-desc').textContent = t.mod2Desc;
     document.getElementById('lbl-mod3-title').textContent = t.mod3Title;
     document.getElementById('lbl-mod3-desc').textContent = t.mod3Desc;
+    document.getElementById('lbl-updated-date').textContent = t.updatedDate;
+    document.getElementById('lbl-changelog').textContent = t.changelog;
+    document.getElementById('lbl-modal-title').textContent = t.modalTitle;
+    document.getElementById('lbl-modal-sub').textContent = t.modalSub;
+    document.getElementById('lbl-pack1-name').textContent = t.pack1Name;
+    document.getElementById('lbl-pack1-price').textContent = P10;
+    document.getElementById('lbl-pack1-desc').textContent = t.pack1Desc;
+    document.getElementById('txt-buy-pack1').textContent = t.buyPack1;
+    document.getElementById('lbl-pack2-name').textContent = t.pack2Name;
+    document.getElementById('lbl-pack2-price').textContent = PPRO;
+    document.getElementById('lbl-pack2-desc').textContent = t.pack2Desc;
+    document.getElementById('txt-buy-pack2').textContent = t.buyPack2;
+    document.getElementById('lbl-license-input').textContent = t.licenseInput;
+    document.getElementById('txt-activate-key').textContent = t.activateKey;
+    document.getElementById('lbl-packs-title').textContent = t.packsTitle;
+    document.getElementById('lbl-packs-desc').textContent = t.packsDesc;
+    document.getElementById('txt-open-packs').textContent = t.openPacks;
     document.getElementById('lbl-ai-detected').textContent = t.aiDetected;
     document.getElementById('lbl-mode-sub').textContent = t.modeSub;
     document.getElementById('lbl-mode-proof').textContent = t.modeProof;
@@ -950,10 +1208,24 @@
   }
 
   async function renderHomeHud() {
+    const t = I18N[lang];
     const subs = await dbAll('subs');
     const proofs = await dbAll('proofs');
+    proofsCache = proofs;
     document.getElementById('home-subs-val').textContent = subs.filter((s) => !s.cancelled).length;
     document.getElementById('home-proofs-val').textContent = proofs.length;
+
+    const lic = saveLicenseState({});
+    const statusEl = document.getElementById('lbl-plan-status');
+    if (lic.proUnlimited) {
+      statusEl.textContent = t.planPro;
+    } else if (lic.credits > 0) {
+      statusEl.textContent = t.planCredits(lic.credits);
+    } else if (lic.freeUsed < 1) {
+      statusEl.textContent = t.planFreeAvail;
+    } else {
+      statusEl.textContent = t.planFreeUsed;
+    }
   }
 
   function switchTab(name, idx) {
@@ -983,7 +1255,7 @@
         const img = new Image();
         img.onload = () => {
           const c = document.createElement('canvas');
-          const max = 480;
+          const max = 600;
           let w = img.width, h = img.height;
           if (w > max || h > max) {
             const ratio = Math.min(max / w, max / h);
@@ -991,7 +1263,7 @@
           }
           c.width = w; c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/jpeg', 0.78));
+          resolve(c.toDataURL('image/jpeg', 0.82));
         };
         img.src = e.target.result;
       };
@@ -1077,7 +1349,8 @@
     prog.classList.add('hidden');
 
     const ai = analyzeOcrText(ocrText);
-    currentScan = { file, hash, thumb, nowIso, localTime, ai, ocrText };
+    const safeName = file.name || `capture_${nowIso.slice(0,10)}.jpg`;
+    currentScan = { file, fileName: safeName, hash, thumb, nowIso, localTime, ai, ocrText };
 
     const thumbEl = document.getElementById('scan-thumb');
     thumbEl.src = thumb;
@@ -1103,7 +1376,7 @@
       linkWrap.classList.add('hidden');
     }
 
-    document.getElementById('proof-title').value = file.name.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
+    document.getElementById('proof-title').value = safeName.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
     document.getElementById('proof-cat').value = ai.proofCat;
     document.getElementById('proof-local-time').value = localTime;
     document.getElementById('proof-hash-preview').textContent = hash;
@@ -1140,10 +1413,12 @@
       'BEGIN:VALARM','TRIGGER:-PT0M','ACTION:DISPLAY','DESCRIPTION:Cancel subscription now!','END:VALARM',
       'END:VEVENT','END:VCALENDAR'
     ].join('\r\n');
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+    a.href = url;
     a.download = `cancel_${name.replace(/[^a-z0-9]/gi, '_')}.ics`;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
   async function saveSubAndAlarm() {
@@ -1166,16 +1441,30 @@
 
   async function saveProof() {
     if (!currentScan) return;
+    const lic = saveLicenseState({});
+    if (!lic.proUnlimited) {
+      if (lic.freeUsed < 1) {
+        saveLicenseState({ freeUsed: 1 });
+      } else if (lic.credits > 0) {
+        saveLicenseState({ credits: lic.credits - 1 });
+      } else {
+        openProModal();
+        return;
+      }
+    }
+
+    const id = Date.now();
+    lastCreatedProofId = id;
     await dbPut('proofs', {
-      id: Date.now(),
-      certId: 'SP-' + Date.now().toString(36).toUpperCase(),
+      id,
+      certId: 'SP-' + id.toString(36).toUpperCase(),
       title: document.getElementById('proof-title').value.trim() || 'Sealed Proof',
       cat: document.getElementById('proof-cat').value,
       hash: currentScan.hash,
       timestamp: currentScan.nowIso,
       localTime: currentScan.localTime,
       thumb: currentScan.thumb,
-      fileName: currentScan.file.name,
+      fileName: currentScan.fileName,
       fileSize: currentScan.file.size
     });
     closeScanResult();
@@ -1186,7 +1475,7 @@
   function buildProofShareText(p) {
     const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
     return [
-      '🛡️ SHIELDPROOF — CERTIFICAT DE PREUVE',
+      `🛡️ SHIELDPROOF v${APP_VERSION} — CERTIFICAT`,
       `ID : ${p.certId}`,
       `Objet : ${p.title} (${p.cat})`,
       `Date & Heure : ${dt}`,
@@ -1196,109 +1485,165 @@
     ].join('\n');
   }
 
-  async function shareProofWhatsApp(id) {
-    const list = await dbAll('proofs');
-    const p = list.find((x) => x.id === id);
-    if (!p) return;
-    const txt = buildProofShareText(p);
-    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
-  }
-
-  async function shareProofEmail(id) {
-    const list = await dbAll('proofs');
-    const p = list.find((x) => x.id === id);
-    if (!p) return;
-    const subject = `SHIELDPROOF ${p.certId} — ${p.title}`;
-    const body = buildProofShareText(p);
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  }
-
-  async function printCertificatePdf(id) {
-    const list = await dbAll('proofs');
-    const p = list.find((x) => x.id === id);
-    if (!p) return;
+  async function buildCertificateCanvas(p) {
     const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
-    document.getElementById('print-cert').innerHTML = `
-      <h2>SHIELDPROOF — CERTIFICAT D'INTÉGRITÉ / INTEGRITY CERTIFICATE</h2>
-      <p><strong>ID Certificat :</strong> ${esc(p.certId)}</p>
-      <p><strong>Titre :</strong> ${esc(p.title)} (${esc(p.cat)})</p>
-      <p><strong>Date &amp; Heure locale :</strong> ${esc(dt)}</p>
-      <p><strong>Horodatage universel (UTC) :</strong> ${esc(p.timestamp)}</p>
-      <p><strong>Fichier original :</strong> ${esc(p.fileName)} (${p.fileSize} bytes)</p>
-      <p><strong>Empreinte cryptographique SHA-256 :</strong></p>
-      <div class="p-hash">${esc(p.hash)}</div>
-      ${p.thumb ? `<img src="${p.thumb}">` : ''}
-      <p style="font-size:11px;color:#475569;margin-top:16px;">Généré localement via Web Crypto SHA-256. Toute modification d'un seul pixel sur le fichier original modifie totalement l'empreinte ci-dessus.</p>
-    `;
-    setTimeout(() => window.print(), 150);
-  }
-
-  async function shareProofImage(id) {
-    const list = await dbAll('proofs');
-    const p = list.find((x) => x.id === id);
-    if (!p) return;
-    const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
-
     const canvas = document.createElement('canvas');
-    canvas.width = 860;
-    canvas.height = 980;
+    canvas.width = 1240;
+    canvas.height = 1754;
     const ctx = canvas.getContext('2d');
 
-    ctx.fillStyle = '#070b1a';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = '#22d3ee';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+    ctx.fillStyle = '#070b1a';
+    ctx.fillRect(0, 0, canvas.width, 210);
+
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = 'bold 48px sans-serif';
+    ctx.fillText(`SHIELDPROOF v${APP_VERSION}`, 60, 88);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 34px sans-serif';
-    ctx.fillText('SHIELDPROOF — CERTIFIED PROOF', 48, 78);
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText('CERTIFICAT D’INTÉGRITÉ / INTEGRITY CERTIFICATE', 60, 142);
 
     ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText(`ID: ${p.certId}`, 60, 185);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText(`Date & Heure : ${dt}`, 60, 275);
+
+    ctx.fillStyle = '#334155';
+    ctx.font = '24px sans-serif';
+    ctx.fillText(`UTC : ${p.timestamp}`, 60, 322);
+    ctx.fillText(`Objet : ${String(p.title).slice(0, 52)} (${p.cat})`, 60, 368);
+    ctx.fillText(`Fichier original : ${String(p.fileName).slice(0, 44)} (${p.fileSize} bytes)`, 60, 414);
+
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(60, 448, canvas.width - 120, 150);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(60, 448, canvas.width - 120, 150);
+
+    ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(`ID: ${p.certId}   •   ${dt}`, 48, 122);
+    ctx.fillText('EMPREINTE CRYPTOGRAPHIQUE SHA-256 (0 PIXEL MODIFIÉ) :', 84, 490);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '20px sans-serif';
-    ctx.fillText(`Title: ${p.title.slice(0, 48)} (${p.cat})`, 48, 162);
-    ctx.fillText(`UTC: ${p.timestamp}`, 48, 194);
-
-    ctx.fillStyle = '#0e152b';
-    ctx.fillRect(48, 218, canvas.width - 96, 86);
-    ctx.fillStyle = '#22d3ee';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText('SHA-256: ' + p.hash.slice(0, 32), 64, 252);
-    ctx.fillText('         ' + p.hash.slice(32), 64, 282);
-
-    const finishShare = (blob) => {
-      const file = new File([blob], `${p.certId}_proof.png`, { type: 'image/png' });
-      const text = buildProofShareText(p);
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ title: p.certId, text, files: [file] }).catch(() => {});
-      } else {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${p.certId}_proof.png`;
-        a.click();
-      }
-    };
+    ctx.fillStyle = '#0369a1';
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText(p.hash.slice(0, 32), 84, 535);
+    ctx.fillText(p.hash.slice(32), 84, 575);
 
     if (p.thumb) {
       const img = new Image();
-      img.onload = () => {
-        const maxW = canvas.width - 96;
-        const maxH = 600;
+      img.src = p.thumb;
+      try {
+        await img.decode();
+      } catch (_) {
+        await new Promise((res) => { img.onload = res; img.onerror = res; });
+      }
+      if (img.width > 0) {
+        const maxW = canvas.width - 120;
+        const maxH = 950;
         const ratio = Math.min(maxW / img.width, maxH / img.height);
         const w = img.width * ratio;
         const h = img.height * ratio;
-        ctx.drawImage(img, (canvas.width - w) / 2, 330, w, h);
-        canvas.toBlob(finishShare, 'image/png');
-      };
-      img.src = p.thumb;
-    } else {
-      canvas.toBlob(finishShare, 'image/png');
+        const x = (canvas.width - w) / 2;
+        const y = 635;
+        ctx.drawImage(img, x, y, w, h);
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, w, h);
+      }
     }
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('Généré localement par SHIELDPROOF (Web Crypto SHA-256). Toute retouche IA modifie ce code.', 60, 1685);
+    return canvas;
+  }
+
+  async function shareProofPdf(id) {
+    const p = proofsCache.find((x) => x.id === id);
+    if (!p) return;
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      printCertificatePdf(id);
+      return;
+    }
+    const canvas = await buildCertificateCanvas(p);
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+    const pdfBlob = doc.output('blob');
+    const pdfFile = new File([pdfBlob], `${p.certId}.pdf`, { type: 'application/pdf' });
+    const text = buildProofShareText(p);
+
+    if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      try {
+        await navigator.share({ title: `${p.certId}.pdf`, text, files: [pdfFile] });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    doc.save(`${p.certId}.pdf`);
+  }
+
+  async function shareProofImage(id) {
+    const p = proofsCache.find((x) => x.id === id);
+    if (!p) return;
+    const canvas = await buildCertificateCanvas(p);
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], `${p.certId}_proof.png`, { type: 'image/png' });
+      const text = buildProofShareText(p);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ title: p.certId, text, files: [file] });
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return;
+        }
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${p.certId}_proof.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
+  }
+
+  function shareProofWhatsApp(id) {
+    const p = proofsCache.find((x) => x.id === id);
+    if (!p) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(buildProofShareText(p))}`, '_blank');
+  }
+
+  function shareProofEmail(id) {
+    const p = proofsCache.find((x) => x.id === id);
+    if (!p) return;
+    const subject = `SHIELDPROOF ${p.certId} — ${p.title}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildProofShareText(p))}`;
+  }
+
+  function printCertificatePdf(id) {
+    const p = proofsCache.find((x) => x.id === id);
+    if (!p) return;
+    const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
+    document.getElementById('print-cert').innerHTML = `
+      <h2>SHIELDPROOF v${APP_VERSION} — CERTIFICAT D'INTÉGRITÉ</h2>
+      <p><strong>ID :</strong> ${esc(p.certId)}</p>
+      <p><strong>Titre :</strong> ${esc(p.title)} (${esc(p.cat)})</p>
+      <p><strong>Date &amp; Heure :</strong> ${esc(dt)}</p>
+      <p><strong>UTC :</strong> ${esc(p.timestamp)}</p>
+      <p><strong>Fichier :</strong> ${esc(p.fileName)} (${p.fileSize} bytes)</p>
+      <div class="p-hash">${esc(p.hash)}</div>
+      ${p.thumb ? `<img src="${p.thumb}">` : ''}
+    `;
+    setTimeout(() => window.print(), 150);
   }
 
   async function renderSubs() {
@@ -1355,12 +1700,14 @@
   async function renderProofs() {
     const t = I18N[lang];
     const list = await dbAll('proofs');
+    proofsCache = list;
     const box = document.getElementById('proofs-list');
     if (!list.length) { box.innerHTML = `<div class="card muted">${esc(t.emptyProofs)}</div>`; return; }
     box.innerHTML = list.map((p) => {
       const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
+      const hl = p.id === lastCreatedProofId ? 'highlight-card' : '';
       return `
-        <div class="card">
+        <div class="card ${hl}">
           <div class="flex">
             ${p.thumb ? `<img class="thumb" src="${p.thumb}" alt="">` : ''}
             <div style="flex:1; min-width:0;">
@@ -1370,10 +1717,10 @@
             </div>
           </div>
           <div class="actions">
-            <button class="btn btn-wa btn-sm" onclick="shareProofWhatsApp(${p.id})">📲 ${esc(t.waBtn)}</button>
+            <button class="btn btn-wa btn-sm" onclick="shareProofPdf(${p.id})">📲 ${esc(t.pdfShareBtn)}</button>
+            <button class="btn btn-tonal btn-sm" onclick="shareProofImage(${p.id})">🖼️ ${esc(t.imgShareBtn)}</button>
+            <button class="btn btn-tonal btn-sm" onclick="shareProofWhatsApp(${p.id})">💬 ${esc(t.waTextBtn)}</button>
             <button class="btn btn-tonal btn-sm" onclick="shareProofEmail(${p.id})">✉️ ${esc(t.mailBtn)}</button>
-            <button class="btn btn-tonal btn-sm" onclick="printCertificatePdf(${p.id})">📄 ${esc(t.pdfBtn)}</button>
-            <button class="btn btn-tonal btn-sm" onclick="shareProofImage(${p.id})">🖼️ ${esc(t.imgBtn)}</button>
             <button class="btn btn-danger btn-sm" onclick="deleteProof(${p.id})">${esc(t.delBtn)}</button>
           </div>
         </div>
@@ -1401,10 +1748,12 @@
   async function exportBackupJson() {
     const subs = await dbAll('subs');
     const proofs = (await dbAll('proofs')).map(({ thumb, ...rest }) => rest);
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ app: `SHIELDPROOF v${APP_VERSION}`, subs, proofs }, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify({ app: 'SHIELDPROOF', subs, proofs }, null, 2)], { type: 'application/json' }));
+    a.href = url;
     a.download = 'shieldproof_backup.json';
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
   }
 
   async function clearAllDb() {
