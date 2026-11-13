@@ -588,9 +588,9 @@
     proUrl: 'https://aitechpro2.gumroad.com/l/pro',
     proProductId: 'CVS-zmPKqlxLb00A0jFCBg==',
     b2bStarterUrl: 'https://aitechpro2.gumroad.com/l/b2b-starter',
-    b2bStarterProductId: 'REPLACE_WITH_B2B_STARTER_PRODUCT_ID',
+    b2bStarterProductId: 'h6D1Ze1huSkSR73Tkfm3XQ==',
     b2bFleetUrl: 'https://aitechpro2.gumroad.com/l/b2b-fleet',
-    b2bFleetProductId: 'REPLACE_WITH_B2B_FLEET_PRODUCT_ID'
+    b2bFleetProductId: 'vjUu13AoxfGNLo9xSK4nxQ=='
   };
   const APP_VERSION = '8.1.0';
 
@@ -1352,7 +1352,6 @@
     }
     toast(t.keyInvalid);
   }
-
   function renderFaq() {
     const t = I18N[lang];
     document.getElementById('lbl-faq-title').textContent = t.faqTitle;
@@ -1681,7 +1680,6 @@
     switchDetectedMode(forceMode || (ai.isSub ? 'SUB' : 'PROOF'));
     document.getElementById('scan-result').classList.remove('hidden');
   }
-
   function switchDetectedMode(mode) {
     document.getElementById('mode-sub-btn').classList.toggle('active', mode === 'SUB');
     document.getElementById('mode-proof-btn').classList.toggle('active', mode === 'PROOF');
@@ -1860,7 +1858,8 @@
     ctx.fillStyle = '#94a3b8'; ctx.font = '17px sans-serif';
     ctx.fillText('⚠️ Attention compression WhatsApp : vérifiez toujours avec le fichier image ORIGINAL non compressé.', 86, 1692);
     return canvas;
-  }    
+  }
+
   async function shareProofPdf(id) {
     const p = proofsCache.find((x) => x.id === id);
     if (!p) return;
