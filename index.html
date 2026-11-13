@@ -4,14 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#050814">
-  <meta name="description" content="Protégez cautions, contrats et abonnements pièges. Scellage SHA-256 100 % local + détection d'images IA (Midjourney, DALL-E, Stable Diffusion).">
+  <meta name="description" content="Protégez cautions, contrats et abonnements pièges. Scellage SHA-256 100 % local + détection d'images IA.">
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="SHIELDPROOF — Scellage SHA-256 & Détection IA">
-  <meta property="og:description" content="Scellez vos photos en SHA-256 avec QR Code vérifiable. Détection locale des images générées par IA.">
-  <meta property="og:type" content="website">
   <title>SHIELDPROOF v9.0.0 — SHA-256 Proof & AI Image Detector</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  
+  <!-- Librairies externes (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@2.0.4/dist/qrcode.min.js"></script>
+
   <style>
     :root {
       --bg: #050814; --surface: rgba(14, 21, 43, 0.88); --surface-2: rgba(23, 33, 66, 0.92);
@@ -23,11 +26,7 @@
     html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); user-select: none; }
     input, textarea { user-select: text; }
     body { padding-bottom: 88px; position: relative; }
-    .cyber-bg {
-      position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
-      background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
-      background-size: 32px 32px;
-    }
+    .cyber-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background-image: linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px); background-size: 32px 32px; }
     .orb { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.32; animation: floatOrb 9s ease-in-out infinite alternate; }
     .orb-1 { width: 240px; height: 240px; background: #2563eb; top: -60px; left: -60px; }
     .orb-2 { width: 220px; height: 220px; background: #06b6d4; bottom: 80px; right: -70px; animation-delay: -4s; }
@@ -86,8 +85,6 @@
     .scan-icon { position: relative; z-index: 2; width: 56px; height: 56px; border-radius: 18px; background: linear-gradient(135deg, #2563eb, #06b6d4); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 22px rgba(34,211,238,0.45); }
     .hud-grid, .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .hud-card, .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 13px; position: relative; overflow: hidden; }
-    .hud-card::after { content: ""; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(34,211,238,0.07), transparent); animation: shimmer 4.5s infinite; }
-    @keyframes shimmer { 0% { left: -100%; } 45%,100% { left: 160%; } }
     .hud-val, .stat-val { font-size: 20px; font-weight: 800; margin-top: 4px; color: #fff; }
     .plan-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 11px 14px; border-radius: 14px; margin-bottom: 12px; background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(34,211,238,0.09)); border: 1px solid rgba(34,211,238,0.35); cursor: pointer; }
     .pack-card { border: 1px solid var(--border); border-radius: 14px; padding: 14px; background: var(--surface-2); margin-bottom: 10px; }
@@ -175,7 +172,6 @@
 </head>
 <body>
 <div class="cyber-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
-
 <div class="top-dock">
   <header>
     <div style="min-width:0;" onclick="showLanding()">
@@ -243,7 +239,8 @@
       <button class="legal-link-btn" onclick="openLegalModal('ccpa')" id="land-lnk-ccpa"></button>
     </div>
   </section>
-    <section id="view-scan" class="anim hidden">
+
+  <section id="view-scan" class="anim hidden">
     <div class="card" style="padding:12px;">
       <label class="hero-scan" for="scan-input">
         <div class="scan-laser"></div>
@@ -267,13 +264,13 @@
         <button class="btn btn-tonal btn-sm" onclick="closeScanResult()">✕</button>
       </div>
       <div style="margin-top:10px;text-align:center;">
-        <img id="scan-thumb" class="thumb hidden" style="width:96px;height:96px;" alt="Aperçu de l'image scannée">
+        <img id="scan-thumb" class="thumb hidden" style="width:96px;height:96px;" alt="Aperçu">
         <div id="demo-dl-wrap" class="hidden" style="margin-top:8px;">
           <button type="button" class="btn btn-tonal btn-sm" onclick="downloadDemoPhoto()">⬇️ <span id="txt-demo-dl"></span></button>
         </div>
       </div>
 
-      <!-- ⚠️ NOUVEAU : CARTE DE DÉTECTION IA -->
+      <!-- ⚠️ CARTE DE DÉTECTION IA -->
       <div id="ai-detection-card" class="ai-detector-card hidden" style="margin-top:12px;">
         <div class="flex" style="justify-content:space-between;align-items:flex-start;">
           <div style="flex:1;">
@@ -324,13 +321,13 @@
       <div id="form-proof" class="hidden">
         <div class="b2b-logo-bar">
           <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-            <img id="b2b-mini-logo" class="b2b-logo-preview hidden" alt="Logo entreprise">
+            <img id="b2b-mini-logo" class="b2b-logo-preview hidden" alt="Logo">
             <div style="min-width:0;">
               <div style="font-size:12px;font-weight:800;color:var(--cyan);" id="lbl-b2b-logo-title"></div>
               <div class="muted" style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="lbl-b2b-logo-sub"></div>
             </div>
           </div>
-          <button type="button" class="b2b-plus-btn" onclick="triggerB2bLogoUpload()" title="Ajouter logo entreprise (Pro)">+</button>
+          <button type="button" class="b2b-plus-btn" onclick="triggerB2bLogoUpload()" title="Ajouter logo (Pro)">+</button>
           <input type="file" id="b2b-logo-input" accept="image/*" style="display:none;" onchange="handleB2bLogoFile(event)">
         </div>
 
@@ -524,7 +521,6 @@
 
 <div id="print-cert"></div>
 <div id="toast"></div>
-
 <script>
   // ===== CONFIG =====
   const GUMROAD_CONFIG = {
@@ -542,8 +538,6 @@
   };
   const APP_VERSION = '9.0.0';
 
-  // ⚠️ IMPORTANT : Charge ces libs LOCALEMENT (pas de CDN).
-  // Instructions en fin de fichier.
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
   }
@@ -644,534 +638,360 @@
   let pendingPresetCat = '';
   let lastVerifyFileHash = '';
   const P10 = GUMROAD_CONFIG.pack10Price;
-  const PPRO = GUMROAD_CONFIG.proPrice
-  
-// ===== TEXTES LÉGAUX =====
-const LEGAL_TEXTS = {
-  fr: {
-    modalTitle: 'Informations Légales & Confidentialité',
-    tabs: { mentions: 'Mentions légales', cgu: 'CGU', rgpd: 'RGPD (UE)', ccpa: 'CCPA / USA' },
-    cardTitle: '⚖️ Mentions légales, CGU, RGPD & CCPA',
-    cardSub: 'Transparence complète sur votre vie privée locale (UE & USA) et conditions d’utilisation.',
-    content: {
-      mentions: `<h4>1. Éditeur</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> est éditée par <strong>AITECHPRO</strong>.<br>• Raison sociale : <strong>[Nom / Raison sociale à compléter]</strong><br>• Adresse : <strong>[Adresse postale à compléter]</strong><br>• SIRET : <strong>[N° SIRET à compléter]</strong><br>• Contact : <strong>[contact@aitechpro-domaine.com]</strong></p><h4>2. Hébergement &amp; Paiement</h4><p>• Hébergement statique : GitHub Pages / Netlify.<br>• Proxy licence : Cloudflare Workers (<em>shieldproof-verify.aitechpro2.workers.dev</em>).<br>• Paiement (Merchant of Record) : <strong>Gumroad Inc.</strong>, San Francisco, CA, USA.</p>`,
-      cgu: `<div class="legal-warn">⚠️ <strong>Avertissement Juridique :</strong> SHIELDPROOF est un outil technique local, et non un cabinet d'avocats, huissier, notaire ou prestataire qualifié eIDAS (UE n° 910/2014). La détection d'images IA est une <strong>heuristique statistique</strong>, pas une preuve absolue.</div><p>L'empreinte SHA-256 et le QR Code prouvent l'intégrité binaire d'un fichier par rapport à l'original non compressé (évitez l'envoi en photo standard WhatsApp). L'horodatage repose sur l'horloge locale de l'appareil. 1ère preuve gratuite ; Packs (${P10}, ${PPRO}) et Pack Entreprise B2B (99 €–290 €/an) traités par Gumroad.</p>`,
-      rgpd: `<h4>100 % Local (RGPD — UE 2016/679)</h4><p><strong>Vos photos, logos B2B, textes OCR et empreintes SHA-256 ne quittent jamais votre appareil.</strong> Stockage exclusif en <code>IndexedDB</code> / <code>localStorage</code>, zéro traceur publicitaire. Seule la validation de clé transite vers Gumroad (Art. 6.1.b). Droits d'accès, portabilité (« Exporter JSON ») et effacement (« Effacer toutes les données ») dans Export. Contact : <strong>[contact@aitechpro-domaine.com]</strong> / CNIL.</p>`,
-      ccpa: `<div class="legal-warn">🇺🇸 <strong>California Privacy Notice (CCPA / CPRA) &amp; US Disclaimer</strong></div><p><strong>No Sale or Sharing:</strong> AITECHPRO / SHIELDPROOF does NOT sell or share personal information. AI image detection is a heuristic, not a legal proof. Provided "AS IS" without legal advice or warranty; liability capped at fees paid.</p>`
-    }
-  },
-  en: {
-    modalTitle: 'Legal Notice, Terms & Privacy',
-    tabs: { mentions: 'Legal Notice', cgu: 'Terms', rgpd: 'GDPR (EU)', ccpa: 'CCPA / USA' },
-    cardTitle: '⚖️ Legal Notice, Terms, GDPR & CCPA',
-    cardSub: 'Full transparency on 100% local privacy (EU & US) and terms of use.',
-    content: {
-      mentions: `<h4>Publisher</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> by <strong>AITECHPRO</strong> ([Entity / Address / Registration / Email]). Hosting: GitHub Pages / Netlify. License Proxy: Cloudflare Workers. MoR: Gumroad Inc.</p>`,
-      cgu: `<div class="legal-warn">⚠️ <strong>Disclaimer:</strong> Local technical utility—not a law firm, notary, or eIDAS QTSP. AI image detection is a <strong>statistical heuristic</strong>, not absolute proof. Keep the uncompressed original photo for SHA-256 &amp; QR verification.</div><p>1st proof free. Consumer (${P10}/${PPRO}) &amp; B2B White-Label (€99–€290/yr, 5–20 seats + company logo) processed by Gumroad.</p>`,
-      rgpd: `<h4>100% Local (EU GDPR 2016/679)</h4><p>Photos, B2B logos, OCR text, and SHA-256 hashes never leave your device (<code>IndexedDB</code>/<code>localStorage</code> only, zero ad trackers). Export or erase data anytime in Settings.</p>`,
-      ccpa: `<div class="legal-warn">🇺🇸 <strong>CCPA / CPRA &amp; US Disclaimer</strong></div><p>We do NOT sell or share personal information. AI detection is heuristic. Provided "AS IS" without legal advice or warranty. Liability capped at fees paid.</p>`
-    }
-  },
-  ar: {
-    modalTitle: 'المعلومات القانونية والخصوصية',
-    tabs: { mentions: 'بيان قانوني', cgu: 'الشروط', rgpd: 'GDPR (أوروبا)', ccpa: 'CCPA (أمريكا)' },
-    cardTitle: '⚖️ البيان القانوني، الشروط، GDPR و CCPA',
-    cardSub: 'شفافية كاملة حول الخصوصية المحلية 100% (الاتحاد الأوروبي وأمريكا).',
-    content: {
-      mentions: `<h4>الناشر</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> من نشر <strong>AITECHPRO</strong>. الاستضافة GitHub Pages والدفع Gumroad.</p>`,
-      cgu: `<div class="legal-warn">⚠️ أداة تقنية محلية وليست مكتباً قانونياً. كشف صور الذكاء الاصطناعي هو تقدير إحصائي وليس دليلاً مطلقاً.</div><p>الإثبات الأول مجاني. باقات الأفراد والشركات العلامة البيضاء (99€–290€/سنة).</p>`,
-      rgpd: `<h4>خصوصية محلية 100% (GDPR)</h4><p>لا تغادر صورك أو بصمات SHA-256 جهازك أبداً، وبدون أي ملفات تتبع إعلانية.</p>`,
-      ccpa: `<div class="legal-warn">🇺🇸 <strong>CCPA &amp; إخلاء المسؤولية</strong></div><p>لا نبيع أو نشارك أي بيانات شخصية. يُقدم التطبيق "كما هو" دون استشارة قانونية.</p>`
-    }
-  },
-  zh: {
-    modalTitle: '法律声明、服务条款与隐私政策',
-    tabs: { mentions: '法律声明', cgu: '使用条款', rgpd: 'GDPR (欧盟)', ccpa: 'CCPA (美国)' },
-    cardTitle: '⚖️ 法律声明、条款、GDPR 与 CCPA',
-    cardSub: '关于 100% 本地隐私（欧盟与美国合规）及免责声明的完整说明。',
-    content: {
-      mentions: `<h4>发布方</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> 由 <strong>AITECHPRO</strong> 发布，GitHub Pages 托管，Gumroad 支付。</p>`,
-      cgu: `<div class="legal-warn">⚠️ 本地技术工具，不构成法律意见。AI 图片检测为启发式算法，并非绝对证据。请保存未经压缩的原图以便 SHA-256 与二维码校验。</div><p>首张存证免费。另提供企业白标版（99€–290€/年）。</p>`,
-      rgpd: `<h4>100% 本地隐私 (GDPR)</h4><p>照片、企业 Logo 与 SHA-256 指纹绝不离开您的设备，无广告追踪。</p>`,
-      ccpa: `<div class="legal-warn">🇺🇸 <strong>CCPA 与免责声明</strong></div><p>绝不出售或共享个人信息。按“现状”提供，不作法律保证。</p>`
-    }
-  }
-};
+  const PPRO = GUMROAD_CONFIG.proPrice;
 
-// ===== I18N =====
-const I18N = {
-  fr: {
-    sub: 'IA Locale Active • 100 % Privé',
-    landPill: '100 % Local • Zéro Serveur • Zéro Accès Bancaire',
-    landTitle: 'Protégez vos <span>cautions, contrats &amp; abonnements</span> contre l’IA',
-    landSub: 'Scellez chaque photo en SHA-256 avec QR Code vérifiable et détectez les images générées par IA (Midjourney, DALL-E, Flux…).',
-    landLaunch: 'Lancer le Scanner IA',
-    landDemo: 'Tester avec une photo d’exemple',
-    landVerify: 'Vérifier un certificat (/verify)',
-    demoDlBtn: "Télécharger l'image d'exemple (pour tester /verify)",
-    uc1Title: 'Auto / Caution & Accidents', uc1Desc: 'Scellez pare-chocs, kilométrage & constats contre les fausses rayures IA.',
-    uc2Title: 'Immobilier / Airbnb & Assurance', uc2Desc: 'États des lieux, contrats & sinistres avec certificat PDF + QR Code.',
-    uc3Title: 'Anti-Abonnements Pièges', uc3Desc: 'L’OCR lit le prix, crée une alarme 48h (.ics) et rédige la résiliation.',
-    b2bBanTitle: '🏢 Entreprises : 1 litige = 500 € à 3 000 € perdus',
-    b2bBanPrice: '99 € – 290 € / an',
-    b2bBanDesc: 'Pack Marque Blanche : Votre Logo sur tous les PDF + 5 à 20 licences employés + champs Auto/Immo/Sinistre.',
-    heroTitle: "1 Photo — L'IA s'occupe de tout",
-    heroSub: "Capture d'essai gratuit / abonnement OU photo de voiture / immobilier / accident / colis.",
-    planFreeAvail: '1 Preuve Gratuite disponible',
-    planFreeUsed: '0 crédit restant — Choisir un Pack',
-    planCredits: (n) => `${n} crédit(s) SHA-256 restant(s)`,
-    planPro: 'Pass Illimité Pro Actif ✓',
-    planB2b: (seats) => `Entreprise Marque Blanche (${seats || '5-20'} licences) ✓`,
-    planSub: `Packs dès ${P10} • Entreprise 99 €–290 €/an`,
-    planCta: 'Packs / B2B',
-    hudSubs: 'Alertes actives', hudProofs: 'Preuves SHA-256',
-    mod1Title: 'Détecteur OCR + IA Anti-Pièges', mod1Desc: 'Lit le prix, alerte 48h, détecte les fausses images générées.',
-    mod2Title: 'Sceau SHA-256 + QR Code Vérifiable', mod2Desc: 'Certifie voitures, Airbnb, sinistres & colis contre retouche IA.',
-    mod3Title: "Vérificateur Public d'Authenticité", mod3Desc: 'Prouvez en 1 clic (ou via QR Code) que la photo est 100 % originale.',
-    faqTitle: 'FAQ — Questions fréquentes',
-    updatedDate: 'Mise à jour : 13/11/2026',
-    changelog: `• v${APP_VERSION} : Détection locale d'images IA (métadonnées + analyse pixel/bruit/saturation), badge d'alerte IA dans le scan, CSP renforcée, accessibilité SVG, typographie « 100 % » corrigée.`,
-    faqs: [
-      { q: 'Comment fonctionne la détection d\'images IA ?', a: "Trois analyses locales sont combinées : (1) recherche de signatures logicielles IA dans les métadonnées (Midjourney, Stable Diffusion, DALL-E, ComfyUI…), (2) analyse de la variance des pixels (les IA sur-lissent souvent les textures), (3) mesure du bruit et de la saturation. Un score de 0 à 100 % est calculé. ⚠️ C'est une heuristique : aucun détecteur n'est fiable à 100 %, et un retoucheur humain peut aussi déclencher de faux positifs." },
-      { q: 'Comment marche le QR Code + la page /verify ?', a: "Chaque certificat PDF/PNG génère un QR Code unique. Votre loueur, propriétaire ou assureur le scanne pour ouvrir /verify, glisse votre photo originale et voit instantanément ✅ AUTHENTIQUE (0 pixel modifié)." },
-      { q: 'Pourquoi faut-il faire attention à WhatsApp / Messenger ?', a: "WhatsApp compresse les images envoyées en mode photo normal, ce qui modifie les octets et casse l’empreinte SHA-256. Gardez toujours la photo ORIGINALE dans votre galerie et envoyez le certificat via « Envoyer PDF » (ou la photo en tant que « Document »)." },
-      { q: 'Que contient le Pack Entreprise Marque Blanche (99 € – 290 €/an) ?', a: "1 seul litige évité vous fait économiser 500 € à 3 000 €. Vous obtenez 5 à 20 licences employés, les champs Auto/Immo/Sinistre, et le bouton « + » pour afficher VOTRE logo d’entreprise sur tous les certificats PDF." },
-      { q: 'Combien coûte l’application pour un particulier ?', a: `1ère certification SHA-256 + Scanner OCR gratuits (0 €). Ensuite : Pack 10 preuves à ${P10} ou Pass Illimité à vie à ${PPRO}.` },
-      { q: 'Est-ce que l’application envoie mes photos sur Internet ?', a: "Jamais. Tout tourne à 100 % sur votre téléphone (conforme RGPD & CCPA)." }
-    ],
-    modalTitle: 'Particuliers & Offre Entreprise B2B',
-    modalSub: '1ère preuve SHA-256 offerte. Choisissez votre formule sans engagement :',
-    pack1Name: 'Pack 10 Preuves (Particulier)', pack1Desc: '10 certifications SHA-256 + QR Code + PDF WhatsApp/Mail.', buyPack1: `Pack 10 (${P10})`,
-    pack2Name: 'Pass Illimité Pro (À vie)', pack2Desc: 'Preuves SHA-256, QR Codes & alertes illimités pour 1 appareil.', buyPack2: `Illimité (${PPRO})`,
-    packB2bName: '🏢 Pack Entreprise / Marque Blanche',
-    packB2bRoi: '⚠️ 1 litige de caution, rayure contestée ou faux sinistre = 500 € à 3 000 € perdus. Rentabilisé dès le 1er dossier !',
-    packB2bDesc: '• Votre Logo Entreprise sur tous les PDF\n• 5 licences (99 €/an) ou 20 licences employés (290 €/an)\n• Champs B2B Auto / Immo / Sinistre personnalisés',
-    buyB2b1: 'Starter 5 licences (99 €/an)',
-    buyB2b2: 'Agence/Flotte 20 licences (290 €/an)',
-    licenseInput: 'Déjà acheté ? Collez votre Clé de Licence Gumroad :', activateKey: 'Activer ma licence',
-    packsTitle: 'Packs Particuliers & Entreprise B2B', packsDesc: 'Débloquez plus de preuves ou activez la Marque Blanche Pro.', openPacks: 'Voir les Offres & B2B',
-    b2bSetTitle: '🏢 Profil Marque Blanche (Professionnels)',
-    b2bSetDesc: 'Ajoutez le nom et le logo de votre entreprise sur tous vos certificats PDF (nécessite le Pack Entreprise B2B).',
-    b2bCompName: 'Nom de votre entreprise / agence',
-    saveB2bName: 'Enregistrer nom entreprise',
-    uploadB2bLogo: 'Ajouter / Changer Logo Entreprise (Pro)',
-    b2bLogoTitle: 'Logo Entreprise sur PDF (Option Pro)',
-    b2bLogoActive: (n) => n ? `Marque Blanche Active : ${n}` : 'Marque Blanche Active — Cliquez + pour votre logo',
-    b2bLogoLocked: 'Réservé aux Pros (99 €–290 €/an) — Cliquez + pour activer',
-    b2bNeedProToast: 'Option réservée aux professionnels (Pack Entreprise B2B). Activez une licence B2B !',
-    b2bSavedToast: 'Profil Entreprise enregistré !',
-    checkoutNotReady: 'Lien Gumroad à configurer dans GUMROAD_CONFIG.',
-    keyInvalid: 'Clé de licence invalide, remboursée ou expirée.',
-    keyAlreadyUsed: 'Cette clé a déjà été activée sur cet appareil.',
-    keySuccessPro: 'Pass Illimité Pro activé !',
-    keySuccessPack: '+10 Preuves SHA-256 ajoutées !',
-    keySuccessB2b: 'Pack Entreprise Marque Blanche activé ! Le bouton + Logo est débloqué.',
-    ocrRunning: 'Analyse IA optimisée mobile en cours (1er chargement ~15s)...',
-    aiDetected: "Analysé automatiquement par l'IA",
-    modeSub: 'Piège Abonnement', modeProof: 'Preuve Certifiée',
-    subName: 'Service détecté', subPrice: 'Prix détecté', subCurr: 'Devise',
-    subDate: "Fin d'essai / Prochain débit", subAnnual: 'Coût caché / an',
-    subLetter: 'Lettre juridique de résiliation (prête à envoyer)',
-    officialLink: 'Ouvrir la page officielle de résiliation',
-    saveSub: 'Sauvegarder + Alarme Calendrier (.ics)',
-    proofTitle: 'Titre du dossier / preuve', proofCat: 'Catégorie (Auto, Immo, Sinistre...)',
-    proofCompany: 'Entreprise / Client / Assuré (B2B)', proofRef: 'Plaque / Adresse / N° Sinistre',
-    proofNotes: 'Observations (km, état, remarques)',
-    proofLocalTime: 'Date & Heure exactes de capture',
-    proofHash: 'Empreinte SHA-256 (sur fichier original intact)', proofTime: 'Horodatage universel (UTC)',
-    saveProof: 'Sceller + Générer QR & PDF',
-    waWarnForm: '⚠️ Piège compression WhatsApp : Conservez la photo ORIGINALE intacte dans votre galerie ! Envoyer une photo en mode normal sur WhatsApp modifie ses octets et casse le SHA-256. Partagez via « Envoyer PDF » (ou en « Document »).',
-    waWarnVerify: '💡 Astuce vérification : Utilisez toujours le fichier photo ORIGINAL (non redimensionné par WhatsApp/SMS).',
-    statActive: 'À surveiller / an', statSaved: 'Argent sauvé (résiliés)',
-    verifyTitle: '🔍 Portail Public de Vérification (/verify)',
-    verifySub: "Scannez un QR Code, collez un SHA-256 / ID (SP-...) ou vérifiez contre votre coffre local.",
-    pubHashIn: 'Empreinte SHA-256 ou ID (du QR Code ou PDF)',
-    verifyBtn: 'Choisir la photo originale à vérifier',
-    expTitle: 'Exports & Confidentialité', expSub: 'Stockage 100 % local sur votre téléphone, sans accès bancaire.',
-    expJson: 'Exporter sauvegarde JSON', clearAll: 'Effacer toutes les données',
-    privacyFoot: 'OCR Tesseract.js local (FR/EN/AR/ZH) + SHA-256 Web Crypto + QR Code & PDF natifs + Détection IA locale. Conforme RGPD (UE) & CCPA (USA).',
-    nav: ['Scanner IA', 'Alertes', 'Preuves', 'Export'],
-    cancelBtn: 'Marquer résilié', copyBtn: 'Copier lettre', alarmBtn: 'Alarme .ics',
-    pdfShareBtn: 'Envoyer PDF (WhatsApp/Mail)', imgShareBtn: 'Envoyer Image', waTextBtn: 'Texte', mailBtn: 'E-mail', delBtn: 'Supprimer',
-    emptySubs: 'Aucun abonnement scanné pour le moment.',
-    emptyProofs: 'Aucune preuve photo scellée pour le moment.',
-    trapAutoRenew: '⚠️ Renouvellement automatique détecté',
-    trapTrial: '⏳ Essai gratuit détecté (risque d’oubli)',
-    authOk: '✅ AUTHENTIQUE : Photo 100 % identique à l’original (0 pixel modifié) !',
-    authFail: '❌ NON RECONNU : Image modifiée (retouche IA / compression WhatsApp) ou absente du certificat.',
-    savedToast: 'Scellé avec QR Code ! Appuyez sur « Envoyer PDF ».', copiedToast: 'Copié !',
-    confirmClear: 'Effacer vos preuves et abonnements locaux ?',
-    letterTemplate: (name, date) => `Objet : Demande de résiliation immédiate – ${name}\n\nMadame, Monsieur,\n\nConformément au droit de la consommation, je demande la résiliation immédiate de « ${name} » avant le ${date}.\n\nCordialement.`,
-    // --- Détection IA ---
-    aiDetectTitle: 'Analyse IA Locale',
-    aiDetectAnalyzing: 'Analyse de l\'image en cours...',
-    aiDetectSafe: 'Image probablement authentique',
-    aiDetectSuspect: 'Image suspecte — possible génération IA',
-    aiDetectHigh: 'Très probablement générée par IA',
-    aiDetectScoreLabel: 'Score de suspicion IA',
-    aiDetectDetails: 'Voir les détails de l\'analyse',
-    aiDetectMeta: 'Signatures logicielles', aiDetectNoise: 'Analyse du bruit', aiDetectSmooth: 'Lissage textures', aiDetectSat: 'Saturation extrême',
-    aiDetectReasonMeta: 'Signature logicielle IA détectée dans les métadonnées',
-    aiDetectReasonHigh: 'Multiples indicateurs forts de génération IA',
-    aiDetectReasonMid: 'Certains indicateurs de retouche/génération IA',
-    aiDetectReasonLow: 'Analyse pixel cohérente avec une photo réelle',
-    aiDetectDisclaimer: '⚠️ Heuristique locale — résultat indicatif, pas une preuve absolue.'
-  },
-  en: {
-    sub: 'Local AI Active • 100% Private',
-    landPill: '100% Local • Zero Servers • Zero Bank Login',
-    landTitle: 'Protect your <span>deposits, contracts &amp; subscriptions</span> from AI',
-    landSub: 'Seal any photo in SHA-256 with a scannable QR Code and detect AI-generated images (Midjourney, DALL-E, Flux…).',
-    landLaunch: 'Launch AI Scanner',
-    landDemo: 'Test with Sample Photo',
-    landVerify: 'Verify a Certificate (/verify)',
-    demoDlBtn: 'Download Sample Photo (to test /verify)',
-    uc1Title: 'Car Rental & Accidents', uc1Desc: 'Seal bumpers, mileage & crash scenes against fake AI scratches.',
-    uc2Title: 'Real Estate, Airbnb & Insurance', uc2Desc: 'Move-in checks, leases & claims with PDF + QR Code certificate.',
-    uc3Title: 'Anti-Subscription Traps', uc3Desc: 'OCR reads hidden fees, builds a 48h (.ics) alarm & legal email.',
-    b2bBanTitle: '🏢 Businesses: 1 dispute = €500 to €3,000 lost',
-    b2bBanPrice: '€99 – €290 / yr',
-    b2bBanDesc: 'White-Label Pack: Your Company Logo on every PDF + 5–20 employee seats + Auto/Property/Claim fields.',
-    heroTitle: '1 Photo — AI Handles Everything',
-    heroSub: 'Free-trial screenshot OR rental car / real estate / accident / package photo.',
-    planFreeAvail: '1 Free Proof available',
-    planFreeUsed: '0 credits left — Choose a Pack',
-    planCredits: (n) => `${n} SHA-256 credit(s) left`,
-    planPro: 'Unlimited Pro Pass Active ✓',
-    planB2b: (seats) => `Enterprise White-Label (${seats || '5-20'} seats) ✓`,
-    planSub: `Packs from ${P10} • Business €99–€290/yr`,
-    planCta: 'Packs / B2B',
-    hudSubs: 'Active alerts', hudProofs: 'SHA-256 proofs',
-    mod1Title: 'OCR Trap Detector + AI Image Scan', mod1Desc: 'Reads price, 48h alarm, detects AI-generated fakes.',
-    mod2Title: 'SHA-256 Seal + Verifiable QR Code', mod2Desc: 'Certifies cars, Airbnb, claims & packages against AI edits.',
-    mod3Title: 'Public Authenticity Verifier', mod3Desc: 'Prove in 1 tap (or via QR Code) that a photo is 100% original.',
-    faqTitle: 'FAQ — Frequently Asked Questions',
-    updatedDate: 'Updated: 2026-11-13',
-    changelog: `• v${APP_VERSION}: Local AI image detection (metadata + pixel/noise/saturation analysis), AI warning badge in scan view, strengthened CSP, SVG accessibility, "100 %" typography fix.`,
-    faqs: [
-      { q: 'How does AI image detection work?', a: "Three local checks are combined: (1) search for AI software signatures in metadata (Midjourney, Stable Diffusion, DALL-E, ComfyUI…), (2) pixel variance analysis (AI models often over-smooth textures), (3) noise and saturation measurement. A 0–100% suspicion score is computed. ⚠️ It's a heuristic: no detector is 100% reliable, and human retouching can trigger false positives." },
-      { q: 'How do the QR Code & /verify portal work?', a: 'Every PDF/PNG includes a QR Code. Your landlord, car rental agency, or insurer scans it to open /verify, picks your original photo, and immediately sees ✅ AUTHENTIC (0 pixels altered).' },
-      { q: 'Why warn about WhatsApp / Messenger compression?', a: 'Standard WhatsApp photo sending compresses the image and changes its bytes, breaking SHA-256. Keep the ORIGINAL file in your gallery and share via "Send PDF" (or send image as "Document").' },
-      { q: 'What is inside the Business White-Label Pack (€99–€290/yr)?', a: 'Avoiding just 1 dispute saves €500–€3,000. You get 5–20 employee seats, Car/Property/Claim fields, and the "+" button to stamp YOUR company logo on all PDFs.' },
-      { q: 'How much for individuals?', a: `1st SHA-256 proof + OCR scanner free (€0). Extra: 10-Proof Pack (${P10}) or Lifetime Unlimited (${PPRO}).` },
-      { q: 'Are photos uploaded to any server?', a: 'Never. 100% local processing (GDPR & CCPA compliant).' }
-    ],
-    modalTitle: 'Personal & Business B2B Plans',
-    modalSub: 'Your 1st SHA-256 proof is free. Pick a plan:',
-    pack1Name: '10-Proof Pack (Personal)', pack1Desc: '10 SHA-256 seals + QR Code + PDF sharing.', buyPack1: `10-Pack (${P10})`,
-    pack2Name: 'Lifetime Unlimited Pro', pack2Desc: 'Unlimited SHA-256 proofs, QR Codes & alerts for 1 device.', buyPack2: `Unlimited (${PPRO})`,
-    packB2bName: '🏢 Enterprise / White-Label Pack',
-    packB2bRoi: '⚠️ 1 lost deposit, fake scratch, or claim dispute = €500 to €3,000 lost. Pays for itself on day 1!',
-    packB2bDesc: '• YOUR Company Logo on all PDFs\n• 5 seats (€99/yr) or 20 employee seats (€290/yr)\n• Custom Car / Real Estate / Insurance fields',
-    buyB2b1: 'Starter 5 seats (€99/yr)',
-    buyB2b2: 'Fleet/Agency 20 seats (€290/yr)',
-    licenseInput: 'Already purchased? Paste your Gumroad License Key:', activateKey: 'Activate License',
-    packsTitle: 'Personal & B2B Business Plans', packsDesc: 'Unlock more proofs or activate B2B White-Label.', openPacks: 'View Plans & B2B',
-    b2bSetTitle: '🏢 White-Label Branding (Business Pro)',
-    b2bSetDesc: 'Add your company name and logo onto all PDF certificates (requires B2B Enterprise Pack).',
-    b2bCompName: 'Company / Agency Name',
-    saveB2bName: 'Save Company Name',
-    uploadB2bLogo: 'Add / Change Company Logo (Pro)',
-    b2bLogoTitle: 'Company Logo on PDF (Pro Option)',
-    b2bLogoActive: (n) => n ? `White-Label Active: ${n}` : 'White-Label Active — Tap + to add logo',
-    b2bLogoLocked: 'Business Pro Only (€99–€290/yr) — Tap + to unlock',
-    b2bNeedProToast: 'Business Pro feature only. Please activate an Enterprise B2B license!',
-    b2bSavedToast: 'Business profile saved!',
-    checkoutNotReady: 'Configure Gumroad link in GUMROAD_CONFIG.',
-    keyInvalid: 'Invalid, refunded, or expired license key.',
-    keyAlreadyUsed: 'This license key was already activated on this device.',
-    keySuccessPro: 'Lifetime Unlimited Pro activated!',
-    keySuccessPack: '+10 SHA-256 proofs added!',
-    keySuccessB2b: 'Business White-Label activated! + Logo button unlocked.',
-    ocrRunning: 'Mobile-optimized AI OCR running (1st load ~15s)...',
-    aiDetected: 'Auto-detected by AI',
-    modeSub: 'Subscription Trap', modeProof: 'Certified Proof',
-    subName: 'Detected service', subPrice: 'Detected price', subCurr: 'Currency',
-    subDate: 'Trial end / Next charge', subAnnual: 'Hidden yearly cost',
-    subLetter: 'Legal cancellation email (AI drafted)',
-    officialLink: 'Open official cancel page',
-    saveSub: 'Save + Calendar Alarm (.ics)',
-    proofTitle: 'Case / Proof title', proofCat: 'Category (Car, Real Estate, Claim...)',
-    proofCompany: 'Company / Client / Insured (B2B)', proofRef: 'Plate / Address / Claim Ref',
-    proofNotes: 'Notes (mileage, condition, remarks)',
-    proofLocalTime: 'Exact Capture Date & Time',
-    proofHash: 'SHA-256 fingerprint (untouched original file)', proofTime: 'Universal Timestamp (UTC)',
-    saveProof: 'Seal + Generate QR & PDF',
-    waWarnForm: '⚠️ WhatsApp Compression Trap: Keep the ORIGINAL file untouched in your gallery! Sending a photo normally on WhatsApp re-compresses it and breaks SHA-256. Share via "Send PDF" (or send photo as "Document").',
-    waWarnVerify: '💡 Tip: Always verify using the ORIGINAL uncompressed photo file.',
-    statActive: 'At risk / year', statSaved: 'Money saved',
-    verifyTitle: '🔍 Public Verification Portal (/verify)',
-    verifySub: 'Scan a QR Code, paste a SHA-256 / ID (SP-...) or match against your local vault.',
-    pubHashIn: 'Expected SHA-256 Hash or ID (from QR / PDF)',
-    verifyBtn: 'Pick original photo to verify',
-    expTitle: 'Exports & Privacy', expSub: '100% local on your phone. Zero bank login required.',
-    expJson: 'Export JSON backup', clearAll: 'Erase all local data',
-    privacyFoot: 'Local Tesseract.js OCR (EN/FR/AR/ZH) + Web Crypto SHA-256 + native QR & PDF + Local AI detection. GDPR & CCPA compliant.',
-    nav: ['AI Scan', 'Alerts', 'Proofs', 'Export'],
-    cancelBtn: 'Mark Cancelled', copyBtn: 'Copy email', alarmBtn: 'Alarm .ics',
-    pdfShareBtn: 'Send PDF (WhatsApp/Mail)', imgShareBtn: 'Send Image', waTextBtn: 'Text', mailBtn: 'Email', delBtn: 'Delete',
-    emptySubs: 'No subscriptions scanned yet.',
-    emptyProofs: 'No sealed photo proofs yet.',
-    trapAutoRenew: '⚠️ Auto-renewal clause detected',
-    trapTrial: '⏳ Free trial trap detected',
-    authOk: '✅ AUTHENTIC: 100% identical to original (0 pixels altered)!',
-    authFail: '❌ NOT VERIFIED: Photo altered (AI edit / WhatsApp compression) or mismatch.',
-    savedToast: 'Sealed with QR Code! Tap Send PDF to share.', copiedToast: 'Copied!',
-    confirmClear: 'Permanently delete local proofs and alerts?',
-    letterTemplate: (name, date) => `Subject: Immediate Cancellation Request – ${name}\n\nHello,\n\nPlease cancel my "${name}" subscription / free trial immediately before ${date}.\n\nThank you.`,
-    aiDetectTitle: 'Local AI Analysis',
-    aiDetectAnalyzing: 'Analyzing image...',
-    aiDetectSafe: 'Likely authentic image',
-    aiDetectSuspect: 'Suspicious image — possible AI generation',
-    aiDetectHigh: 'Very likely AI-generated',
-    aiDetectScoreLabel: 'AI suspicion score',
-    aiDetectDetails: 'See analysis details',
-    aiDetectMeta: 'Software signatures', aiDetectNoise: 'Noise analysis', aiDetectSmooth: 'Texture smoothing', aiDetectSat: 'Extreme saturation',
-    aiDetectReasonMeta: 'AI software signature found in metadata',
-    aiDetectReasonHigh: 'Multiple strong AI generation indicators',
-    aiDetectReasonMid: 'Some AI editing/generation indicators',
-    aiDetectReasonLow: 'Pixel analysis consistent with a real photo',
-    aiDetectDisclaimer: '⚠️ Local heuristic — indicative result, not absolute proof.'
-  },
-  ar: {
-    sub: 'الذكاء المحلي نشط • 100% خصوصية',
-    landPill: 'محلي 100% • بدون خوادم • بدون ربط بنكي',
-    landTitle: 'احمِ <span>تأميناتك، عقودك واشتراكاتك</span> من تزوير الذكاء الاصطناعي',
-    landSub: 'وثّق أي صورة ببصمة SHA-256 ورمز QR قابل للتحقق مع كشف الصور المولدة بالذكاء الاصطناعي.',
-    landLaunch: 'تشغيل الماسح الذكي',
-    landDemo: 'تجربة بصورة مثال',
-    landVerify: 'التحقق من شهادة (/verify)',
-    demoDlBtn: 'تحميل صورة المثال (لتجربة /verify)',
-    uc1Title: 'تأجير السيارات والحوادث', uc1Desc: 'وثّق هيكل السيارة والعداد والحوادث ضد الخدوش المزيفة بالذكاء الاصطناعي.',
-    uc2Title: 'العقارات، Airbnb والتأمين', uc2Desc: 'محاضر المعاينة والعقود والمطالبات بشهادة PDF ورمز QR.',
-    uc3Title: 'مكافحة الاشتراكات الفخ', uc3Desc: 'يقرأ السعر وينشئ منبه 48 ساعة ورسالة إلغاء قانونية.',
-    b2bBanTitle: '🏢 للشركات: نزاع واحد = خسارة 500€ إلى 3,000€',
-    b2bBanPrice: '99€ – 290€ / سنة',
-    b2bBanDesc: 'باقة العلامة البيضاء: شعار شركتك على جميع ملفات PDF + 5 إلى 20 رخصة موظف.',
-    heroTitle: 'صورة واحدة — الذكاء الاصطناعي يتكفل بكل شيء',
-    heroSub: 'لقطة اشتراك مجاني أو صورة سيارة إيجار / عقار / حادث / طرد.',
-    planFreeAvail: 'إثبات واحد مجاني متاح',
-    planFreeUsed: 'انتهى الرصيد — اختر باقة',
-    planCredits: (n) => `متبقي ${n} إثبات(ات) SHA-256`,
-    planPro: 'النسخة غير المحدودة مفعلة ✓',
-    planB2b: (seats) => `باقة الشركات (${seats || '5-20'} رخصة) ✓`,
-    planSub: `الباقات من ${P10} • الشركات 99€–290€/سنة`,
-    planCta: 'الباقات / B2B',
-    hudSubs: 'تنبيهات نشطة', hudProofs: 'إثباتات SHA-256',
-    mod1Title: 'كاشف OCR + تحليل صور IA', mod1Desc: 'يقرأ السعر ويجهز منبه 48 ساعة ويكشف الصور المزيفة.',
-    mod2Title: 'ختم SHA-256 + رمز QR للتحقق', mod2Desc: 'يوثق السيارات والعقارات والحوادث والطرود ضد التعديل.',
-    mod3Title: 'بوابة التحقق العامة (/verify)', mod3Desc: 'أثبت بنقرة واحدة أو عبر QR أن الصورة أصلية 100%.',
-    faqTitle: 'الأسئلة الشائعة',
-    updatedDate: 'تحديث: 13/11/2026',
-    changelog: `• v${APP_VERSION}: كشف محلي للصور المولدة بالذكاء الاصطناعي، شارة تحذير في الماسح، تقوية CSP، تحسين وصولية SVG.`,
-    faqs: [
-      { q: 'كيف يعمل كشف صور الذكاء الاصطناعي؟', a: 'ثلاثة تحليلات محلية: (1) البحث عن بصمات برامج IA في البيانات الوصفية، (2) تحليل تباين البكسل، (3) قياس التشويش والتشبع. يُحسب مؤشر شكوك من 0 إلى 100%. ⚠️ هذا تقدير إحصائي وليس دليلاً مطلقاً.' },
-      { q: 'كيف يعمل رمز QR وبوابة /verify؟', a: 'كل شهادة PDF تتضمن رمز QR. يمسحه المؤجر أو شركة التأمين ويرفق الصورة الأصلية ليرى ✅ أصلية 100%.' },
-      { q: 'لماذا نحذر من ضغط واتساب؟', a: 'إرسال الصورة بشكل عادي عبر واتساب يضغطها ويغير بصمتها. احتفظ بالصورة الأصلية وأرسل عبر "إرسال PDF" أو كـ "مستند".' },
-      { q: 'ماذا تشمل باقة الشركات (99€–290€/سنة)؟', a: 'تجنب نزاع واحد يوفر 500€–3000€. تشمل 5 إلى 20 رخصة موظف وزر + لإضافة شعار شركتك.' }
-    ],
-    modalTitle: 'باقات الأفراد والشركات B2B',
-    modalSub: 'الإثبات الأول مجاني. اختر باقتك:',
-    pack1Name: 'باقة 10 إثباتات', pack1Desc: '10 شهادات SHA-256 + رمز QR + PDF.', buyPack1: `باقة 10 (${P10})`,
-    pack2Name: 'النسخة غير المحدودة (مدى الحياة)', pack2Desc: 'شهادات وتنبيهات غير محدودة لجهاز واحد.', buyPack2: `غير محدود (${PPRO})`,
-    packB2bName: '🏢 باقة الشركات / العلامة البيضاء',
-    packB2bRoi: '⚠️ نزاع واحد = خسارة 500€ إلى 3,000€. تعوّض تكلفتها من أول ملف!',
-    packB2bDesc: '• شعار شركتك على جميع ملفات PDF\n• 5 رخص (99€/سنة) أو 20 رخصة موظف (290€/سنة)',
-    buyB2b1: '5 رخص (99€/سنة)',
-    buyB2b2: '20 رخصة (290€/سنة)',
-    licenseInput: 'لديك مفتاح ترخيص Gumroad؟ ألصقه هنا:', activateKey: 'تفعيل المفتاح',
-    packsTitle: 'الباقات وترخيص الشركات B2B', packsDesc: 'افتح المزيد من الإثباتات أو فعّل العلامة البيضاء.', openPacks: 'عرض الباقات و B2B',
-    b2bSetTitle: '🏢 العلامة البيضاء للشركات (Pro)',
-    b2bSetDesc: 'أضف اسم وشعار شركتك على جميع شهادات PDF (يتطلب باقة الشركات).',
-    b2bCompName: 'اسم الشركة / الوكالة',
-    saveB2bName: 'حفظ اسم الشركة',
-    uploadB2bLogo: 'إضافة / تغيير شعار الشركة (Pro)',
-    b2bLogoTitle: 'شعار الشركة على PDF (خيار Pro)',
-    b2bLogoActive: (n) => n ? `العلامة البيضاء نشطة: ${n}` : 'العلامة البيضاء نشطة — اضغط + لإضافة الشعار',
-    b2bLogoLocked: 'مخصص للشركات (99€–290€/سنة) — اضغط + للتفعيل',
-    b2bNeedProToast: 'ميزة مخصصة للشركات! يرجى تفعيل رخصة B2B.',
-    b2bSavedToast: 'تم حفظ ملف الشركة!',
-    checkoutNotReady: 'يرجى ضبط رابط Gumroad.',
-    keyInvalid: 'مفتاح الترخيص غير صالح أو مسترد.',
-    keyAlreadyUsed: 'تم استخدام هذا المفتاح مسبقاً على هذا الجهاز.',
-    keySuccessPro: 'تم تفعيل النسخة غير المحدودة!',
-    keySuccessPack: 'تمت إضافة +10 إثباتات!',
-    keySuccessB2b: 'تم تفعيل باقة الشركات! زر + الشعار متاح الآن.',
-    ocrRunning: 'جاري التحليل بالذكاء الاصطناعي (التحميل الأول ~15 ثانية)...',
-    aiDetected: 'تم الكشف تلقائياً بالذكاء الاصطناعي',
-    modeSub: 'فخ اشتراك', modeProof: 'إثبات موثق',
-    subName: 'الخدمة المكتشفة', subPrice: 'السعر', subCurr: 'العملة',
-    subDate: 'تاريخ الخصم', subAnnual: 'التكلفة السنوية',
-    subLetter: 'رسالة إلغاء قانونية',
-    officialLink: 'فتح صفحة الإلغاء الرسمية',
-    saveSub: 'حفظ + منبه التقويم (.ics)',
-    proofTitle: 'عنوان الإثبات', proofCat: 'الفئة (سيارة، عقار، حادث...)',
-    proofCompany: 'الشركة / العميل (B2B)', proofRef: 'رقم اللوحة / العنوان / الحادث',
-    proofNotes: 'ملاحظات (الكيلومترات، الحالة)',
-    proofLocalTime: 'تاريخ ووقت الالتقاط الدقيق',
-    proofHash: 'بصمة SHA-256 (للملف الأصلي)', proofTime: 'التوقيت العالمي (UTC)',
-    saveProof: 'حفظ + إنشاء QR و PDF',
-    waWarnForm: '⚠️ فخ ضغط واتساب: احتفظ بالصورة الأصلية في معرضك! إرسال الصورة بشكل عادي يغير بصمتها. شارك عبر "إرسال PDF" أو كـ "مستند".',
-    waWarnVerify: '💡 استخدم دائماً ملف الصورة الأصلي غير المضغوط.',
-    statActive: 'مهدد بالخصم / سنة', statSaved: 'المبلغ الموفر',
-    verifyTitle: '🔍 بوابة التحقق العامة (/verify)',
-    verifySub: 'امسح رمز QR أو الصق بصمة SHA-256 أو ID للتحقق من الصورة الأصلية.',
-    pubHashIn: 'بصمة SHA-256 المتوقعة أو ID',
-    verifyBtn: 'اختر الصورة الأصلية للتحقق',
-    expTitle: 'التصدير والخصوصية', expSub: 'تخزين محلي بالكامل بدون ربط بنكي.',
-    expJson: 'تصدير نسخة JSON', clearAll: 'مسح جميع البيانات',
-    privacyFoot: 'تحليل OCR محلي + SHA-256 + QR و PDF محلياً + كشف IA محلي (GDPR وCCPA).',
-    nav: ['مسح ذكي', 'تنبيهات', 'إثباتات', 'إعدادات'],
-    cancelBtn: 'تم الإلغاء', copyBtn: 'نسخ الرسالة', alarmBtn: 'منبه .ics',
-    pdfShareBtn: 'إرسال PDF (واتساب)', imgShareBtn: 'إرسال صورة', waTextBtn: 'نص', mailBtn: 'إيميل', delBtn: 'حذف',
-    emptySubs: 'لا توجد اشتراكات محفوظة.',
-    emptyProofs: 'لا توجد إثباتات محفوظة.',
-    trapAutoRenew: '⚠️ تم رصد تجديد تلقائي',
-    trapTrial: '⏳ فترة تجريبية مجانية',
-    authOk: '✅ صورة أصلية 100% لم يتم تعديل أي بكسل!',
-    authFail: '❌ غير مطابقة: تم تعديل الصورة أو ضغطها عبر واتساب.',
-    savedToast: 'تم الحفظ مع رمز QR! اضغط إرسال PDF.', copiedToast: 'تم النسخ!',
-    confirmClear: 'هل تريد حذف جميع البيانات؟',
-    letterTemplate: (name, date) => `الموضوع: طلب إلغاء فوري للاشتراك – ${name}\n\nأرجو إلغاء اشتراكي في "${name}" قبل ${date}.`,
-    aiDetectTitle: 'تحليل ذكاء اصطناعي محلي',
-    aiDetectAnalyzing: 'جاري تحليل الصورة...',
-    aiDetectSafe: 'صورة يُرجح أنها أصلية',
-    aiDetectSuspect: 'صورة مشبوهة — ربما مولدة بالذكاء الاصطناعي',
-    aiDetectHigh: 'من المحتمل جداً أنها مولدة بالذكاء الاصطناعي',
-    aiDetectScoreLabel: 'مؤشر الشكوك IA',
-    aiDetectDetails: 'عرض تفاصيل التحليل',
-    aiDetectMeta: 'بصمات البرامج', aiDetectNoise: 'تحليل التشويش', aiDetectSmooth: 'تمليس الأنسجة', aiDetectSat: 'تشبع مفرط',
-    aiDetectReasonMeta: 'تم العثور على بصمة برنامج IA في البيانات الوصفية',
-    aiDetectReasonHigh: 'مؤشرات قوية متعددة على التوليد بالذكاء الاصطناعي',
-    aiDetectReasonMid: 'بعض مؤشرات التعديل أو التوليد بالذكاء الاصطناعي',
-    aiDetectReasonLow: 'تحليل البكسل متوافق مع صورة حقيقية',
-    aiDetectDisclaimer: '⚠️ تحليل محلي تقديري — النتيجة إرشادية وليست دليلاً مطلقاً.'
-  },
-  zh: {
-    sub: '本地 AI 已就绪 • 100% 隐私',
-    landPill: '100% 本地运行 • 零服务器 • 零银行卡绑定',
-    landTitle: '用 SHA-256 保护您的<span>押金、合同与订阅</span>不受 AI 篡改',
-    landSub: '一键生成带防伪二维码的 SHA-256 存证 PDF，并本地检测 AI 生成图像（Midjourney、DALL-E、Flux…）。',
-    landLaunch: '启动 AI 扫描器',
-    landDemo: '使用示例图片测试',
-    landVerify: '公开真伪核验 (/verify)',
-    demoDlBtn: '下载示例图片（用于测试 /verify）',
-    uc1Title: '租车押金与交通事故', uc1Desc: '封存车况、里程与事故现场，防止 AI 伪造划痕索赔。',
-    uc2Title: '房产民宿与保险理赔', uc2Desc: '入住验房、租赁合同与定损取证，生成带二维码的 PDF 证书。',
-    uc3Title: '订阅陷阱拦截', uc3Desc: 'OCR 自动识别价格，提前 48 小时日历提醒并生成取消邮件。',
-    b2bBanTitle: '🏢 企业客户：1 起押金纠纷 = 损失 500€–3,000€',
-    b2bBanPrice: '99€ – 290€ / 年',
-    b2bBanDesc: '企业白标套餐：所有 PDF 印上贵司 Logo + 5–20 员工授权 + 汽车/房产/理赔专属字段。',
-    heroTitle: '只需一张图 — AI 全自动处理',
-    heroSub: '上传订阅截图，或租车/房产/事故/快递防伪照片。',
-    planFreeAvail: '1 次免费存证可用',
-    planFreeUsed: '免费次数已用完 — 选择套餐',
-    planCredits: (n) => `剩余 ${n} 次 SHA-256 存证`,
-    planPro: '终身无限版已激活 ✓',
-    planB2b: (seats) => `企业白标版已激活 (${seats || '5-20'} 授权) ✓`,
-    planSub: `${P10} 起 • 企业版 99€–290€/年`,
-    planCta: '套餐 / 企业版',
-    hudSubs: '扣费预警', hudProofs: 'SHA-256 存证',
-    mod1Title: '多语言 OCR + AI 图片检测', mod1Desc: '自动识别价格、48小时闹钟，并检测 AI 生成假图。',
-    mod2Title: 'SHA-256 印章 + 核验二维码', mod2Desc: '为租车、民宿、理赔和快递提供防修图证明。',
-    mod3Title: '公开真伪核验门户 (/verify)', mod3Desc: '扫码或一键比对，证明照片 0 像素修改。',
-    faqTitle: '常见问题',
-    updatedDate: '更新日期：2026-11-13',
-    changelog: `• v${APP_VERSION}：本地 AI 图像检测（元数据+像素/噪声/饱和度分析）、扫描界面 AI 警告标签、强化 CSP、SVG 可访问性。`,
-    faqs: [
-      { q: 'AI 图片检测如何工作？', a: '三种本地分析：1) 在元数据中搜索 AI 软件签名（Midjourney、Stable Diffusion、DALL-E、ComfyUI…），2) 像素方差分析（AI 常过度平滑纹理），3) 噪声与饱和度测量。生成 0–100% 可疑分。⚠️ 启发式检测，并非绝对证据，人工修图也可能触发误报。' },
-      { q: '二维码和 /verify 门户怎么用？', a: '每份 PDF 均附带二维码，房东、租车行或保险公司扫码即可进入 /verify 核验原图真伪。' },
-      { q: '为什么需要注意 WhatsApp / 微信压缩？', a: '普通发图会压缩图片字节，导致 SHA-256 改变。请务必保留相册原图，并通过“发送 PDF”或“文件原图”发送。' },
-      { q: '企业白标套餐 (99€–290€/年) 包含什么？', a: '避免 1 次纠纷即可回本！含 5–20 员工授权、汽车/房产/理赔字段及“+”按钮印制贵司 Logo。' }
-    ],
-    modalTitle: '个人套餐与企业白标版 B2B',
-    modalSub: '首张存证免费，选择适合您的方案：',
-    pack1Name: '10 次存证包', pack1Desc: '10 次 SHA-256 存证 + 二维码 + PDF 分享。', buyPack1: `10 次包 (${P10})`,
-    pack2Name: '终身无限版 Pro', pack2Desc: '单设备无限次存证、二维码与提醒。', buyPack2: `终身无限版 (${PPRO})`,
-    packB2bName: '🏢 企业白标套餐 (B2B)',
-    packB2bRoi: '⚠️ 1 起纠纷往往损失 500€–3,000€，首单即回本！',
-    packB2bDesc: '• 所有 PDF 显示贵司企业 Logo\n• 5 员工版 (99€/年) 或 20 员工版 (290€/年)\n• 汽车/房产/保险理赔专属字段',
-    buyB2b1: '5 授权 (99€/年)',
-    buyB2b2: '20 授权 (290€/年)',
-    licenseInput: '已购买？请粘贴 Gumroad 授权密钥：', activateKey: '激活密钥',
-    packsTitle: '个人与企业 B2B 套餐', packsDesc: '解锁更多存证或激活企业白标。', openPacks: '查看套餐与 B2B',
-    b2bSetTitle: '🏢 企业白标品牌设置 (Pro)',
-    b2bSetDesc: '在所有 PDF 证书上展示贵司名称和 Logo（需企业版授权）。',
-    b2bCompName: '企业 / 机构名称',
-    saveB2bName: '保存企业名称',
-    uploadB2bLogo: '添加 / 更换企业 Logo (Pro)',
-    b2bLogoTitle: 'PDF 企业 Logo (专业版专属)',
-    b2bLogoActive: (n) => n ? `企业白标已启用：${n}` : '企业白标已启用 — 点击 + 上传 Logo',
-    b2bLogoLocked: '仅限企业版 (99€–290€/年) — 点击 + 激活',
-    b2bNeedProToast: '仅限企业专业版！请先激活 B2B 授权密钥。',
-    b2bSavedToast: '企业信息已保存！',
-    checkoutNotReady: '请在 GUMROAD_CONFIG 配置链接。',
-    keyInvalid: '密钥无效、已退款或已过期。',
-    keyAlreadyUsed: '此密钥已在本设备激活过。',
-    keySuccessPro: '终身无限版已激活！',
-    keySuccessPack: '已充值 +10 次存证！',
-    keySuccessB2b: '企业白标版已激活！+ Logo 功能已解锁。',
-    ocrRunning: '移动端优化 OCR 识别中（首次加载约 15 秒）...',
-    aiDetected: 'AI 已自动识别',
-    modeSub: '订阅防扣费', modeProof: '防篡改存证',
-    subName: '识别到的服务', subPrice: '金额', subCurr: '币种',
-    subDate: '下次扣费日', subAnnual: '年化费用',
-    subLetter: 'AI 生成的取消邮件',
-    officialLink: '打开官方取消页面',
-    saveSub: '保存 + 日历闹钟 (.ics)',
-    proofTitle: '存证标题', proofCat: '类别 (租车/房产/理赔...)',
-    proofCompany: '企业 / 客户名称 (B2B)', proofRef: '车牌 / 房源地址 / 保单号',
-    proofNotes: '备注 (里程、车况说明)',
-    proofLocalTime: '精确本地拍照日期与时间',
-    proofHash: 'SHA-256 指纹 (基于未压缩原图)', proofTime: '世界标准时间戳 (UTC)',
-    saveProof: '加密封存 + 生成二维码与 PDF',
-    waWarnForm: '⚠️ WhatsApp/微信压缩提示：请务必在相册保留原图！普通发图会压缩修改字节并破坏 SHA-256，请通过“发送 PDF”或“文件原图”发送。',
-    waWarnVerify: '💡 提示：核验时请选择未压缩的原始图片文件。',
-    statActive: '年潜在扣费', statSaved: '已省金额',
-    verifyTitle: '🔍 公开真伪核验门户 (/verify)',
-    verifySub: '扫描二维码、粘贴 PDF 中的 SHA-256 / ID 或与本地存证库比对。',
-    pubHashIn: '证书期望的 SHA-256 值或 ID（来自 PDF/二维码）',
-    verifyBtn: '选择原图进行核验',
-    expTitle: '导出与隐私', expSub: '100% 本地存储。',
-    expJson: '导出 JSON 备份', clearAll: '清空本地数据',
-    privacyFoot: '本地多语言 OCR + SHA-256 + 原生二维码与 PDF + 本地 AI 检测，符合 GDPR 与 CCPA。',
-    nav: ['AI 扫描', '扣费预警', '存证箱', '设置'],
-    cancelBtn: '标记已取消', copyBtn: '复制邮件', alarmBtn: '日历闹钟',
-    pdfShareBtn: '发送 PDF (WhatsApp/邮件)', imgShareBtn: '发送图片', waTextBtn: '纯文字', mailBtn: '邮件', delBtn: '删除',
-    emptySubs: '暂无订阅记录。',
-    emptyProofs: '暂无防伪存证。',
-    trapAutoRenew: '⚠️ 检测到自动续费',
-    trapTrial: '⏳ 检测到免费试用',
-    authOk: '✅ 验证通过：与原图 100% 一致（0 像素改动）！',
-    authFail: '❌ 验证失败：图片已被修改或经 WhatsApp 压缩。',
-    savedToast: '已封存并生成二维码！点击发送 PDF 即可分享。', copiedToast: '已复制！',
-    confirmClear: '确定永久删除所有本地数据？',
-    letterTemplate: (name, date) => `主题：立即取消订阅申请 – ${name}\n\n请在 ${date} 前取消「${name}」订阅。`,
-    aiDetectTitle: '本地 AI 分析',
-    aiDetectAnalyzing: '正在分析图像...',
-    aiDetectSafe: '图像可能为真实照片',
-    aiDetectSuspect: '图像可疑 — 可能由 AI 生成',
-    aiDetectHigh: '极可能由 AI 生成',
-    aiDetectScoreLabel: 'AI 可疑度评分',
-    aiDetectDetails: '查看分析详情',
-    aiDetectMeta: '软件签名', aiDetectNoise: '噪声分析', aiDetectSmooth: '纹理平滑度', aiDetectSat: '极端饱和度',
-    aiDetectReasonMeta: '元数据中发现 AI 软件签名',
-    aiDetectReasonHigh: '多个强 AI 生成指标',
-    aiDetectReasonMid: '存在部分 AI 编辑/生成指标',
-    aiDetectReasonLow: '像素分析与真实照片一致',
-    aiDetectDisclaimer: '⚠️ 本地启发式分析 — 结果仅供参考，并非绝对证据。'
-  }
-};
-  
+  // ===== TEXTES LÉGAUX =====
+  const LEGAL_TEXTS = {
+    fr: {
+      modalTitle: 'Informations Légales & Confidentialité',
+      tabs: { mentions: 'Mentions légales', cgu: 'CGU', rgpd: 'RGPD (UE)', ccpa: 'CCPA / USA' },
+      cardTitle: '⚖️ Mentions légales, CGU, RGPD & CCPA',
+      cardSub: 'Transparence complète sur votre vie privée locale (UE & USA) et conditions d’utilisation.',
+      content: {
+        mentions: `<h4>1. Éditeur</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> est éditée par <strong>AITECHPRO</strong>.<br>• Raison sociale : <strong>[À compléter]</strong><br>• Adresse : <strong>[À compléter]</strong><br>• SIRET : <strong>[À compléter]</strong><br>• Contact : <strong>[contact@aitechpro-domaine.com]</strong></p><h4>2. Hébergement &amp; Paiement</h4><p>• Hébergement statique : GitHub Pages / Netlify.<br>• Proxy licence : Cloudflare Workers.<br>• Paiement : <strong>Gumroad Inc.</strong>, San Francisco, CA, USA.</p>`,
+        cgu: `<div class="legal-warn">⚠️ <strong>Avertissement Juridique :</strong> SHIELDPROOF est un outil technique local, et non un cabinet d'avocats. La détection d'images IA est une <strong>heuristique statistique</strong>, pas une preuve absolue.</div><p>L'empreinte SHA-256 et le QR Code prouvent l'intégrité binaire d'un fichier par rapport à l'original non compressé. L'horodatage repose sur l'horloge locale de l'appareil.</p>`,
+        rgpd: `<h4>100 % Local (RGPD — UE 2016/679)</h4><p><strong>Vos photos, logos B2B, textes OCR et empreintes SHA-256 ne quittent jamais votre appareil.</strong> Stockage exclusif en <code>IndexedDB</code> / <code>localStorage</code>, zéro traceur publicitaire.</p>`,
+        ccpa: `<div class="legal-warn">🇺🇸 <strong>California Privacy Notice (CCPA / CPRA)</strong></div><p><strong>No Sale or Sharing:</strong> AITECHPRO / SHIELDPROOF does NOT sell or share personal information. Provided "AS IS" without legal advice or warranty.</p>`
+      }
+    },
+    en: {
+      modalTitle: 'Legal Notice, Terms & Privacy',
+      tabs: { mentions: 'Legal Notice', cgu: 'Terms', rgpd: 'GDPR (EU)', ccpa: 'CCPA / USA' },
+      cardTitle: '⚖️ Legal Notice, Terms, GDPR & CCPA',
+      cardSub: 'Full transparency on 100% local privacy and terms of use.',
+      content: {
+        mentions: `<h4>Publisher</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> by <strong>AITECHPRO</strong>. Hosting: GitHub Pages. MoR: Gumroad Inc.</p>`,
+        cgu: `<div class="legal-warn">⚠️ <strong>Disclaimer:</strong> Local technical utility. AI detection is a <strong>statistical heuristic</strong>, not absolute proof.</div><p>Keep the uncompressed original photo for SHA-256 &amp; QR verification.</p>`,
+        rgpd: `<h4>100% Local (EU GDPR 2016/679)</h4><p>Photos, logos, and SHA-256 hashes never leave your device (<code>IndexedDB</code> only, zero ad trackers).</p>`,
+        ccpa: `<div class="legal-warn">🇺🇸 <strong>CCPA / CPRA &amp; US Disclaimer</strong></div><p>We do NOT sell or share personal information.</p>`
+      }
+    },
+    ar: {
+      modalTitle: 'المعلومات القانونية والخصوصية',
+      tabs: { mentions: 'بيان قانوني', cgu: 'الشروط', rgpd: 'GDPR (أوروبا)', ccpa: 'CCPA (أمريكا)' },
+      cardTitle: '⚖️ البيان القانوني، الشروط، GDPR و CCPA',
+      cardSub: 'شفافية كاملة حول الخصوصية المحلية 100%.',
+      content: {
+        mentions: `<h4>الناشر</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> من نشر <strong>AITECHPRO</strong>.</p>`,
+        cgu: `<div class="legal-warn">⚠️ أداة تقنية محلية. كشف صور الذكاء الاصطناعي هو تقدير إحصائي.</div><p>احتفظ دائماً بالصورة الأصلية غير المضغوطة.</p>`,
+        rgpd: `<h4>خصوصية محلية 100% (GDPR)</h4><p>لا تغادر صورك أو بصمات SHA-256 جهازك أبداً.</p>`,
+        ccpa: `<div class="legal-warn">🇺🇸 <strong>CCPA</strong></div><p>لا نبيع أو نشارك أي بيانات شخصية.</p>`
+      }
+    },
+    zh: {
+      modalTitle: '法律声明、服务条款与隐私政策',
+      tabs: { mentions: '法律声明', cgu: '使用条款', rgpd: 'GDPR (欧盟)', ccpa: 'CCPA (美国)' },
+      cardTitle: '⚖️ 法律声明、条款、GDPR 与 CCPA',
+      cardSub: '关于 100% 本地隐私的完整说明。',
+      content: {
+        mentions: `<h4>发布方</h4><p><strong>SHIELDPROOF (v${APP_VERSION})</strong> 由 <strong>AITECHPRO</strong> 发布。</p>`,
+        cgu: `<div class="legal-warn">⚠️ 本地技术工具。AI 图片检测为启发式算法。</div><p>请保存未经压缩的原图。</p>`,
+        rgpd: `<h4>100% 本地隐私 (GDPR)</h4><p>照片与 SHA-256 指纹绝不离开您的设备。</p>`,
+        ccpa: `<div class="legal-warn">🇺🇸 <strong>CCPA</strong></div><p>绝不出售或共享个人信息。</p>`
+      }
+    }
+  };
+
+  // ===== I18N =====
+  const I18N = {
+    fr: {
+      sub: 'IA Locale Active • 100 % Privé',
+      landPill: '100 % Local • Zéro Serveur • Zéro Accès Bancaire',
+      landTitle: 'Protégez vos <span>cautions, contrats &amp; abonnements</span> contre l’IA',
+      landSub: 'Scellez chaque photo en SHA-256 avec QR Code vérifiable et détectez les images générées par IA.',
+      landLaunch: 'Lancer le Scanner IA',
+      landDemo: 'Tester avec une photo d’exemple',
+      landVerify: 'Vérifier un certificat (/verify)',
+      demoDlBtn: "Télécharger l'image d'exemple",
+      uc1Title: 'Auto / Caution & Accidents', uc1Desc: 'Scellez pare-chocs, kilométrage & constats contre les fausses rayures IA.',
+      uc2Title: 'Immobilier / Airbnb & Assurance', uc2Desc: 'États des lieux, contrats & sinistres avec certificat PDF + QR Code.',
+      uc3Title: 'Anti-Abonnements Pièges', uc3Desc: 'L’OCR lit le prix, crée une alarme 48h (.ics) et rédige la résiliation.',
+      b2bBanTitle: '🏢 Entreprises : 1 litige = 500 € à 3 000 € perdus',
+      b2bBanPrice: '99 € – 290 € / an',
+      b2bBanDesc: 'Pack Marque Blanche : Votre Logo sur tous les PDF + 5 à 20 licences employés.',
+      heroTitle: "1 Photo — L'IA s'occupe de tout",
+      heroSub: "Capture d'essai gratuit OU photo de voiture / immobilier / accident / colis.",
+      planFreeAvail: '1 Preuve Gratuite disponible', planFreeUsed: '0 crédit restant',
+      planCredits: (n) => `${n} crédit(s) SHA-256 restant(s)`, planPro: 'Pass Illimité Pro Actif ✓',
+      planB2b: (seats) => `Entreprise (${seats || '5-20'} licences) ✓`,
+      planSub: `Packs dès ${P10} • Entreprise 99 €–290 €/an`, planCta: 'Packs / B2B',
+      hudSubs: 'Alertes actives', hudProofs: 'Preuves SHA-256',
+      mod1Title: 'Détecteur OCR + IA Anti-Pièges', mod1Desc: 'Lit le prix, alerte 48h, détecte les fausses images.',
+      mod2Title: 'Sceau SHA-256 + QR Code Vérifiable', mod2Desc: 'Certifie vos biens contre les retouches IA.',
+      mod3Title: "Vérificateur Public d'Authenticité", mod3Desc: 'Prouvez en 1 clic que la photo est 100 % originale.',
+      faqTitle: 'FAQ — Questions fréquentes', updatedDate: 'Mise à jour : 13/11/2026',
+      changelog: `• v${APP_VERSION} : Correction du bug de blocage, ajout de la détection IA locale.`,
+      faqs: [
+        { q: 'Comment fonctionne la détection d\'images IA ?', a: "Trois analyses locales sont combinées : métadonnées, variance des pixels et saturation. ⚠️ C'est une heuristique, pas une preuve absolue." },
+        { q: 'Pourquoi faire attention à WhatsApp ?', a: "WhatsApp compresse les images, cassant le SHA-256. Gardez toujours l'original." }
+      ],
+      modalTitle: 'Particuliers & Entreprise B2B', modalSub: 'Choisissez votre formule :',
+      pack1Name: 'Pack 10 Preuves', pack1Desc: '10 certifications SHA-256 + QR Code + PDF.', buyPack1: `Pack 10 (${P10})`,
+      pack2Name: 'Pass Illimité Pro', pack2Desc: 'Preuves et alertes illimitées.', buyPack2: `Illimité (${PPRO})`,
+      packB2bName: '🏢 Pack Entreprise', packB2bRoi: '⚠️ 1 litige évité = 500 € à 3 000 € économisés.',
+      packB2bDesc: '• Logo sur PDF\n• 5 à 20 licences\n• Champs personnalisés',
+      buyB2b1: 'Starter 5 licences (99 €/an)', buyB2b2: 'Agence 20 licences (290 €/an)',
+      licenseInput: 'Clé de Licence Gumroad :', activateKey: 'Activer ma licence',
+      packsTitle: 'Packs & B2B', packsDesc: 'Débloquez plus de preuves.', openPacks: 'Voir les Offres',
+      b2bSetTitle: '🏢 Profil Marque Blanche', b2bSetDesc: 'Ajoutez le nom et le logo de votre entreprise.',
+      b2bCompName: 'Nom de votre entreprise', saveB2bName: 'Enregistrer nom', uploadB2bLogo: 'Logo Entreprise',
+      b2bLogoTitle: 'Logo Entreprise sur PDF', b2bLogoActive: (n) => n ? `Marque Blanche : ${n}` : 'Marque Blanche Active',
+      b2bLogoLocked: 'Réservé aux Pros — Cliquez + pour activer', b2bNeedProToast: 'Option réservée aux professionnels.',
+      b2bSavedToast: 'Profil Entreprise enregistré !', checkoutNotReady: 'Lien Gumroad à configurer.',
+      keyInvalid: 'Clé invalide ou expirée.', keyAlreadyUsed: 'Clé déjà activée sur cet appareil.',
+      keySuccessPro: 'Pass Illimité activé !', keySuccessPack: '+10 Preuves ajoutées !', keySuccessB2b: 'Pack Entreprise activé !',
+      ocrRunning: 'Analyse IA en cours...', aiDetected: "Analysé par l'IA",
+      modeSub: 'Piège Abonnement', modeProof: 'Preuve Certifiée',
+      subName: 'Service détecté', subPrice: 'Prix', subCurr: 'Devise', subDate: "Fin d'essai", subAnnual: 'Coût / an',
+      subLetter: 'Lettre de résiliation', officialLink: 'Ouvrir la page officielle', saveSub: 'Sauvegarder + Alarme (.ics)',
+      proofTitle: 'Titre du dossier', proofCat: 'Catégorie', proofCompany: 'Entreprise / Client', proofRef: 'Plaque / Adresse',
+      proofNotes: 'Observations', proofLocalTime: 'Date & Heure', proofHash: 'Empreinte SHA-256', proofTime: 'Horodatage UTC',
+      saveProof: 'Sceller + Générer QR & PDF',
+      waWarnForm: '⚠️ Piège compression WhatsApp : Conservez la photo ORIGINALE intacte !',
+      waWarnVerify: '💡 Astuce : Utilisez toujours le fichier photo ORIGINAL.',
+      statActive: 'À surveiller / an', statSaved: 'Argent sauvé',
+      verifyTitle: '🔍 Portail de Vérification', verifySub: 'Scannez un QR Code ou collez un SHA-256.',
+      pubHashIn: 'Empreinte SHA-256 ou ID', verifyBtn: 'Choisir la photo originale',
+      expTitle: 'Exports & Confidentialité', expSub: 'Stockage 100 % local.',
+      expJson: 'Exporter (JSON)', clearAll: 'Effacer toutes les données',
+      privacyFoot: 'OCR local + SHA-256 + QR/PDF natifs + Détection IA. Conforme RGPD & CCPA.',
+      nav: ['Scanner IA', 'Alertes', 'Preuves', 'Export'],
+      cancelBtn: 'Marquer résilié', copyBtn: 'Copier lettre', alarmBtn: 'Alarme .ics',
+      pdfShareBtn: 'Envoyer PDF', imgShareBtn: 'Envoyer Image', waTextBtn: 'Texte', mailBtn: 'E-mail', delBtn: 'Supprimer',
+      emptySubs: 'Aucun abonnement scanné.', emptyProofs: 'Aucune preuve scellée.',
+      trapAutoRenew: '⚠️ Renouvellement automatique', trapTrial: '⏳ Essai gratuit',
+      authOk: '✅ AUTHENTIQUE : Photo 100 % identique !', authFail: '❌ NON RECONNU : Image modifiée.',
+      savedToast: 'Scellé avec succès !', copiedToast: 'Copié !',
+      confirmClear: 'Effacer vos preuves et abonnements ?',
+      letterTemplate: (name, date) => `Objet : Demande de résiliation immédiate – ${name}\n\nMadame, Monsieur,\n\nJe demande la résiliation immédiate de « ${name} » avant le ${date}.\n\nCordialement.`,
+      aiDetectTitle: 'Analyse IA Locale', aiDetectAnalyzing: 'Analyse en cours...',
+      aiDetectSafe: 'Image probablement authentique', aiDetectSuspect: 'Image suspecte',
+      aiDetectHigh: 'Très probablement générée par IA', aiDetectScoreLabel: 'Score de suspicion IA',
+      aiDetectDetails: "Voir les détails de l'analyse", aiDetectMeta: 'Signatures logicielles',
+      aiDetectNoise: 'Analyse du bruit', aiDetectSmooth: 'Lissage textures', aiDetectSat: 'Saturation extrême',
+      aiDetectReasonMeta: 'Signature logicielle IA détectée', aiDetectReasonHigh: 'Multiples indicateurs forts',
+      aiDetectReasonMid: 'Certains indicateurs de retouche', aiDetectReasonLow: 'Analyse pixel cohérente',
+      aiDetectDisclaimer: '⚠️ Heuristique locale — résultat indicatif.'
+    },
+    en: {
+      sub: 'Local AI Active • 100% Private', landPill: '100% Local • Zero Servers',
+      landTitle: 'Protect your <span>deposits, contracts &amp; subscriptions</span> from AI',
+      landSub: 'Seal any photo in SHA-256 and detect AI-generated images.',
+      landLaunch: 'Launch AI Scanner', landDemo: 'Test with Sample Photo', landVerify: 'Verify a Certificate',
+      demoDlBtn: 'Download Sample Photo',
+      uc1Title: 'Car Rental & Accidents', uc1Desc: 'Seal bumpers & mileage.',
+      uc2Title: 'Real Estate & Insurance', uc2Desc: 'Move-in checks & claims.',
+      uc3Title: 'Anti-Subscription Traps', uc3Desc: 'OCR reads hidden fees.',
+      b2bBanTitle: '🏢 Businesses: 1 dispute = €500 to €3,000 lost', b2bBanPrice: '€99 – €290 / yr',
+      b2bBanDesc: 'White-Label Pack: Your Logo + 5–20 seats.',
+      heroTitle: '1 Photo — AI Handles Everything', heroSub: 'Free-trial screenshot OR real estate / accident photo.',
+      planFreeAvail: '1 Free Proof available', planFreeUsed: '0 credits left',
+      planCredits: (n) => `${n} SHA-256 credit(s) left`, planPro: 'Unlimited Pro Active ✓',
+      planB2b: (seats) => `Enterprise (${seats || '5-20'} seats) ✓`,
+      planSub: `Packs from ${P10} • Business €99–€290/yr`, planCta: 'Packs / B2B',
+      hudSubs: 'Active alerts', hudProofs: 'SHA-256 proofs',
+      mod1Title: 'OCR Trap Detector + AI Scan', mod1Desc: 'Reads price, detects AI fakes.',
+      mod2Title: 'SHA-256 Seal + QR Code', mod2Desc: 'Certifies against AI edits.',
+      mod3Title: 'Public Authenticity Verifier', mod3Desc: 'Prove in 1 tap.',
+      faqTitle: 'FAQ', updatedDate: 'Updated: 2026-11-13',
+      changelog: `• v${APP_VERSION}: Fix freeze bug, add local AI detection.`,
+      faqs: [
+        { q: 'How does AI image detection work?', a: "Local checks (metadata, pixel variance). ⚠️ It's a heuristic." },
+        { q: 'Why warn about WhatsApp?', a: 'WhatsApp compresses images, breaking SHA-256.' }
+      ],
+      modalTitle: 'Personal & Business B2B Plans', modalSub: 'Pick a plan:',
+      pack1Name: '10-Proof Pack', pack1Desc: '10 SHA-256 seals.', buyPack1: `10-Pack (${P10})`,
+      pack2Name: 'Lifetime Unlimited Pro', pack2Desc: 'Unlimited proofs.', buyPack2: `Unlimited (${PPRO})`,
+      packB2bName: '🏢 Enterprise Pack', packB2bRoi: '⚠️ 1 lost deposit = €500 to €3,000 lost.',
+      packB2bDesc: '• Logo on PDFs\n• 5–20 seats',
+      buyB2b1: 'Starter 5 seats (€99/yr)', buyB2b2: 'Agency 20 seats (€290/yr)',
+      licenseInput: 'Gumroad License Key:', activateKey: 'Activate License',
+      packsTitle: 'Personal & B2B Plans', packsDesc: 'Unlock more proofs.', openPacks: 'View Plans',
+      b2bSetTitle: '🏢 White-Label Branding', b2bSetDesc: 'Add your company name and logo.',
+      b2bCompName: 'Company Name', saveB2bName: 'Save Company Name', uploadB2bLogo: 'Company Logo',
+      b2bLogoTitle: 'Company Logo on PDF', b2bLogoActive: (n) => n ? `White-Label: ${n}` : 'White-Label Active',
+      b2bLogoLocked: 'Business Pro Only', b2bNeedProToast: 'Business Pro feature only.',
+      b2bSavedToast: 'Business profile saved!', checkoutNotReady: 'Configure Gumroad link.',
+      keyInvalid: 'Invalid key.', keyAlreadyUsed: 'Key already activated.',
+      keySuccessPro: 'Pro activated!', keySuccessPack: '+10 proofs added!', keySuccessB2b: 'Enterprise activated!',
+      ocrRunning: 'AI analysis running...', aiDetected: 'Auto-detected',
+      modeSub: 'Subscription Trap', modeProof: 'Certified Proof',
+      subName: 'Service', subPrice: 'Price', subCurr: 'Currency', subDate: 'Trial end', subAnnual: 'Yearly cost',
+      subLetter: 'Cancellation email', officialLink: 'Open cancel page', saveSub: 'Save + Alarm (.ics)',
+      proofTitle: 'Case title', proofCat: 'Category', proofCompany: 'Company / Client', proofRef: 'Plate / Address',
+      proofNotes: 'Notes', proofLocalTime: 'Capture Date & Time', proofHash: 'SHA-256 fingerprint', proofTime: 'UTC Timestamp',
+      saveProof: 'Seal + Generate QR & PDF',
+      waWarnForm: '⚠️ WhatsApp Compression Trap: Keep the ORIGINAL file untouched!',
+      waWarnVerify: '💡 Tip: Use the ORIGINAL uncompressed photo.',
+      statActive: 'At risk / year', statSaved: 'Money saved',
+      verifyTitle: '🔍 Verification Portal', verifySub: 'Scan a QR Code or paste a SHA-256.',
+      pubHashIn: 'SHA-256 or ID', verifyBtn: 'Pick original photo',
+      expTitle: 'Exports & Privacy', expSub: '100% local storage.',
+      expJson: 'Export JSON', clearAll: 'Erase all data',
+      privacyFoot: 'Local OCR + SHA-256 + AI Detection. GDPR & CCPA compliant.',
+      nav: ['AI Scan', 'Alerts', 'Proofs', 'Export'],
+      cancelBtn: 'Mark Cancelled', copyBtn: 'Copy email', alarmBtn: 'Alarm .ics',
+      pdfShareBtn: 'Send PDF', imgShareBtn: 'Send Image', waTextBtn: 'Text', mailBtn: 'Email', delBtn: 'Delete',
+      emptySubs: 'No subscriptions.', emptyProofs: 'No proofs yet.',
+      trapAutoRenew: '⚠️ Auto-renewal', trapTrial: '⏳ Free trial',
+      authOk: '✅ AUTHENTIC: 100% identical!', authFail: '❌ NOT VERIFIED.',
+      savedToast: 'Sealed!', copiedToast: 'Copied!',
+      confirmClear: 'Delete local proofs and alerts?',
+      letterTemplate: (name, date) => `Subject: Cancellation Request – ${name}\n\nPlease cancel my subscription before ${date}.`,
+      aiDetectTitle: 'Local AI Analysis', aiDetectAnalyzing: 'Analyzing...',
+      aiDetectSafe: 'Likely authentic image', aiDetectSuspect: 'Suspicious image',
+      aiDetectHigh: 'Very likely AI-generated', aiDetectScoreLabel: 'AI suspicion score',
+      aiDetectDetails: 'See analysis details', aiDetectMeta: 'Software signatures',
+      aiDetectNoise: 'Noise analysis', aiDetectSmooth: 'Texture smoothing', aiDetectSat: 'Extreme saturation',
+      aiDetectReasonMeta: 'AI software signature found', aiDetectReasonHigh: 'Multiple AI indicators',
+      aiDetectReasonMid: 'Some AI indicators', aiDetectReasonLow: 'Consistent with a real photo',
+      aiDetectDisclaimer: '⚠️ Local heuristic — indicative result.'
+    },
+    ar: {
+      sub: 'الذكاء المحلي نشط • 100% خصوصية', landPill: 'محلي 100% • بدون خوادم',
+      landTitle: 'احمِ <span>تأميناتك، عقودك واشتراكاتك</span> من التزوير',
+      landSub: 'وثّق أي صورة ببصمة SHA-256 واكشف صور الذكاء الاصطناعي.',
+      landLaunch: 'تشغيل الماسح', landDemo: 'تجربة بصورة مثال', landVerify: 'التحقق من شهادة',
+      demoDlBtn: 'تحميل صورة المثال',
+      uc1Title: 'تأجير السيارات والحوادث', uc1Desc: 'وثّق هيكل السيارة والعداد.',
+      uc2Title: 'العقارات والتأمين', uc2Desc: 'محاضر المعاينة والمطالبات.',
+      uc3Title: 'مكافحة الاشتراكات', uc3Desc: 'يقرأ السعر وينشئ منبه.',
+      b2bBanTitle: '🏢 للشركات: نزاع واحد = خسارة كبيرة', b2bBanPrice: '99€ – 290€ / سنة',
+      b2bBanDesc: 'باقة العلامة البيضاء: شعار شركتك على PDF + 5 إلى 20 رخصة.',
+      heroTitle: 'صورة واحدة — الذكاء يتكفل بكل شيء', heroSub: 'لقطة اشتراك أو صورة سيارة / عقار / حادث.',
+      planFreeAvail: 'إثبات واحد مجاني', planFreeUsed: 'انتهى الرصيد',
+      planCredits: (n) => `متبقي ${n} إثبات`, planPro: 'النسخة غير المحدودة ✓',
+      planB2b: (seats) => `باقة الشركات (${seats} رخصة) ✓`,
+      planSub: `الباقات من ${P10}`, planCta: 'الباقات / B2B',
+      hudSubs: 'تنبيهات نشطة', hudProofs: 'إثباتات',
+      mod1Title: 'كاشف OCR + صور IA', mod1Desc: 'يقرأ السعر ويكشف الصور المزيفة.',
+      mod2Title: 'ختم SHA-256 + QR', mod2Desc: 'يوثق الممتلكات ضد التعديل.',
+      mod3Title: 'بوابة التحقق', mod3Desc: 'أثبت أن الصورة أصلية.',
+      faqTitle: 'الأسئلة الشائعة', updatedDate: 'تحديث: 13/11/2026',
+      changelog: `• v${APP_VERSION}: إصلاح الخلل، إضافة كشف IA.`,
+      faqs: [{ q: 'كيف يعمل الكشف؟', a: 'تحليل محلي. تقدير إحصائي.' }, { q: 'لماذا واتساب؟', a: 'يضغط الصورة ويغير البصمة.' }],
+      modalTitle: 'باقات الأفراد والشركات', modalSub: 'اختر باقتك:',
+      pack1Name: 'باقة 10 إثباتات', pack1Desc: '10 شهادات SHA-256.', buyPack1: `باقة 10 (${P10})`,
+      pack2Name: 'النسخة غير المحدودة', pack2Desc: 'إثباتات غير محدودة.', buyPack2: `غير محدود (${PPRO})`,
+      packB2bName: '🏢 باقة الشركات', packB2bRoi: '⚠️ نزاع واحد يعوض التكلفة.',
+      packB2bDesc: '• شعار على PDF\n• 5 إلى 20 رخصة',
+      buyB2b1: '5 رخص (99€/سنة)', buyB2b2: '20 رخصة (290€/سنة)',
+      licenseInput: 'مفتاح الترخيص:', activateKey: 'تفعيل',
+      packsTitle: 'الباقات وترخيص الشركات', packsDesc: 'افتح المزيد.', openPacks: 'عرض الباقات',
+      b2bSetTitle: '🏢 العلامة البيضاء', b2bSetDesc: 'أضف اسم وشعار شركتك.',
+      b2bCompName: 'اسم الشركة', saveB2bName: 'حفظ', uploadB2bLogo: 'شعار الشركة',
+      b2bLogoTitle: 'شعار الشركة على PDF', b2bLogoActive: (n) => n ? `نشط: ${n}` : 'نشط',
+      b2bLogoLocked: 'للشركات فقط', b2bNeedProToast: 'ميزة للشركات فقط.',
+      b2bSavedToast: 'تم الحفظ!', checkoutNotReady: 'قم بضبط الرابط.',
+      keyInvalid: 'مفتاح غير صالح.', keyAlreadyUsed: 'مستخدم مسبقاً.',
+      keySuccessPro: 'تم التفعيل!', keySuccessPack: '+10 إثباتات!', keySuccessB2b: 'تم تفعيل الشركات!',
+      ocrRunning: 'جاري التحليل...', aiDetected: 'تم الكشف',
+      modeSub: 'فخ اشتراك', modeProof: 'إثبات موثق',
+      subName: 'الخدمة', subPrice: 'السعر', subCurr: 'العملة', subDate: 'تاريخ الخصم', subAnnual: 'سنوياً',
+      subLetter: 'رسالة الإلغاء', officialLink: 'صفحة الإلغاء', saveSub: 'حفظ + منبه',
+      proofTitle: 'العنوان', proofCat: 'الفئة', proofCompany: 'الشركة', proofRef: 'اللوحة / العنوان',
+      proofNotes: 'ملاحظات', proofLocalTime: 'التاريخ', proofHash: 'بصمة SHA-256', proofTime: 'UTC',
+      saveProof: 'حفظ + إنشاء QR',
+      waWarnForm: '⚠️ احتفظ بالصورة الأصلية!', waWarnVerify: '💡 استخدم الملف الأصلي.',
+      statActive: 'مهدد / سنة', statSaved: 'الموفر',
+      verifyTitle: '🔍 بوابة التحقق', verifySub: 'امسح QR أو الصق البصمة.',
+      pubHashIn: 'SHA-256 أو ID', verifyBtn: 'اختر الصورة',
+      expTitle: 'التصدير', expSub: 'محلي بالكامل.',
+      expJson: 'تصدير JSON', clearAll: 'مسح الكل',
+      privacyFoot: 'محلي 100%. GDPR.',
+      nav: ['مسح', 'تنبيهات', 'إثباتات', 'إعدادات'],
+      cancelBtn: 'تم الإلغاء', copyBtn: 'نسخ', alarmBtn: 'منبه',
+      pdfShareBtn: 'إرسال PDF', imgShareBtn: 'صورة', waTextBtn: 'نص', mailBtn: 'إيميل', delBtn: 'حذف',
+      emptySubs: 'لا توجد اشتراكات.', emptyProofs: 'لا توجد إثباتات.',
+      trapAutoRenew: '⚠️ تجديد تلقائي', trapTrial: '⏳ فترة تجريبية',
+      authOk: '✅ أصلية 100%!', authFail: '❌ تم التعديل.',
+      savedToast: 'تم الحفظ!', copiedToast: 'تم النسخ!',
+      confirmClear: 'حذف الكل؟',
+      letterTemplate: (name, date) => `الموضوع: طلب إلغاء – ${name}\n\nأرجو إلغاء اشتراكي قبل ${date}.`,
+      aiDetectTitle: 'تحليل ذكاء محلي', aiDetectAnalyzing: 'جاري التحليل...',
+      aiDetectSafe: 'أصلية', aiDetectSuspect: 'مشبوهة',
+      aiDetectHigh: 'مولدة بالذكاء الاصطناعي', aiDetectScoreLabel: 'مؤشر الشكوك',
+      aiDetectDetails: 'التفاصيل', aiDetectMeta: 'بصمات البرامج',
+      aiDetectNoise: 'التشويش', aiDetectSmooth: 'التمليس', aiDetectSat: 'التشبع',
+      aiDetectReasonMeta: 'تم العثور على بصمة برنامج', aiDetectReasonHigh: 'مؤشرات قوية',
+      aiDetectReasonMid: 'بعض المؤشرات', aiDetectReasonLow: 'متوافق مع صورة حقيقية',
+      aiDetectDisclaimer: '⚠️ تقدير محلي.'
+    },
+    zh: {
+      sub: '本地 AI 已就绪 • 100% 隐私', landPill: '100% 本地运行',
+      landTitle: '用 SHA-256 保护您的<span>押金、合同与订阅</span>',
+      landSub: '本地检测 AI 生成图像。',
+      landLaunch: '启动扫描器', landDemo: '使用示例图片', landVerify: '公开真伪核验',
+      demoDlBtn: '下载示例图片',
+      uc1Title: '租车押金', uc1Desc: '封存车况。',
+      uc2Title: '房产民宿', uc2Desc: '入住验房。',
+      uc3Title: '订阅陷阱', uc3Desc: '识别价格。',
+      b2bBanTitle: '🏢 企业客户：1 起纠纷损失巨大', b2bBanPrice: '99€ – 290€ / 年',
+      b2bBanDesc: '企业白标套餐。',
+      heroTitle: '只需一张图', heroSub: '订阅截图或防伪照片。',
+      planFreeAvail: '1 次免费', planFreeUsed: '免费次数已用完',
+      planCredits: (n) => `剩余 ${n} 次`, planPro: '终身无限版 ✓',
+      planB2b: (seats) => `企业版 (${seats} 授权) ✓`,
+      planSub: `${P10} 起`, planCta: '套餐',
+      hudSubs: '扣费预警', hudProofs: 'SHA-256 存证',
+      mod1Title: 'OCR + AI 图片检测', mod1Desc: '检测 AI 生成假图。',
+      mod2Title: 'SHA-256 印章', mod2Desc: '防修图证明。',
+      mod3Title: '公开核验', mod3Desc: '证明 0 像素修改。',
+      faqTitle: '常见问题', updatedDate: '2026-11-13',
+      changelog: `• v${APP_VERSION}：修复卡死问题，添加本地 AI 检测。`,
+      faqs: [{ q: 'AI 检测如何工作？', a: '本地分析，启发式检测。' }, { q: '为什么注意微信？', a: '压缩会破坏 SHA-256。' }],
+      modalTitle: '套餐', modalSub: '选择方案：',
+      pack1Name: '10 次存证包', pack1Desc: '10 次存证。', buyPack1: `10 次包 (${P10})`,
+      pack2Name: '终身无限版', pack2Desc: '无限存证。', buyPack2: `无限 (${PPRO})`,
+      packB2bName: '🏢 企业白标套餐', packB2bRoi: '⚠️ 避免 1 次纠纷即可回本。',
+      packB2bDesc: '• 企业 Logo\n• 5-20 授权',
+      buyB2b1: '5 授权 (99€/年)', buyB2b2: '20 授权 (290€/年)',
+      licenseInput: '授权密钥：', activateKey: '激活',
+      packsTitle: '套餐与 B2B', packsDesc: '解锁更多。', openPacks: '查看套餐',
+      b2bSetTitle: '🏢 企业白标', b2bSetDesc: '展示贵司 Logo。',
+      b2bCompName: '企业名称', saveB2bName: '保存', uploadB2bLogo: '企业 Logo',
+      b2bLogoTitle: 'PDF 企业 Logo', b2bLogoActive: (n) => n ? `已启用：${n}` : '已启用',
+      b2bLogoLocked: '仅限企业版', b2bNeedProToast: '仅限企业版。',
+      b2bSavedToast: '已保存！', checkoutNotReady: '请配置链接。',
+      keyInvalid: '密钥无效。', keyAlreadyUsed: '已激活。',
+      keySuccessPro: '已激活！', keySuccessPack: '+10 次！', keySuccessB2b: '企业版已激活！',
+      ocrRunning: '识别中...', aiDetected: '已识别',
+      modeSub: '订阅防扣费', modeProof: '防篡改存证',
+      subName: '服务', subPrice: '金额', subCurr: '币种', subDate: '扣费日', subAnnual: '年化',
+      subLetter: '取消邮件', officialLink: '官方取消页', saveSub: '保存 + 闹钟',
+      proofTitle: '标题', proofCat: '类别', proofCompany: '企业', proofRef: '车牌 / 地址',
+      proofNotes: '备注', proofLocalTime: '拍照时间', proofHash: 'SHA-256 指纹', proofTime: 'UTC',
+      saveProof: '加密封存',
+      waWarnForm: '⚠️ 请保留原图！', waWarnVerify: '💡 选择原始文件。',
+      statActive: '年潜在扣费', statSaved: '已省',
+      verifyTitle: '🔍 核验门户', verifySub: '扫描二维码或粘贴 SHA-256。',
+      pubHashIn: 'SHA-256 或 ID', verifyBtn: '选择原图',
+      expTitle: '导出', expSub: '本地存储。',
+      expJson: '导出 JSON', clearAll: '清空数据',
+      privacyFoot: '本地处理，符合 GDPR。',
+      nav: ['扫描', '预警', '存证', '设置'],
+      cancelBtn: '已取消', copyBtn: '复制', alarmBtn: '闹钟',
+      pdfShareBtn: '发送 PDF', imgShareBtn: '图片', waTextBtn: '文字', mailBtn: '邮件', delBtn: '删除',
+      emptySubs: '暂无订阅。', emptyProofs: '暂无存证。',
+      trapAutoRenew: '⚠️ 自动续费', trapTrial: '⏳ 免费试用',
+      authOk: '✅ 验证通过！', authFail: '❌ 验证失败。',
+      savedToast: '已封存！', copiedToast: '已复制！',
+      confirmClear: '确定删除？',
+      letterTemplate: (name, date) => `主题：取消订阅 – ${name}\n\n请在 ${date} 前取消。`,
+      aiDetectTitle: '本地 AI 分析', aiDetectAnalyzing: '分析中...',
+      aiDetectSafe: '可能为真实照片', aiDetectSuspect: '图像可疑',
+      aiDetectHigh: '极可能由 AI 生成', aiDetectScoreLabel: 'AI 可疑度',
+      aiDetectDetails: '查看详情', aiDetectMeta: '软件签名',
+      aiDetectNoise: '噪声', aiDetectSmooth: '平滑度', aiDetectSat: '饱和度',
+      aiDetectReasonMeta: '发现 AI 软件签名', aiDetectReasonHigh: '多个强指标',
+      aiDetectReasonMid: '部分指标', aiDetectReasonLow: '与真实照片一致',
+      aiDetectDisclaimer: '⚠️ 本地启发式分析。'
+    }
+  };
+
   // ============================================================
   // 🤖 DÉTECTION D'IMAGES IA (100 % LOCALE)
   // ============================================================
-  // Combine 3 analyses :
-  // 1. Métadonnées : recherche signatures Midjourney / Stable Diffusion / DALL-E / Flux / ComfyUI
-  // 2. Pixels : variance (les IA sur-lissent les textures)
-  // 3. Bruit + saturation : les IA génèrent un bruit anormal ou des saturations extrêmes
-  // ============================================================
-
   const AI_SIGNATURES = [
     'midjourney', 'stable diffusion', 'stablediffusion', 'dall-e', 'dall·e', 'dalle',
     'comfyui', 'automatic1111', 'invokeai', 'novelai', 'leonardo.ai', 'firefly',
@@ -1180,28 +1000,21 @@ const I18N = {
     'c2pa.ai', 'openai', 'imagen', 'sora'
   ];
 
-  // Lit les premiers Ko du fichier à la recherche de signatures texte
   async function scanMetadataSignatures(file) {
     try {
-      const slice = file.slice(0, 65536); // 64 Ko suffisent pour header + EXIF
+      const slice = file.slice(0, 65536);
       const buf = await slice.arrayBuffer();
       const bytes = new Uint8Array(buf);
-      // Décodage latin1 pour ne pas planter sur des octets non-UTF8
       let text = '';
-      for (let i = 0; i < bytes.length; i++) {
-        text += String.fromCharCode(bytes[i]);
-      }
+      for (let i = 0; i < bytes.length; i++) { text += String.fromCharCode(bytes[i]); }
       const lower = text.toLowerCase();
       for (const sig of AI_SIGNATURES) {
         if (lower.includes(sig)) return { found: true, signature: sig };
       }
       return { found: false, signature: null };
-    } catch (_) {
-      return { found: false, signature: null };
-    }
+    } catch (_) { return { found: false, signature: null }; }
   }
 
-  // Analyse pixel : variance, lissage, bruit, saturation
   async function analyzePixelStatistics(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -1216,35 +1029,29 @@ const I18N = {
             ctx.drawImage(img, 0, 0, SIZE, SIZE);
             const data = ctx.getImageData(0, 0, SIZE, SIZE).data;
 
-            // 1) Variance horizontale + verticale (détection sur-lissage)
             let varH = 0, varV = 0, count = 0;
             for (let y = 0; y < SIZE; y++) {
               for (let x = 0; x < SIZE - 1; x++) {
-                const i = (y * SIZE + x) * 4;
-                const j = i + 4;
+                const i = (y * SIZE + x) * 4; const j = i + 4;
                 varH += Math.abs(data[i] - data[j]) + Math.abs(data[i+1] - data[j+1]) + Math.abs(data[i+2] - data[j+2]);
                 count++;
               }
             }
             for (let y = 0; y < SIZE - 1; y++) {
               for (let x = 0; x < SIZE; x++) {
-                const i = (y * SIZE + x) * 4;
-                const j = i + SIZE * 4;
+                const i = (y * SIZE + x) * 4; const j = i + SIZE * 4;
                 varV += Math.abs(data[i] - data[j]) + Math.abs(data[i+1] - data[j+1]) + Math.abs(data[i+2] - data[j+2]);
               }
             }
             const avgVariance = (varH + varV) / (count * 2);
 
-            // 2) Bruit local (écart-type des différences voisines)
             let noiseSum = 0, noiseCount = 0;
-            for (let i = 0; i < data.length - 4; i += 16) { // échantillonnage rapide
+            for (let i = 0; i < data.length - 4; i += 16) {
               const diff = Math.abs(data[i] - data[i+4]) + Math.abs(data[i+1] - data[i+5]) + Math.abs(data[i+2] - data[i+6]);
-              noiseSum += diff * diff;
-              noiseCount++;
+              noiseSum += diff * diff; noiseCount++;
             }
             const noiseLevel = Math.sqrt(noiseSum / Math.max(1, noiseCount));
 
-            // 3) Saturation extrême (les IA poussent souvent les couleurs)
             let satSum = 0, satCount = 0, extremeSat = 0;
             for (let i = 0; i < data.length; i += 4) {
               const r = data[i], g = data[i+1], b = data[i+2];
@@ -1256,13 +1063,8 @@ const I18N = {
             const avgSat = satSum / Math.max(1, satCount);
             const extremeSatRatio = extremeSat / Math.max(1, satCount);
 
-            resolve({
-              avgVariance, noiseLevel, avgSat, extremeSatRatio,
-              width: img.width, height: img.height
-            });
-          } catch (err) {
-            resolve({ error: String(err) });
-          }
+            resolve({ avgVariance, noiseLevel, avgSat, extremeSatRatio, width: img.width, height: img.height });
+          } catch (err) { resolve({ error: String(err) }); }
         };
         img.onerror = () => resolve({ error: 'decode_failed' });
         img.src = e.target.result;
@@ -1272,53 +1074,28 @@ const I18N = {
     });
   }
 
-  // Score final combiné
   function computeAIScore(metaResult, pixelResult) {
-    // Si signature explicite → très haut score
     if (metaResult.found) {
       return { score: 0.97, metaScore: 1, pixelScore: 0, reasons: ['meta'], detail: { signature: metaResult.signature } };
     }
-
     if (pixelResult.error) {
       return { score: 0.3, metaScore: 0, pixelScore: 0, reasons: ['error'], detail: pixelResult };
     }
-
     let pixelScore = 0;
     const reasons = [];
-
-    // Sur-lissage : variance basse = suspect
-    // Photos réelles : variance > 25  |  IA sur-lissées : variance < 8
-    if (pixelResult.avgVariance < 5) { pixelScore += 0.35; reasons.push('smooth'); }
-    else if (pixelResult.avgVariance < 12) { pixelScore += 0.18; }
-
-    // Bruit : bruit très faible (image "propre") = suspect
-    if (pixelResult.noiseLevel < 3) { pixelScore += 0.20; reasons.push('low_noise'); }
-    else if (pixelResult.noiseLevel < 6) { pixelScore += 0.08; }
-
-    // Saturation extrême = suspect
-    if (pixelResult.extremeSatRatio > 0.15) { pixelScore += 0.20; reasons.push('extreme_sat'); }
-    else if (pixelResult.avgSat > 0.72) { pixelScore += 0.10; reasons.push('high_sat'); }
-
-    // Dimensions standardisées IA : multiples de 64
-    if (pixelResult.width % 64 === 0 && pixelResult.height % 64 === 0 &&
-        pixelResult.width >= 512 && pixelResult.height >= 512) {
-      pixelScore += 0.10;
-      reasons.push('ai_dimensions');
+    if (pixelResult.avgVariance < 8) { pixelScore += 0.35; reasons.push('smooth'); }
+    else if (pixelResult.avgVariance < 18) { pixelScore += 0.20; }
+    if (pixelResult.noiseLevel < 5) { pixelScore += 0.25; reasons.push('low_noise'); }
+    else if (pixelResult.noiseLevel < 9) { pixelScore += 0.10; }
+    if (pixelResult.extremeSatRatio > 0.10) { pixelScore += 0.25; reasons.push('extreme_sat'); }
+    else if (pixelResult.avgSat > 0.65) { pixelScore += 0.12; reasons.push('high_sat'); }
+    if (pixelResult.width % 64 === 0 && pixelResult.height % 64 === 0 && pixelResult.width >= 512 && pixelResult.height >= 512) {
+      pixelScore += 0.15; reasons.push('ai_dimensions');
     }
-
-    // Cap du score
-    pixelScore = Math.min(0.85, pixelScore);
-
-    return {
-      score: pixelScore,
-      metaScore: 0,
-      pixelScore,
-      reasons,
-      detail: pixelResult
-    };
+    pixelScore = Math.min(0.90, pixelScore);
+    return { score: pixelScore, metaScore: 0, pixelScore, reasons, detail: pixelResult };
   }
 
-  // Fonction principale appelée par le scan
   async function detectAIImage(file, onProgress) {
     if (onProgress) onProgress(10);
     const metaResult = await scanMetadataSignatures(file);
@@ -1330,66 +1107,42 @@ const I18N = {
     return final;
   }
 
-  // Affichage du panneau de détection
   function renderAIDetectionPanel(result) {
     const t = I18N[lang];
     const card = document.getElementById('ai-detection-card');
     if (!card) return;
-
     const pct = Math.round(result.score * 100);
     card.classList.remove('hidden', 'safe', 'suspect');
 
-    // Titre et badge selon score
     let title, badgeText, badgeClass, cardClass;
-    if (result.metaScore > 0.5) {
-      title = t.aiDetectHigh;
-      badgeText = '🔴 ' + pct + '%';
-      badgeClass = 'badge-err';
-      cardClass = 'suspect';
-    } else if (pct >= 60) {
-      title = t.aiDetectHigh;
-      badgeText = '🔴 ' + pct + '%';
-      badgeClass = 'badge-err';
-      cardClass = 'suspect';
+    if (result.metaScore > 0.5 || pct >= 60) {
+      title = t.aiDetectHigh; badgeText = '🔴 ' + pct + '%'; badgeClass = 'badge-err'; cardClass = 'suspect';
     } else if (pct >= 35) {
-      title = t.aiDetectSuspect;
-      badgeText = '🟠 ' + pct + '%';
-      badgeClass = 'badge-warn';
-      cardClass = 'suspect';
+      title = t.aiDetectSuspect; badgeText = '🟠 ' + pct + '%'; badgeClass = 'badge-warn'; cardClass = 'suspect';
     } else {
-      title = t.aiDetectSafe;
-      badgeText = '🟢 ' + pct + '%';
-      badgeClass = 'badge-ok';
-      cardClass = 'safe';
+      title = t.aiDetectSafe; badgeText = '🟢 ' + pct + '%'; badgeClass = 'badge-ok'; cardClass = 'safe';
     }
     card.classList.add(cardClass);
 
     document.getElementById('ai-detection-title').textContent = title;
     const badge = document.getElementById('ai-detection-badge');
-    badge.textContent = badgeText;
-    badge.className = 'badge ' + badgeClass;
+    badge.textContent = badgeText; badge.className = 'badge ' + badgeClass;
 
-    // Raison
     let reason = t.aiDetectReasonLow;
     if (result.metaScore > 0.5) reason = t.aiDetectReasonMeta;
     else if (pct >= 60) reason = t.aiDetectReasonHigh;
     else if (pct >= 35) reason = t.aiDetectReasonMid;
     document.getElementById('ai-detection-reason').textContent = reason;
 
-    // Barre
     document.getElementById('ai-score-fill').style.width = pct + '%';
     document.getElementById('ai-score-label').textContent = `${t.aiDetectScoreLabel} : ${pct}%`;
-
-    // Détails
     document.getElementById('ai-details-summary').textContent = t.aiDetectDetails;
     document.getElementById('ai-detail-meta-label').textContent = t.aiDetectMeta;
     document.getElementById('ai-detail-noise-label').textContent = t.aiDetectNoise;
     document.getElementById('ai-detail-smooth-label').textContent = t.aiDetectSmooth;
     document.getElementById('ai-detail-sat-label').textContent = t.aiDetectSat;
 
-    const metaVal = result.metaScore > 0.5
-      ? '⚠️ ' + (result.detail?.signature || 'IA')
-      : '✓ ' + 'Aucune';
+    const metaVal = result.metaScore > 0.5 ? '⚠️ ' + (result.detail?.signature || 'IA') : '✓ ' + 'Aucune';
     document.getElementById('ai-detail-meta-val').textContent = metaVal;
 
     if (result.detail && !result.detail.error) {
@@ -1406,7 +1159,6 @@ const I18N = {
   // ============================================================
   // 🛠️ FONCTIONS UTILITAIRES
   // ============================================================
-
   function formatLocalDateTime(d) {
     const pad = (n) => String(n).padStart(2, '0');
     return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
@@ -1426,8 +1178,7 @@ const I18N = {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
     }
-    fallbackCopy(text);
-    return Promise.resolve();
+    fallbackCopy(text); return Promise.resolve();
   }
 
   function fallbackCopy(text) {
@@ -1470,7 +1221,6 @@ const I18N = {
   // ============================================================
   // 🔍 OCR + ANALYSE TEXTE
   // ============================================================
-
   function getOcrLangs() {
     if (lang === 'ar') return 'ara+eng';
     if (lang === 'zh') return 'chi_sim+eng';
@@ -1528,9 +1278,8 @@ const I18N = {
   }
 
   // ============================================================
-  // 📸 FLUX DE SCAN
+  // 📸 FLUX DE SCAN (SÉCURISÉ)
   // ============================================================
-
   async function handleSmartScan(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -1554,210 +1303,146 @@ const I18N = {
     document.getElementById('scan-result').classList.add('hidden');
     fill.style.width = '10%';
 
-    // Hash SHA-256
-    const arrayBuffer = await file.arrayBuffer();
-    const hash = await sha256Hex(arrayBuffer);
-    fill.style.width = '25%';
+    let hash = '', thumb = '', aiDetection = null, ocrText = '';
 
-    // Miniature
-    const thumb = await makeThumb(file);
-    fill.style.width = '40%';
-
-    // 🤖 DÉTECTION IA (avant l'OCR, pour afficher rapidement)
-    let aiDetection = null;
     try {
-      aiDetection = await detectAIImage(file, (p) => {
-        fill.style.width = `${40 + Math.round(p * 0.2)}%`;
-      });
-    } catch (_) { aiDetection = null; }
-    fill.style.width = '65%';
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        hash = await sha256Hex(arrayBuffer);
+      } catch (e) { hash = 'HASH_ERROR_' + Date.now(); }
+      fill.style.width = '25%';
 
-    // OCR (Tesseract) — facultatif
-    let ocrText = '';
-    try {
-      if (typeof Tesseract !== 'undefined') {
-        const ocrInput = await prepareOcrImage(file);
-        const res = await Tesseract.recognize(ocrInput, getOcrLangs(), {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              fill.style.width = `${65 + Math.round(m.progress * 30)}%`;
-            }
-          }
+      try {
+        thumb = await makeThumb(file);
+      } catch (e) { thumb = ''; }
+      fill.style.width = '40%';
+
+      try {
+        const aiPromise = detectAIImage(file, (p) => {
+          fill.style.width = `${40 + Math.round(p * 0.2)}%`;
         });
-        ocrText = res.data.text || '';
-      }
-    } catch (_) { ocrText = ''; }
-    fill.style.width = '100%';
-    prog.classList.add('hidden');
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 6000));
+        aiDetection = await Promise.race([aiPromise, timeoutPromise]);
+      } catch (e) { aiDetection = null; }
+      fill.style.width = '65%';
 
-    // Analyse texte
-    const ai = analyzeOcrText(ocrText);
-    const safeName = file.name || `capture_${nowIso.slice(0,10)}.jpg`;
-    currentScan = {
-      file, fileName: safeName, hash, thumb, nowIso, localTime,
-      ai, ocrText, isDemo: Boolean(isDemo), aiDetection
-    };
-
-    const thumbEl = document.getElementById('scan-thumb');
-async function processFileScan(file, forceMode, isDemo, presetCat) {
-  const t = I18N[lang];
-  const nowObj = new Date();
-  const nowIso = nowObj.toISOString();
-  const localTime = formatLocalDateTime(nowObj);
-  const prog = document.getElementById('scan-progress');
-  const fill = document.getElementById('progress-fill');
-  document.getElementById('lbl-ocr-status').textContent = t.ocrRunning;
-  prog.classList.remove('hidden');
-  document.getElementById('home-hud').classList.add('hidden');
-  document.getElementById('scan-result').classList.add('hidden');
-  fill.style.width = '10%';
-
-  let hash = '', thumb = '', aiDetection = null, ocrText = '';
-
-  try {
-    // 1) Hash SHA-256
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      hash = await sha256Hex(arrayBuffer);
-    } catch (e) {
-      console.warn('Hash error:', e);
-      hash = 'HASH_ERROR_' + Date.now();
-    }
-    fill.style.width = '25%';
-
-    // 2) Miniature
-    try {
-      thumb = await makeThumb(file);
-    } catch (e) {
-      console.warn('Thumb error:', e);
-      thumb = '';
-    }
-    fill.style.width = '40%';
-
-    // 3) Détection IA (avec timeout de 6s max)
-    try {
-      const aiPromise = detectAIImage(file, (p) => {
-        fill.style.width = `${40 + Math.round(p * 0.2)}%`;
-      });
-      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 6000));
-      aiDetection = await Promise.race([aiPromise, timeoutPromise]);
-    } catch (e) {
-      console.warn('AI detection error:', e);
-      aiDetection = null;
-    }
-    fill.style.width = '65%';
-
-    // 4) OCR Tesseract (facultatif, avec timeout de 15s)
-    try {
-      if (typeof Tesseract !== 'undefined') {
-        const ocrInput = await prepareOcrImage(file);
-        const ocrPromise = Tesseract.recognize(ocrInput, getOcrLangs(), {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              fill.style.width = `${65 + Math.round(m.progress * 30)}%`;
+      try {
+        if (typeof Tesseract !== 'undefined') {
+          const ocrInput = await prepareOcrImage(file);
+          const ocrPromise = Tesseract.recognize(ocrInput, getOcrLangs(), {
+            logger: (m) => {
+              if (m.status === 'recognizing text') {
+                fill.style.width = `${65 + Math.round(m.progress * 30)}%`;
+              }
             }
-          }
-        });
-        const ocrTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 15000));
-        const res = await Promise.race([ocrPromise, ocrTimeout]);
-        if (res && res.data && res.data.text) ocrText = res.data.text;
+          });
+          const ocrTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 15000));
+          const res = await Promise.race([ocrPromise, ocrTimeout]);
+          if (res && res.data && res.data.text) ocrText = res.data.text;
+        }
+      } catch (e) { ocrText = ''; }
+      fill.style.width = '100%';
+
+      const ai = analyzeOcrText(ocrText);
+      const safeName = file.name || `capture_${nowIso.slice(0,10)}.jpg`;
+      currentScan = {
+        file, fileName: safeName, hash, thumb, nowIso, localTime,
+        ai, ocrText, isDemo: Boolean(isDemo), aiDetection
+      };
+
+      const thumbEl = document.getElementById('scan-thumb');
+      if (thumb) {
+        thumbEl.src = thumb;
+        thumbEl.classList.remove('hidden');
+      } else {
+        thumbEl.classList.add('hidden');
       }
-    } catch (e) {
-      console.warn('OCR error:', e);
-      ocrText = '';
-    }
-    fill.style.width = '100%';
+      document.getElementById('demo-dl-wrap').classList.toggle('hidden', !isDemo);
 
-    // 5) Analyse du texte
-    const ai = analyzeOcrText(ocrText);
-    const safeName = file.name || `capture_${nowIso.slice(0,10)}.jpg`;
-    currentScan = {
-      file, fileName: safeName, hash, thumb, nowIso, localTime,
-      ai, ocrText, isDemo: Boolean(isDemo), aiDetection
-    };
+      document.getElementById('sub-name').value = ai.serviceName || '';
+      document.getElementById('sub-price').value = ai.price || '';
+      document.getElementById('sub-curr').value = ai.curr || 'EUR';
+      document.getElementById('sub-date').value = ai.targetDate || '';
+      updateAnnualCost();
+      document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate || '');
 
-    // 6) Affichage miniature
-    const thumbEl = document.getElementById('scan-thumb');
-    if (thumb) {
-      thumbEl.src = thumb;
-      thumbEl.classList.remove('hidden');
-    } else {
-      thumbEl.classList.add('hidden');
-    }
-    document.getElementById('demo-dl-wrap').classList.toggle('hidden', !isDemo);
+      const traps = [];
+      if (ai.hasAutoRenew) traps.push(`<span class="badge badge-err">${esc(t.trapAutoRenew)}</span>`);
+      if (ai.hasTrial) traps.push(`<span class="badge badge-warn">${esc(t.trapTrial)}</span>`);
+      document.getElementById('trap-alerts').innerHTML = traps.join(' ');
 
-    // 7) Remplissage formulaire SUB
-    document.getElementById('sub-name').value = ai.serviceName || '';
-    document.getElementById('sub-price').value = ai.price || '';
-    document.getElementById('sub-curr').value = ai.curr || 'EUR';
-    document.getElementById('sub-date').value = ai.targetDate || '';
-    updateAnnualCost();
-    document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate || '');
+      const linkWrap = document.getElementById('official-cancel-wrap');
+      if (ai.cancelUrl) {
+        document.getElementById('official-cancel-link').href = ai.cancelUrl;
+        linkWrap.classList.remove('hidden');
+      } else linkWrap.classList.add('hidden');
 
-    const traps = [];
-    if (ai.hasAutoRenew) traps.push(`<span class="badge badge-err">${esc(t.trapAutoRenew)}</span>`);
-    if (ai.hasTrial) traps.push(`<span class="badge badge-warn">${esc(t.trapTrial)}</span>`);
-    document.getElementById('trap-alerts').innerHTML = traps.join(' ');
+      document.getElementById('proof-title').value = safeName.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
+      if (presetCat && presetCat !== 'SUB') document.getElementById('proof-cat').value = presetCat;
+      else if (ai.proofCat && ai.proofCat !== 'OTHER') document.getElementById('proof-cat').value = ai.proofCat;
 
-    const linkWrap = document.getElementById('official-cancel-wrap');
-    if (ai.cancelUrl) {
-      document.getElementById('official-cancel-link').href = ai.cancelUrl;
-      linkWrap.classList.remove('hidden');
-    } else linkWrap.classList.add('hidden');
+      try {
+        const brand = getB2bBrand();
+        document.getElementById('proof-company').value = brand.name || '';
+      } catch (_) {}
 
-    // 8) Formulaire PROOF
-    document.getElementById('proof-title').value = safeName.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
-    if (presetCat && presetCat !== 'SUB') document.getElementById('proof-cat').value = presetCat;
-    else if (ai.proofCat && ai.proofCat !== 'OTHER') document.getElementById('proof-cat').value = ai.proofCat;
+      document.getElementById('proof-local-time').value = localTime;
+      document.getElementById('proof-hash-preview').textContent = hash;
+      document.getElementById('proof-time').value = nowIso;
 
-    try {
-      const brand = getB2bBrand();
-      document.getElementById('proof-company').value = brand.name || '';
-    } catch (_) {}
+      try { refreshB2bUi(); } catch (_) {}
 
-    document.getElementById('proof-local-time').value = localTime;
-    document.getElementById('proof-hash-preview').textContent = hash;
-    document.getElementById('proof-time').value = nowIso;
-
-    try { refreshB2bUi(); } catch (_) {}
-
-    // 9) Panneau détection IA
-    if (aiDetection) {
-      try { renderAIDetectionPanel(aiDetection); } catch (e) {
-        console.warn('renderAI error:', e);
+      if (aiDetection) {
+        try { renderAIDetectionPanel(aiDetection); } catch (e) {
+          document.getElementById('ai-detection-card').classList.add('hidden');
+        }
+      } else {
         document.getElementById('ai-detection-card').classList.add('hidden');
       }
-    } else {
-      document.getElementById('ai-detection-card').classList.add('hidden');
-    }
 
-    // 10) AFFICHAGE FINAL
-    switchDetectedMode(forceMode || (ai.isSub ? 'SUB' : 'PROOF'));
-    document.getElementById('scan-result').classList.remove('hidden');
+      switchDetectedMode(forceMode || (ai.isSub ? 'SUB' : 'PROOF'));
+      document.getElementById('scan-result').classList.remove('hidden');
 
-  } catch (fatalError) {
-    // Si même le bloc principal plante, on force l'affichage
-    console.error('FATAL scan error:', fatalError);
-    prog.classList.add('hidden');
-    document.getElementById('scan-result').classList.remove('hidden');
-    toast('⚠️ Erreur lors de l\'analyse, mais l\'image est chargée.');
-    if (!currentScan) {
-      currentScan = {
-        file, fileName: file.name || 'image.jpg', hash: 'ERROR', thumb: '',
-        nowIso, localTime, ai: analyzeOcrText(''), ocrText: '', isDemo: false, aiDetection: null
-      };
-      document.getElementById('proof-hash-preview').textContent = 'Erreur hash';
-      document.getElementById('proof-local-time').value = localTime;
-      document.getElementById('proof-time').value = nowIso;
+    } catch (fatalError) {
+      console.error('FATAL scan error:', fatalError);
+      prog.classList.add('hidden');
+      document.getElementById('scan-result').classList.remove('hidden');
+      toast('⚠️ Erreur lors de l\'analyse, mais l\'image est chargée.');
+      if (!currentScan) {
+        currentScan = {
+          file, fileName: file.name || 'image.jpg', hash: 'ERROR', thumb: '',
+          nowIso, localTime, ai: analyzeOcrText(''), ocrText: '', isDemo: false, aiDetection: null
+        };
+        document.getElementById('proof-hash-preview').textContent = 'Erreur hash';
+        document.getElementById('proof-local-time').value = localTime;
+        document.getElementById('proof-time').value = nowIso;
+      }
+      switchDetectedMode('PROOF');
     }
-    switchDetectedMode('PROOF');
   }
-}
+
+  function switchDetectedMode(mode) {
+    document.getElementById('mode-sub-btn').classList.toggle('active', mode === 'SUB');
+    document.getElementById('mode-proof-btn').classList.toggle('active', mode === 'PROOF');
+    document.getElementById('form-sub').classList.toggle('hidden', mode !== 'SUB');
+    document.getElementById('form-proof').classList.toggle('hidden', mode !== 'PROOF');
+  }
+
+  function updateAnnualCost() {
+    const p = parseFloat(document.getElementById('sub-price').value) || 0;
+    const c = document.getElementById('sub-curr').value;
+    document.getElementById('sub-annual').value = p > 0 ? `${(p * 12).toFixed(2)} ${c}` : '0';
+  }
+
+  function closeScanResult() {
+    document.getElementById('scan-result').classList.add('hidden');
+    document.getElementById('home-hud').classList.remove('hidden');
+    currentScan = null;
+  }
 
   // ============================================================
   // 📅 CALENDRIER .ICS
   // ============================================================
-
   function downloadIcsAlarm(name, dateStr, priceText) {
     const dt = new Date(dateStr + 'T09:00:00');
     dt.setDate(dt.getDate() - 2);
@@ -1779,7 +1464,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 💾 SAUVEGARDE
   // ============================================================
-
   async function saveSubAndAlarm() {
     const name = document.getElementById('sub-name').value.trim() || 'Subscription';
     const price = parseFloat(document.getElementById('sub-price').value) || 0;
@@ -1829,7 +1513,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 🔗 PARTAGE & CERTIFICAT
   // ============================================================
-
   function getVerifyUrlForProof(p) {
     const base = window.location.href.split('?')[0].split('#')[0];
     const qs = new URLSearchParams({ verify: '1', cert: p.certId, hash: p.hash, utc: p.timestamp, title: p.title });
@@ -1910,7 +1593,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
     if (p.notes) { ctx.fillText(`Observations : ${String(p.notes).slice(0,48)}`, 60, y); y += 38; }
     ctx.fillText(`Original : ${String(p.fileName).slice(0,38)} (${p.fileSize} bytes)`, 60, y);
 
-    // Bloc SHA-256
     ctx.fillStyle = '#f1f5f9'; ctx.fillRect(60, 520, canvas.width - 120, 145);
     ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.strokeRect(60, 520, canvas.width - 120, 145);
     ctx.fillStyle = '#0f172a'; ctx.font = 'bold 22px sans-serif';
@@ -1918,7 +1600,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
     ctx.fillStyle = '#0369a1'; ctx.font = 'bold 26px monospace';
     ctx.fillText(p.hash.slice(0,32), 84, 604); ctx.fillText(p.hash.slice(32), 84, 644);
 
-    // Bloc analyse IA
     if (p.aiScore > 0) {
       const aiPct = Math.round(p.aiScore * 100);
       ctx.fillStyle = p.aiScore >= 0.6 ? '#fef2f2' : (p.aiScore >= 0.35 ? '#fffbeb' : '#f0fdf4');
@@ -2014,11 +1695,10 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
       <h2>${esc(p.company || `SHIELDPROOF v${APP_VERSION}`)} — CERTIFICAT D'INTÉGRITÉ</h2>
       <p><strong>ID :</strong> ${esc(p.certId)} • ${esc(p.cat)}</p>
       <p><strong>Titre :</strong> ${esc(p.title)}</p>
-      ${p.ref ? `<p><strong>Réf / Plaque / Adresse :</strong> ${esc(p.ref)}</p>` : ''}
-      ${p.notes ? `<p><strong>Observations :</strong> ${esc(p.notes)}</p>` : ''}
+      ${p.ref ? `<p><strong>Réf :</strong> ${esc(p.ref)}</p>` : ''}
       <p><strong>Date &amp; Heure :</strong> ${esc(dt)} | <strong>UTC :</strong> ${esc(p.timestamp)}</p>
       <div class="p-hash">${esc(p.hash)}</div>
-      ${p.aiScore > 0 ? `<p><strong>Analyse IA :</strong> ${Math.round(p.aiScore * 100)} % de suspicion</p>` : ''}
+      ${p.aiScore > 0 ? `<p><strong>Analyse IA :</strong> ${Math.round(p.aiScore * 100)} %</p>` : ''}
       ${p.thumb ? `<img src="${p.thumb}">` : ''}`;
     setTimeout(() => window.print(), 150);
   }
@@ -2026,7 +1706,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 📋 RENDU DES LISTES
   // ============================================================
-
   async function renderSubs() {
     const t = I18N[lang];
     const list = await dbAll('subs');
@@ -2100,7 +1779,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // ✅ VÉRIFICATION PUBLIQUE
   // ============================================================
-
   function onVerifyHashInput() {
     const val = document.getElementById('pub-verify-hash').value.trim();
     if (val.length >= 8) searchByHashOrId(true);
@@ -2112,8 +1790,7 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
     if (!q) { if (!silent) box.classList.add('hidden'); return; }
 
     if (lastVerifyFileHash && /^[a-f0-9]{64}$/.test(q)) {
-      await compareVerifyHashes(lastVerifyFileHash);
-      return;
+      await compareVerifyHashes(lastVerifyFileHash); return;
     }
 
     const list = await dbAll('proofs');
@@ -2168,7 +1845,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 📤 EXPORT / CLEAR
   // ============================================================
-
   async function exportBackupJson() {
     const subs = await dbAll('subs');
     const proofs = (await dbAll('proofs')).map(({ thumb, ...rest }) => rest);
@@ -2185,7 +1861,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 🏢 B2B
   // ============================================================
-
   function refreshB2bUi() {
     const t = I18N[lang];
     const lic = saveLicenseState({});
@@ -2240,7 +1915,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 🔑 LICENCES GUMROAD
   // ============================================================
-
   async function verifyKeyWithProduct(productId, key, increment) {
     if (!productId || productId.startsWith('REPLACE_') || !GUMROAD_CONFIG.verifyProxyUrl) return { ok: false };
     try {
@@ -2293,7 +1967,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 🎛️ UI : NAV, TABS, MODALS
   // ============================================================
-
   function showLanding() {
     ['landing','scan','subs','proofs','settings'].forEach((v) => document.getElementById('view-' + v).classList.toggle('hidden', v !== 'landing'));
     window.scrollTo({ top: 0 });
@@ -2416,7 +2089,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 🌍 LANGUE
   // ============================================================
-
   function setLang(l) {
     lang = l;
     localStorage.setItem('sp_lang', l);
@@ -2548,7 +2220,6 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   // ============================================================
   // 🚀 INITIALISATION
   // ============================================================
-
   function handleStartupRoute() {
     const params = new URLSearchParams(window.location.search);
     const isVerifyPath = window.location.pathname.endsWith('/verify') || window.location.hash === '#verify' || params.get('verify') === '1';
@@ -2573,4 +2244,4 @@ async function processFileScan(file, forceMode, isDemo, presetCat) {
   handleStartupRoute();
 </script>
 </body>
-</html>
+  </html>
