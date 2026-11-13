@@ -1599,17 +1599,100 @@ const I18N = {
     };
 
     const thumbEl = document.getElementById('scan-thumb');
-    thumbEl.src = thumb;
-    thumbEl.classList.remove('hidden');
+async function processFileScan(file, forceMode, isDemo, presetCat) {
+  const t = I18N[lang];
+  const nowObj = new Date();
+  const nowIso = nowObj.toISOString();
+  const localTime = formatLocalDateTime(nowObj);
+  const prog = document.getElementById('scan-progress');
+  const fill = document.getElementById('progress-fill');
+  document.getElementById('lbl-ocr-status').textContent = t.ocrRunning;
+  prog.classList.remove('hidden');
+  document.getElementById('home-hud').classList.add('hidden');
+  document.getElementById('scan-result').classList.add('hidden');
+  fill.style.width = '10%';
+
+  let hash = '', thumb = '', aiDetection = null, ocrText = '';
+
+  try {
+    // 1) Hash SHA-256
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      hash = await sha256Hex(arrayBuffer);
+    } catch (e) {
+      console.warn('Hash error:', e);
+      hash = 'HASH_ERROR_' + Date.now();
+    }
+    fill.style.width = '25%';
+
+    // 2) Miniature
+    try {
+      thumb = await makeThumb(file);
+    } catch (e) {
+      console.warn('Thumb error:', e);
+      thumb = '';
+    }
+    fill.style.width = '40%';
+
+    // 3) Détection IA (avec timeout de 6s max)
+    try {
+      const aiPromise = detectAIImage(file, (p) => {
+        fill.style.width = `${40 + Math.round(p * 0.2)}%`;
+      });
+      const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 6000));
+      aiDetection = await Promise.race([aiPromise, timeoutPromise]);
+    } catch (e) {
+      console.warn('AI detection error:', e);
+      aiDetection = null;
+    }
+    fill.style.width = '65%';
+
+    // 4) OCR Tesseract (facultatif, avec timeout de 15s)
+    try {
+      if (typeof Tesseract !== 'undefined') {
+        const ocrInput = await prepareOcrImage(file);
+        const ocrPromise = Tesseract.recognize(ocrInput, getOcrLangs(), {
+          logger: (m) => {
+            if (m.status === 'recognizing text') {
+              fill.style.width = `${65 + Math.round(m.progress * 30)}%`;
+            }
+          }
+        });
+        const ocrTimeout = new Promise((resolve) => setTimeout(() => resolve(null), 15000));
+        const res = await Promise.race([ocrPromise, ocrTimeout]);
+        if (res && res.data && res.data.text) ocrText = res.data.text;
+      }
+    } catch (e) {
+      console.warn('OCR error:', e);
+      ocrText = '';
+    }
+    fill.style.width = '100%';
+
+    // 5) Analyse du texte
+    const ai = analyzeOcrText(ocrText);
+    const safeName = file.name || `capture_${nowIso.slice(0,10)}.jpg`;
+    currentScan = {
+      file, fileName: safeName, hash, thumb, nowIso, localTime,
+      ai, ocrText, isDemo: Boolean(isDemo), aiDetection
+    };
+
+    // 6) Affichage miniature
+    const thumbEl = document.getElementById('scan-thumb');
+    if (thumb) {
+      thumbEl.src = thumb;
+      thumbEl.classList.remove('hidden');
+    } else {
+      thumbEl.classList.add('hidden');
+    }
     document.getElementById('demo-dl-wrap').classList.toggle('hidden', !isDemo);
 
-    // Remplissage formulaire SUB
-    document.getElementById('sub-name').value = ai.serviceName;
-    document.getElementById('sub-price').value = ai.price;
-    document.getElementById('sub-curr').value = ai.curr;
-    document.getElementById('sub-date').value = ai.targetDate;
+    // 7) Remplissage formulaire SUB
+    document.getElementById('sub-name').value = ai.serviceName || '';
+    document.getElementById('sub-price').value = ai.price || '';
+    document.getElementById('sub-curr').value = ai.curr || 'EUR';
+    document.getElementById('sub-date').value = ai.targetDate || '';
     updateAnnualCost();
-    document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate);
+    document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate || '');
 
     const traps = [];
     if (ai.hasAutoRenew) traps.push(`<span class="badge badge-err">${esc(t.trapAutoRenew)}</span>`);
@@ -1622,47 +1705,54 @@ const I18N = {
       linkWrap.classList.remove('hidden');
     } else linkWrap.classList.add('hidden');
 
-    // Formulaire PROOF
+    // 8) Formulaire PROOF
     document.getElementById('proof-title').value = safeName.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
     if (presetCat && presetCat !== 'SUB') document.getElementById('proof-cat').value = presetCat;
-    else if (ai.proofCat !== 'OTHER') document.getElementById('proof-cat').value = ai.proofCat;
-    const brand = getB2bBrand();
-    document.getElementById('proof-company').value = brand.name || '';
+    else if (ai.proofCat && ai.proofCat !== 'OTHER') document.getElementById('proof-cat').value = ai.proofCat;
+
+    try {
+      const brand = getB2bBrand();
+      document.getElementById('proof-company').value = brand.name || '';
+    } catch (_) {}
+
     document.getElementById('proof-local-time').value = localTime;
     document.getElementById('proof-hash-preview').textContent = hash;
     document.getElementById('proof-time').value = nowIso;
 
-    refreshB2bUi();
+    try { refreshB2bUi(); } catch (_) {}
 
-    // 🎯 Affichage du panneau de détection IA
+    // 9) Panneau détection IA
     if (aiDetection) {
-      renderAIDetectionPanel(aiDetection);
+      try { renderAIDetectionPanel(aiDetection); } catch (e) {
+        console.warn('renderAI error:', e);
+        document.getElementById('ai-detection-card').classList.add('hidden');
+      }
     } else {
       document.getElementById('ai-detection-card').classList.add('hidden');
     }
 
+    // 10) AFFICHAGE FINAL
     switchDetectedMode(forceMode || (ai.isSub ? 'SUB' : 'PROOF'));
     document.getElementById('scan-result').classList.remove('hidden');
-  }
 
-  function switchDetectedMode(mode) {
-    document.getElementById('mode-sub-btn').classList.toggle('active', mode === 'SUB');
-    document.getElementById('mode-proof-btn').classList.toggle('active', mode === 'PROOF');
-    document.getElementById('form-sub').classList.toggle('hidden', mode !== 'SUB');
-    document.getElementById('form-proof').classList.toggle('hidden', mode !== 'PROOF');
+  } catch (fatalError) {
+    // Si même le bloc principal plante, on force l'affichage
+    console.error('FATAL scan error:', fatalError);
+    prog.classList.add('hidden');
+    document.getElementById('scan-result').classList.remove('hidden');
+    toast('⚠️ Erreur lors de l\'analyse, mais l\'image est chargée.');
+    if (!currentScan) {
+      currentScan = {
+        file, fileName: file.name || 'image.jpg', hash: 'ERROR', thumb: '',
+        nowIso, localTime, ai: analyzeOcrText(''), ocrText: '', isDemo: false, aiDetection: null
+      };
+      document.getElementById('proof-hash-preview').textContent = 'Erreur hash';
+      document.getElementById('proof-local-time').value = localTime;
+      document.getElementById('proof-time').value = nowIso;
+    }
+    switchDetectedMode('PROOF');
   }
-
-  function updateAnnualCost() {
-    const p = parseFloat(document.getElementById('sub-price').value) || 0;
-    const c = document.getElementById('sub-curr').value;
-    document.getElementById('sub-annual').value = p > 0 ? `${(p * 12).toFixed(2)} ${c}` : '0';
-  }
-
-  function closeScanResult() {
-    document.getElementById('scan-result').classList.add('hidden');
-    document.getElementById('home-hud').classList.remove('hidden');
-    currentScan = null;
-  }
+}
 
   // ============================================================
   // 📅 CALENDRIER .ICS
