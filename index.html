@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#050814">
-  <title>SHIELDPROOF v7.5.0 — AI Trap &amp; Proof Shield</title>
+  <title>SHIELDPROOF v7.5.3 — AI Trap &amp; Proof Shield</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -118,6 +118,31 @@
     .version-footer summary::-webkit-details-marker { display: none; }
     .version-badge { color: var(--cyan); }
     .changelog-box { text-align: start; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 11.5px; color: #cbd5e1; line-height: 1.55; }
+    .legal-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 10px; }
+    .legal-link-btn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      padding: 5px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+    .legal-link-btn:active, .legal-link-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .legal-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 12px; }
+    .legal-tab {
+      padding: 8px 4px; border-radius: 10px; text-align: center; font-size: 11px; font-weight: 700;
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); cursor: pointer;
+    }
+    .legal-tab.active { background: rgba(34,211,238,0.18); color: var(--cyan); border-color: var(--cyan); }
+    .legal-body {
+      background: rgba(0,0,0,0.34); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; font-size: 12.5px; line-height: 1.6; color: #cbd5e1; user-select: text;
+    }
+    .legal-body h4 { margin: 12px 0 5px; color: var(--cyan); font-size: 13px; }
+    .legal-body h4:first-child { margin-top: 0; }
+    .legal-body p { margin: 0 0 8px; }
+    .legal-body ul { margin: 4px 0 10px; padding-inline-start: 18px; }
+    .legal-body li { margin-bottom: 4px; }
+    .legal-warn {
+      background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.35);
+      color: #fde68a; border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 12px;
+    }
     .modal-backdrop { position: fixed; inset: 0; z-index: 40; background: rgba(3,6,16,0.84); backdrop-filter: blur(8px); display: flex; align-items: flex-end; justify-content: center; padding: 12px; }
     .modal-sheet { width: 100%; max-width: 560px; max-height: 88vh; overflow-y: auto; background: #0d142a; border: 1px solid rgba(34,211,238,0.4); border-radius: 22px; padding: 18px; animation: fadeUp 0.22s var(--ease); }
     .progress-wrap { margin-top: 12px; }
@@ -291,6 +316,12 @@
         <summary><span class="version-badge">SHIELDPROOF v7.5.0</span> • <span id="lbl-updated-date"></span> ▾</summary>
         <div class="changelog-box" id="lbl-changelog"></div>
       </details>
+      <div class="legal-links">
+        <button class="legal-link-btn" onclick="openLegalModal('mentions')" id="lnk-mentions"></button>
+        <button class="legal-link-btn" onclick="openLegalModal('cgu')" id="lnk-cgu"></button>
+        <button class="legal-link-btn" onclick="openLegalModal('rgpd')" id="lnk-rgpd"></button>
+        <button class="legal-link-btn" onclick="openLegalModal('ccpa')" id="lnk-ccpa"></button>
+      </div>
     </div>
   </section>
 
@@ -323,6 +354,16 @@
       <div class="muted" style="margin:4px 0 10px;" id="lbl-export-sub"></div>
       <button class="btn btn-tonal" onclick="exportBackupJson()">⬇️ <span id="txt-exp-json"></span></button>
       <button class="btn btn-danger" onclick="clearAllDb()">🗑️ <span id="txt-clear-all"></span></button>
+    </div>
+    <div class="card">
+      <div style="font-weight:800;font-size:15px;" id="lbl-legal-card-title"></div>
+      <div class="muted" style="margin:4px 0 10px;" id="lbl-legal-card-sub"></div>
+      <div class="actions">
+        <button class="btn btn-tonal btn-sm" onclick="openLegalModal('mentions')" id="btn-set-mentions"></button>
+        <button class="btn btn-tonal btn-sm" onclick="openLegalModal('cgu')" id="btn-set-cgu"></button>
+        <button class="btn btn-tonal btn-sm" onclick="openLegalModal('rgpd')" id="btn-set-rgpd"></button>
+        <button class="btn btn-tonal btn-sm" onclick="openLegalModal('ccpa')" id="btn-set-ccpa"></button>
+      </div>
     </div>
     <div class="card">
       <div style="font-weight:800;font-size:15px;">SHIELDPROOF v7.5.0 — by AITECHPRO</div>
@@ -360,6 +401,30 @@
       <input type="text" id="in-license-key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX">
     </div>
     <button class="btn" id="btn-activate-key" onclick="activateGumroadKey()">🔓 <span id="txt-activate-key"></span></button>
+    <div class="legal-links" style="margin-top:12px;">
+      <button class="legal-link-btn" onclick="openLegalModal('cgu')" id="pro-lnk-cgu"></button>
+      <button class="legal-link-btn" onclick="openLegalModal('rgpd')" id="pro-lnk-rgpd"></button>
+      <button class="legal-link-btn" onclick="openLegalModal('ccpa')" id="pro-lnk-ccpa"></button>
+    </div>
+  </div>
+</div>
+
+<div id="legal-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeLegalModal()">
+  <div class="modal-sheet">
+    <div class="flex" style="justify-content:space-between;margin-bottom:6px;">
+      <strong style="font-size:16px;" id="lbl-legal-modal-title"></strong>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-tonal btn-sm" onclick="copyLegalText()" id="btn-copy-legal">📋</button>
+        <button class="btn btn-tonal btn-sm" onclick="closeLegalModal()">✕</button>
+      </div>
+    </div>
+    <div class="legal-tabs">
+      <div class="legal-tab active" data-ltab="mentions" onclick="switchLegalTab('mentions')" id="ltab-mentions"></div>
+      <div class="legal-tab" data-ltab="cgu" onclick="switchLegalTab('cgu')" id="ltab-cgu"></div>
+      <div class="legal-tab" data-ltab="rgpd" onclick="switchLegalTab('rgpd')" id="ltab-rgpd"></div>
+      <div class="legal-tab" data-ltab="ccpa" onclick="switchLegalTab('ccpa')" id="ltab-ccpa"></div>
+    </div>
+    <div class="legal-body" id="legal-content"></div>
   </div>
 </div>
 
@@ -463,8 +528,209 @@
   let proofsCache = [];
   let currentScan = null;
   let lastCreatedProofId = null;
+  let currentLegalTab = 'mentions';
   const P10 = GUMROAD_CONFIG.pack10Price;
   const PPRO = GUMROAD_CONFIG.proPrice;
+
+  const LEGAL_TEXTS = {
+    fr: {
+      modalTitle: 'Informations Légales & Confidentialité',
+      tabs: { mentions: 'Mentions légales', cgu: 'CGU', rgpd: 'RGPD (UE)', ccpa: 'CCPA / USA' },
+      cardTitle: '⚖️ Mentions légales, CGU, RGPD & CCPA',
+      cardSub: 'Transparence complète sur votre vie privée locale (UE & USA) et conditions d’utilisation.',
+      content: {
+        mentions: `
+          <h4>1. Éditeur de l'application</h4>
+          <p>L'application web progressive (PWA) <strong>SHIELDPROOF (v${APP_VERSION})</strong> est éditée par <strong>AITECHPRO</strong>.<br>
+          • Raison sociale / Nom : <strong>[Nom / Raison sociale AITECHPRO à compléter]</strong><br>
+          • Adresse postale : <strong>[Adresse complète en France / UE à compléter]</strong><br>
+          • Immatriculation (SIRET / RCS) : <strong>[N° SIRET à compléter]</strong><br>
+          • Directeur de publication : <strong>[Nom du responsable]</strong><br>
+          • Contact e-mail : <strong>[contact@aitechpro-domaine.com]</strong></p>
+          <h4>2. Hébergement &amp; Prestataires techniques</h4>
+          <p>• Hébergement statique de l'application : <strong>[Nom et adresse de l'hébergeur, ex. Cloudflare Pages / GitHub Pages]</strong>.<br>
+          • Validation des clés de licence : Proxy technique Cloudflare Workers (<em>shieldproof-verify.aitechpro2.workers.dev</em>).<br>
+          • Paiement &amp; facturation (Merchant of Record) : <strong>Gumroad Inc.</strong>, 548 Market St, San Francisco, CA 94104, USA.</p>
+          <h4>3. Propriété intellectuelle</h4>
+          <p>La marque SHIELDPROOF, son interface, son code source et ses textes sont la propriété exclusive d'AITECHPRO. Les bibliothèques open-source intégrées (Tesseract.js, jsPDF) restent soumises à leurs licences respectives.</p>`,
+        cgu: `
+          <div class="legal-warn">⚠️ <strong>Avertissement Juridique Essentiel :</strong> SHIELDPROOF est un outil d'assistance technique local. Il ne constitue ni un cabinet d'avocats, ni un commissaire de justice (huissier), ni un notaire, ni un prestataire de confiance qualifié au sens du règlement européen <strong>eIDAS (UE n° 910/2014)</strong>.</div>
+          <h4>1. Objet &amp; Fonctionnement local</h4>
+          <p>SHIELDPROOF permet d'analyser localement des captures d'écran par reconnaissance optique (OCR Tesseract.js), de générer des rappels calendrier (.ics) et modèles de courriers de résiliation, et de sceller des images par empreinte cryptographique SHA-256 (Web Crypto API) avec certificat PDF/PNG.</p>
+          <h4>2. Portée probante &amp; Responsabilité utilisateur</h4>
+          <ul>
+            <li>L'empreinte SHA-256 atteste mathématiquement de l'intégrité binaire d'un fichier par rapport à l'original conservé.</li>
+            <li>L'horodatage local et UTC repose sur l'horloge système de l'appareil de l'utilisateur et n'équivaut pas à un horodatage qualifié eIDAS ni à un constat d'huissier. La recevabilité devant une juridiction relève de l'appréciation souveraine du juge.</li>
+            <li>Les modèles de lettres de résiliation et montants détectés par OCR sont fournis à titre indicatif : vous devez vérifier toutes les informations avant envoi.</li>
+          </ul>
+          <h4>3. Accès gratuit, Packs &amp; Licences Gumroad</h4>
+          <p>La 1ère preuve SHA-256 et le scanner OCR sont gratuits. Des crédits supplémentaires (Pack 10 à ${P10} ou Pass Illimité Pro à ${PPRO}, paiement unique sans abonnement) sont vendus via Gumroad. Les conditions de paiement, TVA et remboursement sont régies par Gumroad en tant que Merchant of Record. Toute clé est limitée en nombre d'activations contre le partage frauduleux.</p>
+          <h4>4. Disponibilité &amp; Limitation de responsabilité</h4>
+          <p>L'application est fournie « en l'état ». AITECHPRO ne saurait être tenu responsable des pertes de données locales (vidage du cache navigateur, perte du téléphone) : pensez à utiliser le bouton « Exporter sauvegarde JSON » et à conserver l'image originale non modifiée pour toute vérification SHA-256 future.</p>`,
+        rgpd: `
+          <h4>1. Architecture 100 % Locale (Privacy by Design)</h4>
+          <p>Conformément au <strong>Règlement Général sur la Protection des Données (RGPD — UE 2016/679)</strong>, AITECHPRO applique le principe de minimisation maximale : <strong>vos photos, captures d'écran, textes OCR, abonnements et empreintes SHA-256 ne quittent jamais votre appareil</strong> et ne sont envoyés vers aucun serveur d'AITECHPRO.</p>
+          <h4>2. Stockage local &amp; Cookies (Directive ePrivacy / CNIL)</h4>
+          <ul>
+            <li><strong>Aucun cookie publicitaire ni traceur analytique</strong> n'est utilisé.</li>
+            <li>Vos preuves et alertes sont stockées uniquement dans l'espace local <code>IndexedDB</code> de votre navigateur.</li>
+            <li>Vos préférences de langue et l'état de votre licence sont enregistrés dans <code>localStorage</code> (stockage strictement nécessaire au fonctionnement du service).</li>
+          </ul>
+          <h4>3. Flux réseau limités (Tiers techniques)</h4>
+          <ul>
+            <li><strong>Activation de licence :</strong> Lorsque vous validez une clé Gumroad, seule la clé saisie et l'ID produit transitent via notre proxy Cloudflare Workers vers l'API Gumroad (base légale : exécution du contrat, Art. 6.1.b RGPD).</li>
+            <li><strong>Bibliothèques CDN :</strong> Au premier chargement, votre navigateur télécharge Tesseract.js (<code>cdn.jsdelivr.net</code>) et jsPDF (<code>cdnjs.cloudflare.com</code>) avant mise en cache hors-ligne.</li>
+            <li><strong>Partage volontaire :</strong> L'envoi via WhatsApp, e-mail ou menu de partage OS n'a lieu qu'à votre demande explicite.</li>
+          </ul>
+          <h4>4. Vos droits RGPD</h4>
+          <p>Vous disposez d'un droit d'accès, de portabilité (« Exporter sauvegarde JSON ») et d'effacement immédiat (« Effacer toutes les données » dans l'onglet Export). Pour toute question relative à une commande Gumroad ou vos droits : <strong>[contact@aitechpro-domaine.com]</strong>. Vous pouvez également introduire une réclamation auprès de la <strong>CNIL</strong> (www.cnil.fr).</p>`,
+        ccpa: `
+          <div class="legal-warn">🇺🇸 <strong>US Legal Disclaimer &amp; California Privacy Notice (CCPA / CPRA)</strong></div>
+          <h4>1. CCPA / CPRA Privacy Notice (California Residents)</h4>
+          <ul>
+            <li><strong>No Sale or Sharing of Personal Information:</strong> AITECHPRO / SHIELDPROOF does <strong>NOT</strong> sell your personal information and does <strong>NOT</strong> share personal information for cross-context behavioral advertising.</li>
+            <li><strong>Local-First Processing:</strong> Photos, OCR text, and SHA-256 hashes are processed and stored 100% locally on your device. AITECHPRO servers do not collect or retain your images.</li>
+            <li><strong>License Verification Data:</strong> If you purchase a license via Gumroad (Merchant of Record) or activate a key, only the license key and product ID are transmitted to our Cloudflare Worker proxy to verify purchase validity.</li>
+            <li><strong>Your California Rights:</strong> You have the Right to Know, Right to Delete (use the in-app "Erase all local data" button for device records, or contact Gumroad / <strong>[contact@aitechpro-domaine.com]</strong> for purchase records), and Right to Non-Discrimination.</li>
+          </ul>
+          <h4>2. Disclaimer of Warranties ("AS IS")</h4>
+          <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE US LAW, SHIELDPROOF IS PROVIDED <strong>"AS IS" AND "AS AVAILABLE"</strong> WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.</p>
+          <h4>3. No Legal Advice &amp; Evidentiary Disclaimer</h4>
+          <p>SHIELDPROOF is not a law firm, notary public, or certified forensic service. Generated cancellation letters, OCR estimates, SHA-256 hashes, and device timestamps do not constitute legal advice and do not guarantee evidentiary admissibility under Federal Rules of Evidence (e.g., FRE 901/902) or state laws. Always preserve the original unedited image file outside the app.</p>
+          <h4>4. Limitation of Liability</h4>
+          <p>TO THE FULLEST EXTENT PERMITTED BY LAW, AITECHPRO SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES. TOTAL AGGREGATE LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY YOU FOR YOUR SHIELDPROOF LICENSE.</p>`
+      }
+    },
+    en: {
+      modalTitle: 'Legal Notice, Terms & Privacy',
+      tabs: { mentions: 'Legal Notice', cgu: 'Terms', rgpd: 'GDPR (EU)', ccpa: 'CCPA / USA' },
+      cardTitle: '⚖️ Legal Notice, Terms, GDPR & CCPA',
+      cardSub: 'Full transparency on 100% local privacy (EU & US) and terms of use.',
+      content: {
+        mentions: `
+          <h4>1. App Publisher</h4>
+          <p>The Progressive Web App (PWA) <strong>SHIELDPROOF (v${APP_VERSION})</strong> is published by <strong>AITECHPRO</strong>.<br>
+          • Legal Name / Entity: <strong>[AITECHPRO Legal Entity Name]</strong><br>
+          • Business Address: <strong>[Registered Business Address]</strong><br>
+          • Registration / Tax ID: <strong>[Registration Number]</strong><br>
+          • Contact Email: <strong>[contact@aitechpro-domain.com]</strong></p>
+          <h4>2. Hosting &amp; Infrastructure Providers</h4>
+          <p>• Static App Hosting: <strong>[Hosting Provider Name &amp; Address]</strong>.<br>
+          • License Verification Proxy: Cloudflare Workers (<em>shieldproof-verify.aitechpro2.workers.dev</em>).<br>
+          • Payment &amp; Merchant of Record: <strong>Gumroad Inc.</strong>, 548 Market St, San Francisco, CA 94104, USA.</p>
+          <h4>3. Intellectual Property</h4>
+          <p>SHIELDPROOF branding, UI, and source code belong to AITECHPRO. Embedded open-source libraries (Tesseract.js, jsPDF) remain governed by their respective licenses.</p>`,
+        cgu: `
+          <div class="legal-warn">⚠️ <strong>Important Disclaimer:</strong> SHIELDPROOF is a local utility tool. It is NOT a law firm, notary, bailiff, or eIDAS Qualified Trust Service Provider (EU Regulation 910/2014).</div>
+          <h4>1. Service Scope</h4>
+          <p>SHIELDPROOF provides client-side OCR subscription scanning (Tesseract.js), local calendar alerts (.ics), cancellation email templates, and SHA-256 cryptographic hashing (Web Crypto API) with PDF/PNG certificates.</p>
+          <h4>2. Evidentiary Scope &amp; User Responsibility</h4>
+          <ul>
+            <li>A SHA-256 hash mathematically proves a file is bit-for-bit identical to the sealed file.</li>
+            <li>Local and UTC timestamps rely on your device clock and are not certified atomic or eIDAS timestamps. Court admissibility depends on applicable local law and judicial discretion.</li>
+            <li>Always review AI-extracted prices, renewal dates, and cancellation drafts before sending.</li>
+          </ul>
+          <h4>3. Pricing &amp; Gumroad Purchases</h4>
+          <p>Your 1st SHA-256 proof and OCR scanner are free. One-time packs (10-Proof Pack at ${P10} or Lifetime Pro at ${PPRO}, zero recurring fees) are processed by Gumroad as Merchant of Record. License keys have activation limits to prevent abuse.</p>
+          <h4>4. Data Preservation</h4>
+          <p>Always back up using "Export JSON backup" and keep the original unedited photo file so SHA-256 verification can match it later.</p>`,
+        rgpd: `
+          <h4>1. 100% Local Architecture (EU GDPR 2016/679)</h4>
+          <p>SHIELDPROOF follows strict Privacy by Design: <strong>your photos, screenshots, OCR text, subscriptions, and SHA-256 hashes never leave your device</strong> and are never uploaded to AITECHPRO servers.</p>
+          <h4>2. Local Storage &amp; No Tracking Cookies</h4>
+          <ul>
+            <li><strong>Zero advertising cookies, zero analytics trackers.</strong></li>
+            <li>Proofs and alerts are stored solely in your browser's <code>IndexedDB</code>; language and license state are stored in <code>localStorage</code> (strictly necessary for app operation).</li>
+          </ul>
+          <h4>3. Limited Network Requests</h4>
+          <ul>
+            <li><strong>License Check:</strong> When activating a Gumroad key, only the key and product ID are sent via our Cloudflare Worker proxy to Gumroad's API (legal basis: performance of contract, Art. 6(1)(b) GDPR).</li>
+            <li><strong>CDN Scripts:</strong> Initial load fetches Tesseract.js (<code>cdn.jsdelivr.net</code>) and jsPDF (<code>cdnjs.cloudflare.com</code>) for offline caching.</li>
+            <li><strong>User-Initiated Sharing:</strong> WhatsApp, Email, and OS file sharing run only when explicitly triggered by you.</li>
+          </ul>
+          <h4>4. Your GDPR Rights</h4>
+          <p>You can exercise portability ("Export JSON backup") and erasure ("Erase all local data") directly in Settings. Contact: <strong>[contact@aitechpro-domain.com]</strong>. You may also lodge a complaint with your EU Data Protection Authority (e.g., CNIL).</p>`,
+        ccpa: `
+          <div class="legal-warn">🇺🇸 <strong>California Privacy Notice (CCPA / CPRA) &amp; US Disclaimer</strong></div>
+          <h4>1. CCPA / CPRA Disclosures</h4>
+          <ul>
+            <li><strong>No Sale or Sharing:</strong> AITECHPRO / SHIELDPROOF does <strong>NOT</strong> sell personal information and does <strong>NOT</strong> share it for cross-context behavioral advertising.</li>
+            <li><strong>Local-First Processing:</strong> Photos, OCR text, and SHA-256 hashes remain strictly on your device. Only Gumroad (Merchant of Record) handles payment info during checkout, and our license proxy only checks license keys.</li>
+            <li><strong>Your Rights:</strong> Right to Know, Right to Delete (clear local records via Settings; email <strong>[contact@aitechpro-domain.com]</strong> or Gumroad for order records), and Right to Non-Discrimination.</li>
+          </ul>
+          <h4>2. Disclaimer of Warranties ("AS IS")</h4>
+          <p>TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, SHIELDPROOF IS PROVIDED <strong>"AS IS" AND "AS AVAILABLE"</strong> WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.</p>
+          <h4>3. No Legal Advice &amp; Limitation of Liability</h4>
+          <p>SHIELDPROOF does not provide legal advice or notarization and does not guarantee admissibility under Federal Rules of Evidence (FRE 901/902) or state law. AGGREGATE LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID FOR THE LICENSE.</p>`
+      }
+    },
+    ar: {
+      modalTitle: 'المعلومات القانونية والخصوصية',
+      tabs: { mentions: 'بيان قانوني', cgu: 'الشروط', rgpd: 'GDPR (أوروبا)', ccpa: 'CCPA (أمريكا)' },
+      cardTitle: '⚖️ البيان القانوني، الشروط، GDPR و CCPA',
+      cardSub: 'شفافية كاملة حول الخصوصية المحلية 100% (الاتحاد الأوروبي وأمريكا).',
+      content: {
+        mentions: `
+          <h4>1. ناشر التطبيق</h4>
+          <p>تطبيق الويب التقدمي <strong>SHIELDPROOF (v${APP_VERSION})</strong> من نشر <strong>AITECHPRO</strong>.<br>
+          • الاسم القانوني: <strong>[اسم الشركة / الناشر]</strong><br>
+          • العنوان: <strong>[العنوان البريدي]</strong><br>
+          • البريد الإلكتروني: <strong>[contact@aitechpro-domain.com]</strong></p>
+          <h4>2. الاستضافة والدفع</h4>
+          <p>• الاستضافة السحابية: <strong>[اسم مزود الاستضافة]</strong>.<br>
+          • التحقق من الترخيص: Cloudflare Workers (<em>shieldproof-verify.aitechpro2.workers.dev</em>).<br>
+          • معالجة المدفوعات: <strong>Gumroad Inc.</strong> (USA).</p>`,
+        cgu: `
+          <div class="legal-warn">⚠️ <strong>تنبيه قانوني:</strong> SHIELDPROOF أداة تقنية محلية وليست مكتب محاماة أو موثقاً رسمياً أو مزود ثقة معتمداً بموجب لائحة eIDAS الأوروبية.</div>
+          <h4>1. نطاق الخدمة</h4>
+          <p>يقدم التطبيق تحليلاً محلياً بالذكاء الاصطناعي (OCR)، ومنبهات تقويم (.ics)، وختم SHA-256 محلي للصور مع إصدار شهادات PDF/PNG.</p>
+          <h4>2. القيمة الإثباتية والمدفوعات</h4>
+          <p>تعتمد البصمة على تطابق الملف الأصلي وتوقيت الجهاز المحلي. يتم الدفع لمرة واحدة عبر Gumroad (${P10} / ${PPRO}) دون اشتراك شهري. احتفظ دائماً بالصورة الأصلية غير المعدلة.</p>`,
+        rgpd: `
+          <h4>1. الخصوصية المحلية 100% (GDPR)</h4>
+          <p>لا تغادر صورك أو بصمات SHA-256 أو اشتراكاتك جهازك أبداً. يتم التخزين محلياً في <code>IndexedDB</code> و<code>localStorage</code> فقط، دون أي ملفات تتبع إعلانية.</p>
+          <h4>2. حقوقك</h4>
+          <p>يمكنك تصدير بياناتك أو مسحها بالكامل فوراً من تبويب الإعدادات. عند تفعيل مفتاح Gumroad يتم إرسال المفتاح فقط للتحقق. للتواصل: <strong>[contact@aitechpro-domain.com]</strong>.</p>`,
+        ccpa: `
+          <div class="legal-warn">🇺🇸 <strong>إشعار الخصوصية لولاية كاليفورنيا (CCPA) وإخلاء المسؤولية</strong></div>
+          <p><strong>عدم بيع البيانات:</strong> لا تقوم AITECHPRO ببيع أو مشاركة أي بيانات شخصية للإعلانات.</p>
+          <p><strong>إخلاء المسؤولية:</strong> يُقدم التطبيق "كما هو" (AS IS) دون أي ضمانات قانونية أو استشارة قانونية، ولا تتجاوز المسؤولية قيمة الترخيص المدفوعة.</p>`
+      }
+    },
+    zh: {
+      modalTitle: '法律声明、服务条款与隐私政策',
+      tabs: { mentions: '法律声明', cgu: '使用条款', rgpd: 'GDPR (欧盟)', ccpa: 'CCPA (美国)' },
+      cardTitle: '⚖️ 法律声明、条款、GDPR 与 CCPA',
+      cardSub: '关于 100% 本地隐私（欧盟与美国合规）及免责声明的完整说明。',
+      content: {
+        mentions: `
+          <h4>1. 应用发布方</h4>
+          <p>渐进式网页应用 <strong>SHIELDPROOF (v${APP_VERSION})</strong> 由 <strong>AITECHPRO</strong> 发布。<br>
+          • 实体名称：<strong>[填写公司或个人主体名称]</strong><br>
+          • 注册地址：<strong>[填写地址]</strong><br>
+          • 联系邮箱：<strong>[contact@aitechpro-domain.com]</strong></p>
+          <h4>2. 托管与支付服务商</h4>
+          <p>• 静态托管：<strong>[托管商名称]</strong>。<br>
+          • 密钥校验代理：Cloudflare Workers (<em>shieldproof-verify.aitechpro2.workers.dev</em>)。<br>
+          • 支付处理（Merchant of Record）：<strong>Gumroad Inc.</strong> (USA)。</p>`,
+        cgu: `
+          <div class="legal-warn">⚠️ <strong>重要法律免责声明：</strong> SHIELDPROOF 仅提供本地技术辅助，不构成律师事务所、公证处或欧盟 eIDAS 认证信任服务。</div>
+          <h4>1. 服务内容与证据效力</h4>
+          <p>本应用在本地运行 OCR 识别、.ics 日历提醒及 SHA-256 哈希防伪印章。时间戳基于您的设备时钟，司法采信度由相关法院依法裁量。请务必妥善保存未经修改的原图文件。</p>
+          <h4>2. 买断套餐</h4>
+          <p>首张存证免费。10 次包 (${P10}) 与终身版 (${PPRO}) 均通过 Gumroad 一次性买断，无月费。</p>`,
+        rgpd: `
+          <h4>1. 100% 本地处理 (欧盟 GDPR 2016/679)</h4>
+          <p>您的照片、OCR 文本、订阅提醒与 SHA-256 哈希<strong>绝不离开您的设备</strong>。所有数据仅保存在浏览器的 <code>IndexedDB</code> 与 <code>localStorage</code> 中，无广告 Cookie 或追踪器。</p>
+          <h4>2. 您的权利</h4>
+          <p>您可随时在“设置”中导出 JSON 备份或一键清空本地数据。仅在激活 Gumroad 密钥时，才会通过 Cloudflare Worker 校验密钥有效性。联系邮箱：<strong>[contact@aitechpro-domain.com]</strong>。</p>`,
+        ccpa: `
+          <div class="legal-warn">🇺🇸 <strong>美国加州消费者隐私法案 (CCPA / CPRA) 与免责声明</strong></div>
+          <p><strong>不出售或共享个人信息：</strong> AITECHPRO / SHIELDPROOF 绝不出售或出于跨上下文广告目的共享您的个人信息。</p>
+          <p><strong>“按现状”免责声明：</strong> 在适用法律允许的最大范围内，本应用按“现状”(AS IS) 提供，不作任何明示或默示担保，亦不构成法律意见；累计赔偿责任不超过您支付的授权费用。</p>`
+      }
+    }
+  };
 
   const I18N = {
     fr: {
@@ -483,13 +749,13 @@
       mod3Title: "Vérificateur d'Authenticité", mod3Desc: 'Prouvez en 1 clic si une photo a été modifiée par IA.',
       faqTitle: 'FAQ — Questions fréquentes',
       updatedDate: 'Mise à jour : 13/11/2026',
-      changelog: `• v${APP_VERSION} : Envoi direct de vrai certificat PDF & Image sur WhatsApp/E-mail, horodatage local + UTC, Pack 10 (${P10}) & Pass Illimité (${PPRO}), FAQ multilingue.`,
+      changelog: `• v${APP_VERSION} : Envoi direct de vrai certificat PDF & Image sur WhatsApp/E-mail, horodatage local + UTC, Pack 10 (${P10}) & Pass Illimité (${PPRO}), FAQ multilingue + Mentions légales, CGU, RGPD (UE) & CCPA (USA).`,
       faqs: [
         { q: 'Comment marche le SHA-256 ?', a: "Imaginez le SHA-256 comme l’ADN mathématique unique d’un fichier.\n\nQuand vous mettez une photo dans SHIELDPROOF, le téléphone lit les millions d'octets de la photo et crée un code unique de 64 caractères (ex. 8f4a9c...21b0).\n\n• Effet papillon : 1 seul pixel modifié (retouche IA, rayure ajoutée, filtre, recadrage) change complètement le code.\n• Sens unique : impossible de fabriquer une fausse photo donnant le même code." },
         { q: 'Comment fonctionne le Scanner IA et comment tester l’authenticité ?', a: "1) Sceller l’original : choisissez une photo de votre Galerie, appuyez sur 🔒 Sceller.\n2) Vérifier la vraie photo (✅ Vert) : dans Preuves → Importer une photo à vérifier → reprenez la même photo.\n3) Test avec une photo modifiée / retouchée par IA (❌ Rouge) : modifiez une copie et importez-la : ❌ NON RECONNU !" },
         { q: 'Comment envoyer le PDF ou la photo certificat sur WhatsApp ou E-mail (0 €) ?', a: "Dans Preuves, appuyez sur 📲 Envoyer PDF ou 🖼️ Envoyer Image : Android ouvre le menu de partage pour attacher le vrai fichier PDF (ou l'image avec la photo + date/heure + SHA-256) directement dans WhatsApp ou Gmail !" },
         { q: 'Combien coûte l’application ?', a: `Votre 1ère certification SHA-256 + le Scanner OCR anti-abonnements sont gratuits (0 €). Pour sceller plus de preuves : Pack 10 preuves à ${P10} ou Pass Illimité à vie à ${PPRO}, sans aucun abonnement.` },
-        { q: 'Est-ce que l’application a accès à ma banque ou envoie mes photos ?', a: "Jamais. Zéro carte bancaire, zéro compte, zéro serveur. Tout tourne à 100 % sur votre téléphone." },
+        { q: 'Est-ce que l’application a accès à ma banque ou envoie mes photos ?', a: "Jamais. Zéro carte bancaire, zéro compte, zéro serveur. Tout tourne à 100 % sur votre téléphone (conforme RGPD & CCPA)." },
         { q: 'Comment l’IA protège-t-elle contre les essais gratuits pièges ?', a: "Elle lit le prix, le service, calcule le coût annuel, rédige la lettre de résiliation et génère une alarme calendrier (.ics) 48h avant." },
         { q: 'Dans quels cas utiliser les Preuves Certifiées ?', a: "Location de voiture (caution), état des lieux Airbnb/appartement, emballage/ouverture de colis (Vinted, eBay, Amazon, Temu)." },
         { q: 'L’application fonctionne-t-elle hors-ligne (Mode Avion) ?', a: "Oui, après le premier chargement et mise en cache." }
@@ -523,7 +789,7 @@
       verifyBtn: 'Importer une photo à vérifier',
       expTitle: 'Exports & Confidentialité', expSub: 'Stockage 100 % local sur votre téléphone, sans accès bancaire.',
       expJson: 'Exporter sauvegarde JSON', clearAll: 'Effacer toutes les données',
-      privacyFoot: 'OCR Tesseract.js local + SHA-256 Web Crypto + PDF & Calendrier .ics natifs. Aucun serveur externe ne reçoit vos images.',
+      privacyFoot: 'OCR Tesseract.js local + SHA-256 Web Crypto + PDF & Calendrier .ics natifs. Conforme RGPD (UE) & CCPA (USA) : aucun serveur externe ne reçoit vos images.',
       nav: ['Scanner IA', 'Alertes', 'Preuves', 'Export'],
       cancelBtn: 'Marquer résilié', copyBtn: 'Copier lettre', alarmBtn: 'Alarme .ics',
       pdfShareBtn: 'Envoyer PDF (WhatsApp/Mail)', imgShareBtn: 'Envoyer Image', waTextBtn: 'Texte', mailBtn: 'E-mail', delBtn: 'Supprimer',
@@ -553,13 +819,13 @@
       mod3Title: 'Authenticity Verifier', mod3Desc: 'Prove in 1 tap if an image was altered by AI.',
       faqTitle: 'FAQ — Frequently Asked Questions',
       updatedDate: 'Updated: 2026-11-13',
-      changelog: `• v${APP_VERSION}: Direct real PDF & Image sharing to WhatsApp/Email, Local + UTC date/time, 10-Proof Pack (${P10}) & Lifetime Pro (${PPRO}), 4-language FAQ.`,
+      changelog: `• v${APP_VERSION}: Direct real PDF & Image sharing to WhatsApp/Email, Local + UTC date/time, 10-Proof Pack (${P10}) & Lifetime Pro (${PPRO}), 4-language FAQ + Legal Notice, Terms, GDPR & CCPA.`,
       faqs: [
         { q: 'How does SHA-256 work?', a: "Think of SHA-256 as a file's unique mathematical DNA. Any 1-pixel edit (AI edit, filter, crop) completely changes the 64-character code." },
         { q: 'How does the Authenticity Verifier work?', a: "1) Seal an original Gallery photo.\n2) Verify the real photo: ✅ AUTHENTIC.\n3) Verify an AI-edited copy: ❌ NOT VERIFIED!" },
         { q: 'How do I send the PDF or Image certificate on WhatsApp / Email ($0)?', a: "Tap 📲 Send PDF or 🖼️ Send Image in Proofs: Android opens the native share sheet so you can attach the actual PDF or PNG certificate inside WhatsApp or Gmail!" },
         { q: 'How much does SHIELDPROOF cost?', a: `Your 1st SHA-256 proof + OCR subscription scanner are free (€0). Extra packs: 10-Proof Pack (${P10}) or Lifetime Unlimited (${PPRO}) with zero monthly subscription.` },
-        { q: 'Does SHIELDPROOF access my bank or upload photos?', a: 'Never. Zero bank login, zero cloud upload.' },
+        { q: 'Does SHIELDPROOF access my bank or upload photos?', a: 'Never. Zero bank login, zero cloud upload (GDPR & CCPA compliant).' },
         { q: 'How does it stop free-trial traps?', a: 'AI extracts price/date, drafts a legal cancellation email, and creates a 48h calendar alarm (.ics).' },
         { q: 'When should I use Certified Proofs?', a: 'Rental cars, Airbnb move-ins, and e-commerce packing/unboxing.' },
         { q: 'Does it work offline?', a: 'Yes, once cached.' }
@@ -593,7 +859,7 @@
       verifyBtn: 'Pick photo to verify',
       expTitle: 'Exports & Privacy', expSub: '100% local on your phone. Zero bank login required.',
       expJson: 'Export JSON backup', clearAll: 'Erase all local data',
-      privacyFoot: 'Local Tesseract.js OCR + Web Crypto SHA-256 + native PDF & .ics alarms.',
+      privacyFoot: 'Local Tesseract.js OCR + Web Crypto SHA-256 + native PDF & .ics alarms. GDPR (EU) & CCPA (USA) compliant: zero images leave your device.',
       nav: ['AI Scan', 'Alerts', 'Proofs', 'Export'],
       cancelBtn: 'Mark Cancelled', copyBtn: 'Copy email', alarmBtn: 'Alarm .ics',
       pdfShareBtn: 'Send PDF (WhatsApp/Mail)', imgShareBtn: 'Send Image', waTextBtn: 'Text', mailBtn: 'Email', delBtn: 'Delete',
@@ -623,7 +889,7 @@
       mod3Title: 'مدقق أصالة الصور', mod3Desc: 'اكشف بنقرة واحدة هل تم تعديل الصورة بالذكاء الاصطناعي.',
       faqTitle: 'الأسئلة الشائعة (FAQ)',
       updatedDate: 'تحديث: 13/11/2026',
-      changelog: `• v${APP_VERSION}: إرسال ملف PDF وصورة الشهادة عبر واتساب والإيميل، التوقيت المحلي وUTC، باقات ${P10} و${PPRO}.`,
+      changelog: `• v${APP_VERSION}: إرسال ملف PDF وصورة الشهادة عبر واتساب والإيميل، التوقيت المحلي وUTC، باقات ${P10} و${PPRO}، والوثائق القانونية (GDPR/CCPA).`,
       faqs: [
         { q: 'كيف يعمل SHA-256؟', a: 'كالحمض النووي الرقمي للملف: أي تعديل لبكسل واحد يغيّر البصمة بالكامل.' },
         { q: 'كيف أختبر أصالة الصورة؟', a: 'احفظ الصورة الأصلية ثم افحص نفس الصورة (✅) ثم نسخة معدلة (❌).' },
@@ -663,7 +929,7 @@
       verifyBtn: 'اختر صورة للتحقق',
       expTitle: 'التصدير والخصوصية', expSub: 'تخزين محلي بالكامل بدون ربط بنكي.',
       expJson: 'تصدير نسخة JSON', clearAll: 'مسح جميع البيانات',
-      privacyFoot: 'تحليل محلي وتشفير SHA-256 وإصدار PDF محلياً دون خوادم.',
+      privacyFoot: 'تحليل محلي وتشفير SHA-256 وإصدار PDF محلياً دون خوادم (متوافق مع GDPR وCCPA).',
       nav: ['مسح ذكي', 'تنبيهات', 'إثباتات', 'إعدادات'],
       cancelBtn: 'تم الإلغاء', copyBtn: 'نسخ الرسالة', alarmBtn: 'منبه .ics',
       pdfShareBtn: 'إرسال PDF (واتساب)', imgShareBtn: 'إرسال صورة', waTextBtn: 'نص', mailBtn: 'إيميل', delBtn: 'حذف',
@@ -693,13 +959,13 @@
       mod3Title: 'AI 修图真伪校验', mod3Desc: '一键比对照片是否被 AI 篡改。',
       faqTitle: '常见问题 (FAQ)',
       updatedDate: '更新日期：2026-11-13',
-      changelog: `• v${APP_VERSION}：支持 WhatsApp/邮件直接发送 PDF 与证书图片、本地与 UTC 时间戳、${P10} 与 ${PPRO} 买断套餐。`,
+      changelog: `• v${APP_VERSION}：支持 WhatsApp/邮件直接发送 PDF 与证书图片、本地与 UTC 时间戳、${P10} 与 ${PPRO} 买断套餐，以及法律声明/GDPR/CCPA。`,
       faqs: [
         { q: 'SHA-256 如何工作？', a: '照片的数字 DNA，修改 1 像素就会彻底改变 64 位指纹。' },
         { q: '如何测试真伪校验？', a: '封存相册原图后，原图校验为 ✅，修改副本校验为 ❌。' },
         { q: '如何将 PDF 或证书图片直接发到 WhatsApp / 邮件？', a: '点击 📲 发送 PDF 或 🖼️ 发送图片，系统会调起手机分享菜单并直接附加文件！' },
         { q: '价格是多少？', a: `首张存证免费，10次包 ${P10} 或终身无限版 ${PPRO}（无月费）。` },
-        { q: '会上传照片或读取银行卡吗？', a: '绝不，100% 本地运行。' },
+        { q: '会上传照片或读取银行卡吗？', a: '绝不，100% 本地运行（符合 GDPR 与 CCPA）。' },
         { q: '如何防自动续费？', a: '生成扣费前 48 小时日历闹钟与取消邮件。' },
         { q: '适用场景？', a: '租车、退房押金、快递开箱防伪。' },
         { q: '支持离线吗？', a: '支持。' }
@@ -733,7 +999,7 @@
       verifyBtn: '选择照片验证',
       expTitle: '导出与隐私', expSub: '无需绑定银行卡，100% 本地存储。',
       expJson: '导出 JSON 备份', clearAll: '清空本地数据',
-      privacyFoot: '本地 OCR + SHA-256 + 原生 PDF 导出，不上传任何图片。',
+      privacyFoot: '本地 OCR + SHA-256 + 原生 PDF 导出，符合欧盟 GDPR 与美国 CCPA，绝不上传任何图片。',
       nav: ['AI 扫描', '扣费预警', '存证箱', '设置'],
       cancelBtn: '标记已取消', copyBtn: '复制邮件', alarmBtn: '日历闹钟',
       pdfShareBtn: '发送 PDF (WhatsApp/邮件)', imgShareBtn: '发送图片', waTextBtn: '纯文字', mailBtn: '邮件', delBtn: '删除',
@@ -782,6 +1048,25 @@
     const url = plan === 'unlimited' ? GUMROAD_CONFIG.proUrl : GUMROAD_CONFIG.pack10Url;
     if (!url) { toast(I18N[lang].checkoutNotReady); return; }
     window.open(url, '_blank', 'noopener');
+  }
+
+  function openLegalModal(tab) {
+    currentLegalTab = tab || 'mentions';
+    switchLegalTab(currentLegalTab);
+    document.getElementById('legal-modal').classList.remove('hidden');
+  }
+  function closeLegalModal() {
+    document.getElementById('legal-modal').classList.add('hidden');
+  }
+  function switchLegalTab(tab) {
+    currentLegalTab = tab;
+    document.querySelectorAll('.legal-tab').forEach((el) => el.classList.toggle('active', el.dataset.ltab === tab));
+    const L = LEGAL_TEXTS[lang] || LEGAL_TEXTS.fr;
+    document.getElementById('legal-content').innerHTML = L.content[tab] || L.content.mentions;
+  }
+  function copyLegalText() {
+    const txt = document.getElementById('legal-content').innerText || '';
+    if (txt) copySafe(txt).then(() => toast(I18N[lang].copiedToast));
   }
 
   async function verifyKeyWithProduct(productId, key, increment) {
@@ -854,6 +1139,8 @@
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
     document.querySelectorAll('.lang-pill').forEach((b) => b.classList.toggle('active', b.dataset.lang === l));
     const t = I18N[l];
+    const L = LEGAL_TEXTS[l] || LEGAL_TEXTS.fr;
+
     document.getElementById('lbl-sub').textContent = t.sub;
     document.getElementById('lbl-hero-title').textContent = t.heroTitle;
     document.getElementById('lbl-hero-sub').textContent = t.heroSub;
@@ -912,6 +1199,20 @@
     document.getElementById('txt-clear-all').textContent = t.clearAll;
     document.getElementById('lbl-privacy-foot').textContent = t.privacyFoot;
     ['scan','subs','proofs','settings'].forEach((id, i) => document.getElementById('nav-' + id).textContent = t.nav[i]);
+
+    document.getElementById('lbl-legal-modal-title').textContent = L.modalTitle;
+    document.getElementById('lbl-legal-card-title').textContent = L.cardTitle;
+    document.getElementById('lbl-legal-card-sub').textContent = L.cardSub;
+    ['mentions','cgu','rgpd','ccpa'].forEach((k) => {
+      document.getElementById('lnk-' + k).textContent = L.tabs[k];
+      document.getElementById('btn-set-' + k).textContent = L.tabs[k];
+      document.getElementById('ltab-' + k).textContent = L.tabs[k];
+    });
+    document.getElementById('pro-lnk-cgu').textContent = L.tabs.cgu;
+    document.getElementById('pro-lnk-rgpd').textContent = L.tabs.rgpd;
+    document.getElementById('pro-lnk-ccpa').textContent = L.tabs.ccpa;
+    switchLegalTab(currentLegalTab);
+
     renderFaq();
     renderHomeHud();
     renderSubs();
