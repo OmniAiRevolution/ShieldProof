@@ -24,10 +24,7 @@
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
-    html, body {
-      margin: 0; padding: 0; background: var(--bg); color: var(--text);
-      user-select: none;
-    }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); user-select: none; }
     input, textarea { user-select: text; }
     body { padding-bottom: calc(92px + env(safe-area-inset-bottom)); position: relative; }
 
@@ -63,7 +60,7 @@
     }
     .live-dot {
       width: 6px; height: 6px; border-radius: 50%; background: var(--ok);
-      box-shadow: 0 0 8px var(--ok); animation: pulseDot 1.6s infinite;
+      box-shadow: 0 0 8px var(--ok); animation: pulseDot 1.6s infinite; flex-shrink: 0;
     }
     @keyframes pulseDot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.75); } }
 
@@ -88,7 +85,7 @@
 
     .hero-scan {
       position: relative; overflow: hidden; display: block; text-align: center;
-      padding: 28px 16px; border-radius: 20px;
+      padding: 26px 16px; border-radius: 20px;
       border: 1.5px solid rgba(34, 211, 238, 0.38);
       background: radial-gradient(circle at 50% 25%, rgba(34, 211, 238, 0.14), rgba(10, 16, 36, 0.92));
       cursor: pointer; transition: transform 0.15s var(--ease);
@@ -110,7 +107,7 @@
       100% { transform: translateY(200px); opacity: 0; }
     }
 
-    .radar-wrap { position: relative; width: 76px; height: 76px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
+    .radar-wrap { position: relative; width: 74px; height: 74px; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; }
     .radar-ring {
       position: absolute; inset: 0; border-radius: 22px;
       border: 1.5px solid rgba(34, 211, 238, 0.55);
@@ -122,7 +119,7 @@
       100% { transform: scale(1.45); opacity: 0; }
     }
     .scan-icon {
-      position: relative; z-index: 2; width: 58px; height: 58px; border-radius: 18px;
+      position: relative; z-index: 2; width: 56px; height: 56px; border-radius: 18px;
       background: linear-gradient(135deg, #2563eb, #06b6d4); color: #fff;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 0 22px rgba(34, 211, 238, 0.45);
@@ -157,6 +154,35 @@
     .mod-title { font-size: 13px; font-weight: 700; }
     .mod-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
+    .faq-section { margin-top: 18px; }
+    .faq-heading {
+      font-size: 14px; font-weight: 800; letter-spacing: 0.4px;
+      color: var(--cyan); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    details.faq-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 8px; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    details.faq-item[open] { border-color: rgba(34, 211, 238, 0.45); }
+    summary.faq-q {
+      list-style: none; padding: 13px 14px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700;
+    }
+    summary.faq-q::-webkit-details-marker { display: none; }
+    .faq-num {
+      font-size: 10px; font-weight: 800; color: var(--cyan);
+      background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.35);
+      padding: 3px 7px; border-radius: 7px; flex-shrink: 0;
+    }
+    .faq-chevron { margin-inline-start: auto; color: var(--muted); transition: transform 0.2s var(--ease); flex-shrink: 0; }
+    details.faq-item[open] .faq-chevron { transform: rotate(180deg); color: var(--cyan); }
+    .faq-a {
+      padding: 10px 14px 14px; font-size: 12.5px; color: #cbd5e1;
+      line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05);
+      white-space: pre-line;
+    }
+
     .progress-wrap { margin-top: 12px; }
     .progress-bar { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
     .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--cyan), var(--ok)); transition: width 0.2s; }
@@ -187,6 +213,7 @@
     .btn:active { transform: scale(0.97); }
     .btn-tonal { background: var(--surface-2); border: 1px solid var(--border); color: #fff; }
     .btn-ok { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+    .btn-wa { background: #16a34a; color: #fff; }
     .btn-warn { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.45); color: var(--warn); }
     .btn-danger { background: rgba(251, 113, 133, 0.14); border: 1px solid rgba(251, 113, 133, 0.4); color: var(--err); }
     .btn-sm { width: auto; padding: 8px 11px; font-size: 12px; border-radius: 10px; margin-top: 0; }
@@ -228,6 +255,22 @@
       background: #131c3a; border: 1px solid var(--cyan); color: #fff;
       padding: 10px 18px; border-radius: 99px; font-size: 13px; font-weight: 600; display: none; z-index: 30;
     }
+
+    /* Vue d'impression PDF native (0 €) */
+    #print-cert { display: none; }
+    @media print {
+      body { background: #fff !important; color: #111 !important; padding: 0 !important; }
+      body > *:not(#print-cert) { display: none !important; }
+      #print-cert {
+        display: block !important; padding: 24px; border: 2px solid #111;
+        font-family: sans-serif; max-width: 760px; margin: 0 auto;
+      }
+      #print-cert .p-hash {
+        font-family: monospace; background: #f1f5f9; padding: 10px;
+        border: 1px solid #cbd5e1; word-break: break-all; font-size: 12px;
+      }
+      #print-cert img { max-width: 100%; max-height: 360px; margin-top: 14px; border: 1px solid #cbd5e1; }
+    }
   </style>
 </head>
 <body>
@@ -240,7 +283,7 @@
 <header>
   <div style="min-width:0;">
     <div class="logo">SHIELD<span>PROOF</span></div>
-    <div class="sub"><span class="live-dot"></span><span id="lbl-sub">AI Shield • 100% Local</span></div>
+    <div class="sub"><span class="live-dot"></span><span id="lbl-sub">IA Locale Active • 100% Privé</span></div>
   </div>
   <div class="lang-bar">
     <button class="lang-pill active" data-lang="fr" onclick="setLang('fr')">FR</button>
@@ -251,6 +294,7 @@
 </header>
 
 <main>
+  <!-- ONGLET 1 : SCANNER IA -->
   <section id="view-scan" class="anim">
     <div class="card" style="padding:12px;">
       <label class="hero-scan" for="scan-input">
@@ -273,51 +317,14 @@
       </div>
     </div>
 
-    <div id="home-hud" class="anim">
-      <div class="hud-grid">
-        <div class="hud-card" onclick="switchTab('subs', 1)" style="cursor:pointer;">
-          <div class="muted" id="lbl-hud-subs">Alertes actives</div>
-          <div class="hud-val" style="color:var(--warn);" id="home-subs-val">0</div>
-        </div>
-        <div class="hud-card" onclick="switchTab('proofs', 2)" style="cursor:pointer;">
-          <div class="muted" id="lbl-hud-proofs">Preuves SHA-256</div>
-          <div class="hud-val" style="color:var(--cyan);" id="home-proofs-val">0</div>
-        </div>
-      </div>
-
-      <div class="ai-modules">
-        <div class="ai-mod" onclick="document.getElementById('scan-input').click()">
-          <div class="mod-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-          <div style="flex:1;">
-            <div class="mod-title" id="lbl-mod1-title">Détecteur OCR Anti-Pièges</div>
-            <div class="mod-desc" id="lbl-mod1-desc">Lit le prix caché, alarme 48h avant (.ics) &amp; lettre juridique.</div>
-          </div>
-          <span class="live-dot"></span>
-        </div>
-
-        <div class="ai-mod" onclick="switchTab('proofs', 2)">
-          <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-          <div style="flex:1;">
-            <div class="mod-title" id="lbl-mod2-title">Sceau Cryptographique SHA-256</div>
-            <div class="mod-desc" id="lbl-mod2-desc">Certifie voitures, Airbnb &amp; colis contre la retouche IA.</div>
-          </div>
-          <span class="live-dot"></span>
-        </div>
-
-        <div class="ai-mod" onclick="switchTab('proofs', 2)">
-          <div class="mod-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-          <div style="flex:1;">
-            <div class="mod-title" id="lbl-mod3-title">Vérificateur d'Authenticité</div>
-            <div class="mod-desc" id="lbl-mod3-desc">Prouvez en 1 clic si une photo a été modifiée par IA.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <!-- RÉSULTAT AUTO IA -->
     <div id="scan-result" class="card anim hidden">
       <div class="flex" style="justify-content:space-between;">
         <span class="badge badge-ok" id="lbl-ai-detected">Détecté automatiquement par l'IA</span>
-        <img id="scan-thumb" class="thumb hidden" alt="">
+        <button class="btn btn-tonal btn-sm" onclick="closeScanResult()">✕</button>
+      </div>
+      <div style="margin-top:10px;text-align:center;">
+        <img id="scan-thumb" class="thumb hidden" style="width:96px;height:96px;" alt="">
       </div>
 
       <div class="mode-switch">
@@ -384,18 +391,73 @@
           </select>
         </div>
         <div class="field">
+          <label id="lbl-proof-local-time">Date &amp; Heure exactes de capture</label>
+          <input type="text" id="proof-local-time" readonly style="color:var(--cyan);font-weight:700;">
+        </div>
+        <div class="field">
           <label id="lbl-proof-hash">Empreinte cryptographique SHA-256 (anti-retouche IA)</label>
           <div class="hash-box" id="proof-hash-preview"></div>
         </div>
         <div class="field">
-          <label id="lbl-proof-time">Horodatage certifié (UTC)</label>
+          <label id="lbl-proof-time">Horodatage universel (UTC)</label>
           <input type="text" id="proof-time" readonly>
         </div>
-        <button class="btn btn-ok" onclick="saveProof()">🔒 <span id="txt-save-proof">Sceller dans le Coffre + Certificat</span></button>
+        <button class="btn btn-ok" onclick="saveProof()">🔒 <span id="txt-save-proof">Sceller dans le Coffre + Partager</span></button>
+      </div>
+    </div>
+
+    <!-- HUD + MODULES + FAQ -->
+    <div id="home-hud" class="anim">
+      <div class="hud-grid">
+        <div class="hud-card" onclick="switchTab('subs', 1)" style="cursor:pointer;">
+          <div class="muted" id="lbl-hud-subs">Alertes actives</div>
+          <div class="hud-val" style="color:var(--warn);" id="home-subs-val">0</div>
+        </div>
+        <div class="hud-card" onclick="switchTab('proofs', 2)" style="cursor:pointer;">
+          <div class="muted" id="lbl-hud-proofs">Preuves SHA-256</div>
+          <div class="hud-val" style="color:var(--cyan);" id="home-proofs-val">0</div>
+        </div>
+      </div>
+
+      <div class="ai-modules">
+        <div class="ai-mod" onclick="document.getElementById('scan-input').click()">
+          <div class="mod-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div style="flex:1;">
+            <div class="mod-title" id="lbl-mod1-title">Détecteur OCR Anti-Pièges</div>
+            <div class="mod-desc" id="lbl-mod1-desc">Lit prix caché, alarme 48h (.ics) &amp; lettre juridique.</div>
+          </div>
+          <span class="live-dot"></span>
+        </div>
+
+        <div class="ai-mod" onclick="switchTab('proofs', 2)">
+          <div class="mod-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <div style="flex:1;">
+            <div class="mod-title" id="lbl-mod2-title">Sceau Cryptographique SHA-256</div>
+            <div class="mod-desc" id="lbl-mod2-desc">Certifie voitures, Airbnb &amp; colis contre retouche IA.</div>
+          </div>
+          <span class="live-dot"></span>
+        </div>
+
+        <div class="ai-mod" onclick="switchTab('proofs', 2)">
+          <div class="mod-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div style="flex:1;">
+            <div class="mod-title" id="lbl-mod3-title">Vérificateur d'Authenticité</div>
+            <div class="mod-desc" id="lbl-mod3-desc">Prouvez en 1 clic si une photo a été modifiée par IA.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-section">
+        <div class="faq-heading">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span id="lbl-faq-title">FAQ — Questions fréquentes</span>
+        </div>
+        <div id="faq-list"></div>
       </div>
     </div>
   </section>
 
+  <!-- ONGLET 2 : ALERTES -->
   <section id="view-subs" class="anim hidden">
     <div class="stat-grid">
       <div class="stat-card">
@@ -410,6 +472,7 @@
     <div id="subs-list"></div>
   </section>
 
+  <!-- ONGLET 3 : PREUVES -->
   <section id="view-proofs" class="anim hidden">
     <div class="card">
       <div style="font-weight:800;font-size:15px;" id="lbl-verify-title">🔍 Vérifier si une photo a été retouchée</div>
@@ -423,6 +486,7 @@
     <div id="proofs-list"></div>
   </section>
 
+  <!-- ONGLET 4 : EXPORT -->
   <section id="view-settings" class="anim hidden">
     <div class="card">
       <div style="font-weight:800;font-size:15px;" id="lbl-export-title">Exports &amp; Sauvegarde locale</div>
@@ -432,7 +496,7 @@
     </div>
     <div class="card">
       <div style="font-weight:800;font-size:15px;">SHIELDPROOF — 0 € Local Edition</div>
-      <div class="muted" style="margin-top:6px;">OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.</div>
+      <div class="muted" style="margin-top:6px;" id="lbl-privacy-foot">OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.</div>
     </div>
   </section>
 </main>
@@ -455,6 +519,9 @@
     <span id="nav-settings">Export</span>
   </div>
 </nav>
+
+<!-- ZONE IMPRESSION PDF NATIVE -->
+<div id="print-cert"></div>
 
 <div id="toast"></div>
 
@@ -540,6 +607,41 @@
       mod1Title: 'Détecteur OCR Anti-Pièges', mod1Desc: 'Lit prix caché, alarme 48h (.ics) & lettre juridique.',
       mod2Title: 'Sceau Cryptographique SHA-256', mod2Desc: 'Certifie voitures, Airbnb & colis contre retouche IA.',
       mod3Title: "Vérificateur d'Authenticité", mod3Desc: 'Prouvez en 1 clic si une photo a été modifiée par IA.',
+      faqTitle: 'FAQ — Questions fréquentes',
+      faqs: [
+        {
+          q: 'Comment marche le SHA-256 ?',
+          a: "Imaginez le SHA-256 comme l’ADN mathématique unique d’un fichier.\n\nQuand vous mettez une photo dans SHIELDPROOF, le téléphone lit les millions d'octets qui composent cette photo et les transforme en un code unique de 64 caractères (ex. 8f4a9c...21b0).\n\n• Effet papillon : si quelqu’un modifie 1 seul pixel (retouche IA, rayure ajoutée, filtre, recadrage d’1 mm, photo compressée par WhatsApp), le code de 64 caractères change complètement du tout au tout.\n• Sens unique : impossible de fabriquer une fausse photo qui donne le même code SHA-256."
+        },
+        {
+          q: 'Comment fonctionne le Scanner IA et comment tester l’authenticité ?',
+          a: "1) Sceller l’original : dans Scanner IA, choisissez une photo déjà dans votre Galerie. L’app enregistre la date/heure exactes et calcule son SHA-256. Appuyez sur 🔒 Sceller dans le Coffre + Partager.\n\n2) Vérifier la vraie photo (✅ Vert) : allez dans l’onglet Preuves → Importer une photo à vérifier → reprenez la même photo. Résultat : ✅ AUTHENTIQUE.\n\n3) Test avec une photo modifiée / retouchée par IA (❌ Rouge) : modifiez une copie de cette photo puis importez-la. Résultat : ❌ NON RECONNU — preuve qu’elle ne correspond pas à l’original !"
+        },
+        {
+          q: 'Comment horodater ma preuve gratuitement à 100 % sur WhatsApp ou E-mail ?',
+          a: "Juste après avoir scellé la photo, appuyez sur 📲 WhatsApp ou ✉️ E-mail (0 €) et envoyez-vous le récapitulatif avec la date, l’heure et le SHA-256 (ou partagez l’image PNG du certificat). Le serveur WhatsApp / E-mail prouve gratuitement la date exacte de réception !"
+        },
+        {
+          q: 'Est-ce que l’application a accès à ma banque ou envoie mes photos ?',
+          a: "Jamais. SHIELDPROOF ne demande ni carte bancaire, ni mot de passe, ni compte. L'analyse OCR et le SHA-256 tournent à 100 % sur votre téléphone."
+        },
+        {
+          q: 'Comment l’IA protège-t-elle contre les essais gratuits pièges ?',
+          a: "Prenez une capture d’écran de l'essai gratuit : l’IA lit le service, le prix, calcule le coût annuel caché, rédige la lettre de résiliation et génère une alarme calendrier (.ics) 48h avant."
+        },
+        {
+          q: 'Dans quels cas utiliser les Preuves Certifiées ?',
+          a: "Location de voiture (caution), état des lieux Airbnb/appartement, emballage ou ouverture de colis (Vinted, eBay, Amazon, Temu) contre les faux litiges."
+        },
+        {
+          q: 'L’application fonctionne-t-elle hors-ligne (Mode Avion) ?',
+          a: "Oui ! Après le premier chargement (et une première lecture OCR pour la mise en cache), le coffre, le SHA-256, les certificats PDF/PNG et les alarmes marchent hors-ligne."
+        },
+        {
+          q: 'Comment sauvegarder mes preuves si je change de téléphone ?',
+          a: "Conservez vos photos originales dans votre Galerie et utilisez Export → Exporter sauvegarde JSON."
+        }
+      ],
       ocrRunning: 'Analyse IA laser en cours...',
       aiDetected: "Analysé automatiquement par l'IA",
       modeSub: 'Piège Abonnement', modeProof: 'Preuve Certifiée',
@@ -549,24 +651,26 @@
       officialLink: 'Ouvrir la page officielle de résiliation',
       saveSub: 'Sauvegarder + Alarme Calendrier (.ics)',
       proofTitle: 'Titre de la preuve', proofCat: 'Type de litige potentiel',
-      proofHash: 'Empreinte SHA-256 (anti-retouche IA)', proofTime: 'Horodatage certifié (UTC)',
-      saveProof: 'Sceller dans le Coffre + Certificat',
+      proofLocalTime: 'Date & Heure exactes de capture',
+      proofHash: 'Empreinte SHA-256 (anti-retouche IA)', proofTime: 'Horodatage universel (UTC)',
+      saveProof: 'Sceller dans le Coffre + Partager',
       statActive: 'À surveiller / an', statSaved: 'Argent sauvé (résiliés)',
       verifyTitle: '🔍 Vérifier si une photo a été retouchée',
       verifySub: "Importez une image pour vérifier si elle correspond à 100 % à l'original scellé.",
       verifyBtn: 'Importer une photo à vérifier',
       expTitle: 'Exports & Confidentialité', expSub: 'Stockage 100 % local sur votre téléphone, sans accès bancaire.',
       expJson: 'Exporter sauvegarde JSON', clearAll: 'Effacer toutes les données',
+      privacyFoot: 'OCR Tesseract.js local + SHA-256 Web Crypto + Calendrier .ics natif. Aucun serveur externe ne reçoit vos images.',
       nav: ['Scanner IA', 'Alertes', 'Preuves', 'Export'],
       cancelBtn: 'Marquer résilié', copyBtn: 'Copier lettre', alarmBtn: 'Alarme .ics',
-      certBtn: 'Certificat PDF/HTML', delBtn: 'Supprimer',
+      waBtn: 'WhatsApp', mailBtn: 'E-mail', pdfBtn: 'PDF', imgBtn: 'Image / Partager', delBtn: 'Supprimer',
       emptySubs: 'Aucun abonnement scanné pour le moment.',
       emptyProofs: 'Aucune preuve photo scellée pour le moment.',
       trapAutoRenew: '⚠️ Renouvellement automatique détecté',
       trapTrial: '⏳ Essai gratuit détecté (risque d’oubli)',
       authOk: '✅ AUTHENTIQUE : Image 100 % identique à l’original scellé !',
       authFail: '❌ NON RECONNU : Image modifiée par IA/éditeur ou absente de votre coffre.',
-      savedToast: 'Enregistré + Alarme générée !', copiedToast: 'Copié !',
+      savedToast: 'Scellé ! Partagez-le sur WhatsApp ou E-mail pour fixer la date.', copiedToast: 'Copié !',
       confirmClear: 'Tout supprimer définitivement ?',
       letterTemplate: (name, date) => `Objet : Demande de résiliation immédiate – ${name}\n\nMadame, Monsieur,\n\nConformément aux dispositions applicables du droit de la consommation, je vous demande par la présente de résilier immédiatement mon abonnement / essai gratuit « ${name} » et de stopper tout renouvellement automatique avant le ${date}.\n\nMerci de me confirmer cette résiliation par retour d'e-mail.\n\nCordialement.`
     },
@@ -578,6 +682,41 @@
       mod1Title: 'OCR Trap Detector', mod1Desc: 'Extracts hidden price, 48h alarm (.ics) & legal email.',
       mod2Title: 'SHA-256 Crypto Seal', mod2Desc: 'Certifies rental cars, Airbnb & packages against AI edits.',
       mod3Title: 'Authenticity Verifier', mod3Desc: 'Prove in 1 tap if an image was altered by AI.',
+      faqTitle: 'FAQ — Frequently Asked Questions',
+      faqs: [
+        {
+          q: 'How does SHA-256 work? (Simple explanation)',
+          a: "Think of SHA-256 as a file's unique mathematical DNA.\n\nWhen you scan a photo in SHIELDPROOF, your phone reads its exact bytes and turns them into a unique 64-character fingerprint (e.g. 8f4a9c...21b0).\n\n• Butterfly effect: if someone alters even 1 single pixel (AI edit, fake scratch, filter, 1mm crop, or WhatsApp compression), the 64-character code changes completely.\n• One-way math: it is impossible to fake another image with the same SHA-256 hash."
+        },
+        {
+          q: 'How does the AI Scanner & Authenticity test work?',
+          a: "1) Seal the original: pick a photo from your Gallery. The app stamps the exact date/time and computes its SHA-256. Tap 🔒 Seal in Vault + Share.\n\n2) Verify the real photo (✅ Green): go to Proofs → Pick photo to verify → choose the same Gallery file. Result: ✅ AUTHENTIC.\n\n3) Test with an AI-edited copy (❌ Red): edit a copy and upload it. Result: ❌ NOT VERIFIED — instant proof it is not the sealed original!"
+        },
+        {
+          q: 'How do I timestamp my proof for free ($0) via WhatsApp or Email?',
+          a: 'Right after sealing a photo, tap 📲 WhatsApp or ✉️ Email ($0) to send the certificate summary (or PNG certificate image) to yourself or the counterparty. Your email/WhatsApp server creates a free third-party timestamp!'
+        },
+        {
+          q: 'Does SHIELDPROOF access my bank or upload photos?',
+          a: 'Never. No bank login, no account, no cloud upload. OCR and SHA-256 run 100% locally on your phone.'
+        },
+        {
+          q: 'How does it stop free-trial traps?',
+          a: 'Screenshot any trial checkout screen: AI extracts the service, price, yearly cost, drafts a legal cancellation email, and creates a 48h-before calendar alarm (.ics).'
+        },
+        {
+          q: 'When should I use Certified Proofs?',
+          a: 'Rental car walkarounds, Airbnb/apartment move-in inspections, and e-commerce packing/unboxing (Vinted, eBay, Amazon, Temu).'
+        },
+        {
+          q: 'Does it work offline (Airplane Mode)?',
+          a: 'Yes! Once loaded online (and after one OCR scan caches the engine), vault, SHA-256, PDF/PNG certificates, and alarms work offline.'
+        },
+        {
+          q: 'How do I back up my proofs?',
+          a: 'Keep original photos in your Gallery and use Export → Export JSON backup.'
+        }
+      ],
       ocrRunning: 'Laser AI analysis running...',
       aiDetected: 'Auto-detected by AI',
       modeSub: 'Subscription Trap', modeProof: 'Certified Proof',
@@ -587,24 +726,26 @@
       officialLink: 'Open official cancel page',
       saveSub: 'Save + Calendar Alarm (.ics)',
       proofTitle: 'Proof title', proofCat: 'Dispute category',
-      proofHash: 'SHA-256 fingerprint (anti-AI tampering)', proofTime: 'Certified timestamp (UTC)',
-      saveProof: 'Seal in Vault + Certificate',
+      proofLocalTime: 'Exact Capture Date & Time',
+      proofHash: 'SHA-256 fingerprint (anti-AI tampering)', proofTime: 'Universal Timestamp (UTC)',
+      saveProof: 'Seal in Vault + Share',
       statActive: 'At risk / year', statSaved: 'Money saved',
       verifyTitle: '🔍 Verify if a photo was edited by AI',
       verifySub: 'Upload any photo to prove it matches 100% of the sealed original file.',
       verifyBtn: 'Pick photo to verify',
       expTitle: 'Exports & Privacy', expSub: '100% local on your phone. Zero bank login required.',
       expJson: 'Export JSON backup', clearAll: 'Erase all local data',
+      privacyFoot: 'Local Tesseract.js OCR + Web Crypto SHA-256 + native .ics alarms. Zero images sent to external servers.',
       nav: ['AI Scan', 'Alerts', 'Proofs', 'Export'],
       cancelBtn: 'Mark Cancelled', copyBtn: 'Copy email', alarmBtn: 'Alarm .ics',
-      certBtn: 'Certificate PDF/HTML', delBtn: 'Delete',
+      waBtn: 'WhatsApp', mailBtn: 'Email', pdfBtn: 'PDF', imgBtn: 'Image / Share', delBtn: 'Delete',
       emptySubs: 'No subscriptions scanned yet.',
       emptyProofs: 'No sealed photo proofs yet.',
       trapAutoRenew: '⚠️ Auto-renewal clause detected',
       trapTrial: '⏳ Free trial trap detected',
       authOk: '✅ AUTHENTIC: 100% identical to your sealed original photo!',
       authFail: '❌ NOT VERIFIED: Photo was altered or is not in your vault.',
-      savedToast: 'Saved + Alarm ready!', copiedToast: 'Copied!',
+      savedToast: 'Sealed! Share on WhatsApp or Email to lock the timestamp.', copiedToast: 'Copied!',
       confirmClear: 'Permanently delete all local items?',
       letterTemplate: (name, date) => `Subject: Immediate Cancellation Request – ${name}\n\nHello,\n\nUnder applicable consumer protection laws, please cancel my "${name}" subscription / free trial immediately and disable any automatic renewal prior to ${date}.\n\nPlease confirm cancellation by reply.\n\nThank you.`
     },
@@ -616,6 +757,17 @@
       mod1Title: 'كاشف فخاخ الاشتراكات', mod1Desc: 'يقرأ السعر ويجهز منبه 48 ساعة ورسالة الإلغاء.',
       mod2Title: 'ختم SHA-256 ضد التعديل', mod2Desc: 'يوثق صور السيارات والعقارات والطرود ضد التزوير.',
       mod3Title: 'مدقق أصالة الصور', mod3Desc: 'اكشف بنقرة واحدة هل تم تعديل الصورة بالذكاء الاصطناعي.',
+      faqTitle: 'الأسئلة الشائعة (FAQ)',
+      faqs: [
+        { q: 'كيف يعمل تشفير SHA-256؟', a: 'تخيل SHA-256 كالحمض النووي الرقمي الفريد للملف. أي تعديل ولو لبكسل واحد يغيّر الكود المكون من 64 حرفاً بالكامل.' },
+        { q: 'كيف أختبر الماسح الذكي وأثبت تعديل الصورة؟', a: '1) احفظ الصورة الأصلية من المعرض.\n2) اختبر نفس الصورة: ستظهر ✅ أصلية 100%.\n3) عدّل نسخة منها وأعد فحصها: ستظهر ❌ غير متطابقة!' },
+        { q: 'كيف أوثق التاريخ مجاناً عبر واتساب أو الإيميل؟', a: 'بعد الحفظ، اضغط على زر 📲 واتساب أو ✉️ إيميل (0€) لإرسال الشهادة لنفسك فوراً لتثبيت التاريخ على خادم خارجي مجاناً.' },
+        { q: 'هل يرفع صوري أو يطلب حسابي البنكي؟', a: 'لا أبداً. كل التحليل والتشفير محلي 100% على هاتفك.' },
+        { q: 'كيف يحميني من فخ الفترات التجريبية؟', a: 'يقرأ السعر والتاريخ ويجهز رسالة الإلغاء ومنبه قبل الخصم بـ 48 ساعة.' },
+        { q: 'متى أستخدم الإثبات الموثق؟', a: 'لإيجار السيارات، تسليم شقق Airbnb، وتغليف الطرود.' },
+        { q: 'هل يعمل بدون إنترنت؟', a: 'نعم بعد الفتح الأول، الخزنة وSHA-256 وPDF تعمل بدون إنترنت.' },
+        { q: 'كيف أحفظ نسختي؟', a: 'احتفظ بالصور الأصلية واستخدم تصدير JSON.' }
+      ],
       ocrRunning: 'جاري التحليل بالذكاء الاصطناعي...',
       aiDetected: 'تم الكشف تلقائياً بالذكاء الاصطناعي',
       modeSub: 'فخ اشتراك', modeProof: 'إثبات موثق',
@@ -625,24 +777,26 @@
       officialLink: 'فتح صفحة الإلغاء الرسمية',
       saveSub: 'حفظ + منبه التقويم (.ics)',
       proofTitle: 'عنوان الإثبات', proofCat: 'نوع النزاع',
-      proofHash: 'بصمة SHA-256 ضد التعديل', proofTime: 'التوقيت الموثق (UTC)',
-      saveProof: 'حفظ في الخزنة + شهادة',
+      proofLocalTime: 'تاريخ ووقت الالتقاط الدقيق',
+      proofHash: 'بصمة SHA-256 ضد التعديل', proofTime: 'التوقيت العالمي (UTC)',
+      saveProof: 'حفظ في الخزنة + مشاركة',
       statActive: 'مهدد بالخصم / سنة', statSaved: 'المبلغ الموفر',
       verifyTitle: '🔍 تحقق من عدم تعديل الصورة',
       verifySub: 'أدخل صورة للتأكد من مطابقتها 100% للأصل المحفوظ.',
       verifyBtn: 'اختر صورة للتحقق',
       expTitle: 'التصدير والخصوصية', expSub: 'تخزين محلي بالكامل بدون ربط بنكي.',
       expJson: 'تصدير نسخة JSON', clearAll: 'مسح جميع البيانات',
+      privacyFoot: 'تحليل محلي بالكامل وتشفير SHA-256 داخل المتصفح دون إرسال أي صور.',
       nav: ['مسح ذكي', 'تنبيهات', 'إثباتات', 'إعدادات'],
       cancelBtn: 'تم الإلغاء', copyBtn: 'نسخ الرسالة', alarmBtn: 'منبه .ics',
-      certBtn: 'شهادة الإثبات', delBtn: 'حذف',
+      waBtn: 'واتساب', mailBtn: 'إيميل', pdfBtn: 'PDF', imgBtn: 'صورة / مشاركة', delBtn: 'حذف',
       emptySubs: 'لا توجد اشتراكات محفوظة.',
       emptyProofs: 'لا توجد إثباتات محفوظة.',
       trapAutoRenew: '⚠️ تم رصد تجديد تلقائي',
       trapTrial: '⏳ فترة تجريبية مجانية',
       authOk: '✅ صورة أصلية 100% لم يتم تعديلها!',
       authFail: '❌ غير متطابقة: تم تعديل الصورة أو غير موجودة.',
-      savedToast: 'تم الحفظ وتجهيز المنبه!', copiedToast: 'تم النسخ!',
+      savedToast: 'تم الحفظ! شاركه عبر واتساب أو إيميل لتثبيت الوقت.', copiedToast: 'تم النسخ!',
       confirmClear: 'هل تريد حذف جميع البيانات؟',
       letterTemplate: (name, date) => `الموضوع: طلب إلغاء فوري للاشتراك – ${name}\n\nتحية طيبة،\n\nأرجو إلغاء اشتراكي في خدمة "${name}" فوراً وإيقاف التجديد التلقائي قبل تاريخ ${date}.\n\nيرجى تأكيد الإلغاء.\nشكراً لكم.`
     },
@@ -654,6 +808,17 @@
       mod1Title: 'OCR 订阅陷阱识别', mod1Desc: '自动识别价格、生成48小时闹钟及取消邮件。',
       mod2Title: 'SHA-256 防篡改印章', mod2Desc: '为租车、民宿押金和快递开箱提供防修图证明。',
       mod3Title: 'AI 修图真伪校验', mod3Desc: '一键比对照片是否被 AI 篡改。',
+      faqTitle: '常见问题 (FAQ)',
+      faqs: [
+        { q: 'SHA-256 防篡改指纹如何工作？', a: '相当于照片的数字 DNA。只要被 AI 修图或修改 1 像素，64 位指纹就会彻底改变。' },
+        { q: '如何测试 AI 扫描与防伪校验？', a: '1) 从相册选原图封存。\n2) 上传同一原图：显示 ✅ 原图通过。\n3) 上传 AI 修改后的副本：显示 ❌ 验证失败！' },
+        { q: '如何 0 费用通过 WhatsApp/邮件固定时间戳？', a: '封存后点击 📲 WhatsApp 或 ✉️ 邮件，把摘要或证书图片发给自己，即可免费在第三方服务器留下接收时间记录！' },
+        { q: '会绑定银行卡或上传照片吗？', a: '绝不，100% 手机本地运行。' },
+        { q: '如何防自动续费陷阱？', a: 'AI 识别扣费日期并生成提前 48 小时日历闹钟与取消邮件。' },
+        { q: '适用哪些防伪存证场景？', a: '租车验车、民宿退房押金、贵重快递打包开箱。' },
+        { q: '支持离线模式吗？', a: '支持，缓存后可在飞行模式下使用。' },
+        { q: '如何备份数据？', a: '保留原图并使用 JSON 导出备份。' }
+      ],
       ocrRunning: '激光 AI 识别中...',
       aiDetected: 'AI 已自动识别',
       modeSub: '订阅防扣费', modeProof: '防篡改存证',
@@ -663,24 +828,26 @@
       officialLink: '打开官方取消页面',
       saveSub: '保存 + 日历闹钟 (.ics)',
       proofTitle: '存证标题', proofCat: '纠纷类型',
-      proofHash: 'SHA-256 防 AI 修图指纹', proofTime: 'UTC 标准时间戳',
-      saveProof: '加密保存 + 导出证书',
+      proofLocalTime: '精确本地拍照日期与时间',
+      proofHash: 'SHA-256 防 AI 修图指纹', proofTime: '世界标准时间戳 (UTC)',
+      saveProof: '加密保存 + 分享',
       statActive: '年潜在扣费', statSaved: '已省金额',
       verifyTitle: '🔍 验证照片是否被 AI 修改',
       verifySub: '上传照片即可比对是否与原图完全一致（0 像素改动）。',
       verifyBtn: '选择照片验证',
       expTitle: '导出与隐私', expSub: '无需绑定银行卡，100% 本地存储。',
       expJson: '导出 JSON 备份', clearAll: '清空本地数据',
+      privacyFoot: '本地 Tesseract.js OCR + Web Crypto SHA-256 + 原生日历提醒，不上传任何图片。',
       nav: ['AI 扫描', '扣费预警', '存证箱', '设置'],
       cancelBtn: '标记已取消', copyBtn: '复制邮件', alarmBtn: '日历闹钟',
-      certBtn: '导出存证证书', delBtn: '删除',
+      waBtn: 'WhatsApp', mailBtn: '邮件', pdfBtn: 'PDF', imgBtn: '图片 / 分享', delBtn: '删除',
       emptySubs: '暂无订阅记录。',
       emptyProofs: '暂无防伪存证。',
       trapAutoRenew: '⚠️ 检测到自动续费条款',
       trapTrial: '⏳ 检测到免费试用陷阱',
       authOk: '✅ 原图验证通过：100% 未经修改！',
       authFail: '❌ 验证失败：图片已被修改或不在本地存证库中。',
-      savedToast: '已保存并生成提醒！', copiedToast: '已复制！',
+      savedToast: '已封存！建议通过 WhatsApp 或邮件发给自己固定时间。', copiedToast: '已复制！',
       confirmClear: '确定永久删除所有本地数据？',
       letterTemplate: (name, date) => `主题：立即取消订阅申请 – ${name}\n\n您好：\n\n请立即取消我的「${name}」订阅/免费试用，并在 ${date} 之前停止所有自动续费扣款。\n\n请回复确认取消结果，谢谢！`
     }
@@ -688,13 +855,47 @@
 
   let currentScan = null;
 
+  function formatLocalDateTime(dateObj) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(dateObj.getDate())}/${pad(dateObj.getMonth()+1)}/${dateObj.getFullYear()} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}:${pad(dateObj.getSeconds())}`;
+  }
+
   function toast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg; el.style.display = 'block';
-    setTimeout(() => el.style.display = 'none', 2500);
+    setTimeout(() => el.style.display = 'none', 2800);
   }
   function esc(s) {
     return String(s || '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function copySafe(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    }
+    fallbackCopy(text);
+    return Promise.resolve();
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta);
+  }
+
+  function renderFaq() {
+    const t = I18N[lang];
+    document.getElementById('lbl-faq-title').textContent = t.faqTitle;
+    document.getElementById('faq-list').innerHTML = t.faqs.slice(0, 10).map((f, idx) => `
+      <details class="faq-item">
+        <summary class="faq-q">
+          <span class="faq-num">${String(idx + 1).padStart(2, '0')}</span>
+          <span>${esc(f.q)}</span>
+          <svg class="faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="faq-a">${esc(f.a)}</div>
+      </details>
+    `).join('');
   }
 
   function setLang(l) {
@@ -727,6 +928,7 @@
     document.getElementById('txt-save-sub').textContent = t.saveSub;
     document.getElementById('lbl-proof-title').textContent = t.proofTitle;
     document.getElementById('lbl-proof-cat').textContent = t.proofCat;
+    document.getElementById('lbl-proof-local-time').textContent = t.proofLocalTime;
     document.getElementById('lbl-proof-hash').textContent = t.proofHash;
     document.getElementById('lbl-proof-time').textContent = t.proofTime;
     document.getElementById('txt-save-proof').textContent = t.saveProof;
@@ -739,7 +941,9 @@
     document.getElementById('lbl-export-sub').textContent = t.expSub;
     document.getElementById('txt-exp-json').textContent = t.expJson;
     document.getElementById('txt-clear-all').textContent = t.clearAll;
+    document.getElementById('lbl-privacy-foot').textContent = t.privacyFoot;
     ['scan','subs','proofs','settings'].forEach((id, i) => document.getElementById('nav-' + id).textContent = t.nav[i]);
+    renderFaq();
     renderHomeHud();
     renderSubs();
     renderProofs();
@@ -761,6 +965,12 @@
     window.scrollTo({ top: 0 });
   }
 
+  function closeScanResult() {
+    document.getElementById('scan-result').classList.add('hidden');
+    document.getElementById('home-hud').classList.remove('hidden');
+    currentScan = null;
+  }
+
   async function sha256Hex(buffer) {
     const digest = await crypto.subtle.digest('SHA-256', buffer);
     return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -773,7 +983,7 @@
         const img = new Image();
         img.onload = () => {
           const c = document.createElement('canvas');
-          const max = 420;
+          const max = 480;
           let w = img.width, h = img.height;
           if (w > max || h > max) {
             const ratio = Math.min(max / w, max / h);
@@ -781,7 +991,7 @@
           }
           c.width = w; c.height = h;
           c.getContext('2d').drawImage(img, 0, 0, w, h);
-          resolve(c.toDataURL('image/jpeg', 0.72));
+          resolve(c.toDataURL('image/jpeg', 0.78));
         };
         img.src = e.target.result;
       };
@@ -830,6 +1040,10 @@
     const file = event.target.files[0];
     if (!file) return;
     const t = I18N[lang];
+    const nowObj = new Date();
+    const nowIso = nowObj.toISOString();
+    const localTime = formatLocalDateTime(nowObj);
+
     const prog = document.getElementById('scan-progress');
     const fill = document.getElementById('progress-fill');
     const statusLbl = document.getElementById('lbl-ocr-status');
@@ -842,7 +1056,6 @@
     const arrayBuffer = await file.arrayBuffer();
     const hash = await sha256Hex(arrayBuffer);
     const thumb = await makeThumb(file);
-    const nowIso = new Date().toISOString();
 
     let ocrText = '';
     try {
@@ -864,7 +1077,7 @@
     prog.classList.add('hidden');
 
     const ai = analyzeOcrText(ocrText);
-    currentScan = { file, hash, thumb, nowIso, ai, ocrText };
+    currentScan = { file, hash, thumb, nowIso, localTime, ai, ocrText };
 
     const thumbEl = document.getElementById('scan-thumb');
     thumbEl.src = thumb;
@@ -890,13 +1103,15 @@
       linkWrap.classList.add('hidden');
     }
 
-    document.getElementById('proof-title').value = file.name.replace(/\.[^.]+$/, '') || `Preuve ${nowIso.slice(0,10)}`;
+    document.getElementById('proof-title').value = file.name.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
     document.getElementById('proof-cat').value = ai.proofCat;
+    document.getElementById('proof-local-time').value = localTime;
     document.getElementById('proof-hash-preview').textContent = hash;
     document.getElementById('proof-time').value = nowIso;
 
     switchDetectedMode(ai.isSub ? 'SUB' : 'PROOF');
     document.getElementById('scan-result').classList.remove('hidden');
+    event.target.value = '';
   }
 
   function switchDetectedMode(mode) {
@@ -944,8 +1159,7 @@
       thumb: currentScan?.thumb || '', cancelled: false
     });
     if (date) downloadIcsAlarm(name, date, `${price} ${curr}`);
-    document.getElementById('scan-result').classList.add('hidden');
-    document.getElementById('home-hud').classList.remove('hidden');
+    closeScanResult();
     toast(I18N[lang].savedToast);
     switchTab('subs', 1);
   }
@@ -959,14 +1173,132 @@
       cat: document.getElementById('proof-cat').value,
       hash: currentScan.hash,
       timestamp: currentScan.nowIso,
+      localTime: currentScan.localTime,
       thumb: currentScan.thumb,
       fileName: currentScan.file.name,
       fileSize: currentScan.file.size
     });
-    document.getElementById('scan-result').classList.add('hidden');
-    document.getElementById('home-hud').classList.remove('hidden');
+    closeScanResult();
     toast(I18N[lang].savedToast);
     switchTab('proofs', 2);
+  }
+
+  function buildProofShareText(p) {
+    const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
+    return [
+      '🛡️ SHIELDPROOF — CERTIFICAT DE PREUVE',
+      `ID : ${p.certId}`,
+      `Objet : ${p.title} (${p.cat})`,
+      `Date & Heure : ${dt}`,
+      `UTC : ${p.timestamp}`,
+      `Fichier : ${p.fileName} (${p.fileSize} octets)`,
+      `Empreinte SHA-256 : ${p.hash}`
+    ].join('\n');
+  }
+
+  async function shareProofWhatsApp(id) {
+    const list = await dbAll('proofs');
+    const p = list.find((x) => x.id === id);
+    if (!p) return;
+    const txt = buildProofShareText(p);
+    window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`, '_blank');
+  }
+
+  async function shareProofEmail(id) {
+    const list = await dbAll('proofs');
+    const p = list.find((x) => x.id === id);
+    if (!p) return;
+    const subject = `SHIELDPROOF ${p.certId} — ${p.title}`;
+    const body = buildProofShareText(p);
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  async function printCertificatePdf(id) {
+    const list = await dbAll('proofs');
+    const p = list.find((x) => x.id === id);
+    if (!p) return;
+    const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
+    document.getElementById('print-cert').innerHTML = `
+      <h2>SHIELDPROOF — CERTIFICAT D'INTÉGRITÉ / INTEGRITY CERTIFICATE</h2>
+      <p><strong>ID Certificat :</strong> ${esc(p.certId)}</p>
+      <p><strong>Titre :</strong> ${esc(p.title)} (${esc(p.cat)})</p>
+      <p><strong>Date &amp; Heure locale :</strong> ${esc(dt)}</p>
+      <p><strong>Horodatage universel (UTC) :</strong> ${esc(p.timestamp)}</p>
+      <p><strong>Fichier original :</strong> ${esc(p.fileName)} (${p.fileSize} bytes)</p>
+      <p><strong>Empreinte cryptographique SHA-256 :</strong></p>
+      <div class="p-hash">${esc(p.hash)}</div>
+      ${p.thumb ? `<img src="${p.thumb}">` : ''}
+      <p style="font-size:11px;color:#475569;margin-top:16px;">Généré localement via Web Crypto SHA-256. Toute modification d'un seul pixel sur le fichier original modifie totalement l'empreinte ci-dessus.</p>
+    `;
+    setTimeout(() => window.print(), 150);
+  }
+
+  async function shareProofImage(id) {
+    const list = await dbAll('proofs');
+    const p = list.find((x) => x.id === id);
+    if (!p) return;
+    const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 860;
+    canvas.height = 980;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#070b1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#22d3ee';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px sans-serif';
+    ctx.fillText('SHIELDPROOF — CERTIFIED PROOF', 48, 78);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(`ID: ${p.certId}   •   ${dt}`, 48, 122);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '20px sans-serif';
+    ctx.fillText(`Title: ${p.title.slice(0, 48)} (${p.cat})`, 48, 162);
+    ctx.fillText(`UTC: ${p.timestamp}`, 48, 194);
+
+    ctx.fillStyle = '#0e152b';
+    ctx.fillRect(48, 218, canvas.width - 96, 86);
+    ctx.fillStyle = '#22d3ee';
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText('SHA-256: ' + p.hash.slice(0, 32), 64, 252);
+    ctx.fillText('         ' + p.hash.slice(32), 64, 282);
+
+    const finishShare = (blob) => {
+      const file = new File([blob], `${p.certId}_proof.png`, { type: 'image/png' });
+      const text = buildProofShareText(p);
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ title: p.certId, text, files: [file] }).catch(() => {});
+      } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${p.certId}_proof.png`;
+        a.click();
+      }
+    };
+
+    if (p.thumb) {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = canvas.width - 96;
+        const maxH = 600;
+        const ratio = Math.min(maxW / img.width, maxH / img.height);
+        const w = img.width * ratio;
+        const h = img.height * ratio;
+        ctx.drawImage(img, (canvas.width - w) / 2, 330, w, h);
+        canvas.toBlob(finishShare, 'image/png');
+      };
+      img.src = p.thumb;
+    } else {
+      canvas.toBlob(finishShare, 'image/png');
+    }
   }
 
   async function renderSubs() {
@@ -1011,7 +1343,7 @@
   async function copySubLetter(id) {
     const list = await dbAll('subs');
     const item = list.find((x) => x.id === id);
-    if (item) navigator.clipboard.writeText(item.letter).then(() => toast(I18N[lang].copiedToast));
+    if (item) copySafe(item.letter).then(() => toast(I18N[lang].copiedToast));
   }
   async function reAlarm(id) {
     const list = await dbAll('subs');
@@ -1025,44 +1357,28 @@
     const list = await dbAll('proofs');
     const box = document.getElementById('proofs-list');
     if (!list.length) { box.innerHTML = `<div class="card muted">${esc(t.emptyProofs)}</div>`; return; }
-    box.innerHTML = list.map((p) => `
-      <div class="card">
-        <div class="flex">
-          ${p.thumb ? `<img class="thumb" src="${p.thumb}" alt="">` : ''}
-          <div style="flex:1; min-width:0;">
-            <strong>${esc(p.title)}</strong>
-            <div class="muted">${esc(p.certId)} • ${esc(p.timestamp.slice(0,16).replace('T',' '))}</div>
-            <div class="muted" style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;">SHA256: ${esc(p.hash.slice(0,18))}...</div>
+    box.innerHTML = list.map((p) => {
+      const dt = p.localTime || formatLocalDateTime(new Date(p.timestamp));
+      return `
+        <div class="card">
+          <div class="flex">
+            ${p.thumb ? `<img class="thumb" src="${p.thumb}" alt="">` : ''}
+            <div style="flex:1; min-width:0;">
+              <strong>${esc(p.title)}</strong>
+              <div class="muted" style="color:var(--cyan);font-weight:600;">${esc(p.certId)} • ${esc(dt)}</div>
+              <div class="muted" style="font-family:monospace;overflow:hidden;text-overflow:ellipsis;">SHA256: ${esc(p.hash.slice(0,18))}...</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-wa btn-sm" onclick="shareProofWhatsApp(${p.id})">📲 ${esc(t.waBtn)}</button>
+            <button class="btn btn-tonal btn-sm" onclick="shareProofEmail(${p.id})">✉️ ${esc(t.mailBtn)}</button>
+            <button class="btn btn-tonal btn-sm" onclick="printCertificatePdf(${p.id})">📄 ${esc(t.pdfBtn)}</button>
+            <button class="btn btn-tonal btn-sm" onclick="shareProofImage(${p.id})">🖼️ ${esc(t.imgBtn)}</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProof(${p.id})">${esc(t.delBtn)}</button>
           </div>
         </div>
-        <div class="actions">
-          <button class="btn btn-tonal btn-sm" onclick="downloadCertificate(${p.id})">${esc(t.certBtn)}</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProof(${p.id})">${esc(t.delBtn)}</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  async function downloadCertificate(id) {
-    const list = await dbAll('proofs');
-    const p = list.find((x) => x.id === id);
-    if (!p) return;
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(p.certId)}</title>
-      <style>body{font-family:sans-serif;max-width:720px;margin:30px auto;padding:20px;border:2px solid #111;}
-      .hash{font-family:monospace;background:#f1f5f9;padding:12px;word-break:break-all;} img{max-width:100%;max-height:380px;margin-top:16px;}</style>
-      </head><body><h2>SHIELDPROOF — INTEGRITY CERTIFICATE</h2>
-      <p><strong>Certificate ID:</strong> ${esc(p.certId)}</p>
-      <p><strong>Title:</strong> ${esc(p.title)} (${esc(p.cat)})</p>
-      <p><strong>UTC Timestamp:</strong> ${esc(p.timestamp)}</p>
-      <p><strong>Original File:</strong> ${esc(p.fileName)} (${p.fileSize} bytes)</p>
-      <p><strong>SHA-256 Cryptographic Seal:</strong></p><div class="hash">${esc(p.hash)}</div>
-      ${p.thumb ? `<img src="${p.thumb}">` : ''}
-      <p style="font-size:12px;color:#555;margin-top:20px;">Generated locally via Web Crypto SHA-256. Any 1-pixel alteration to the original image file changes the SHA-256 hash above.</p>
-      </body></html>`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-    a.download = `${p.certId}_certificate.html`;
-    a.click();
+      `;
+    }).join('');
   }
 
   async function verifyPhotoFile(event) {
@@ -1075,8 +1391,9 @@
     const box = document.getElementById('verify-result');
     box.classList.remove('hidden');
     box.innerHTML = match
-      ? `<div class="badge badge-ok" style="display:block;padding:10px;">${esc(t.authOk)}<br><small>${esc(match.certId)} • ${esc(match.timestamp)}</small></div>`
+      ? `<div class="badge badge-ok" style="display:block;padding:10px;">${esc(t.authOk)}<br><small>${esc(match.certId)} • ${esc(match.localTime || match.timestamp)}</small></div>`
       : `<div class="badge badge-err" style="display:block;padding:10px;">${esc(t.authFail)}</div>`;
+    event.target.value = '';
   }
 
   async function deleteProof(id) { await dbDel('proofs', id); renderProofs(); renderHomeHud(); }
