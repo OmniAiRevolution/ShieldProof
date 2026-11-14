@@ -104,13 +104,6 @@
     const proof = await getStore('proofs', id);
     if (!proof) return;
     try {
-      proof.signature = await signCertificate(proof);
-      proof.signatureStatus = 'signed';
-    } catch (e) {
-      proof.signatureStatus = 'unavailable';
-      proof.signatureError = String(e && e.message || e);
-    }
-    try {
       const receipts = await submitOpenTimestamp(proof.hash);
       proof.otsReceipts = receipts;
       proof.otsStatus = receipts.length ? 'pending_bitcoin_confirmation' : 'unavailable';
@@ -119,6 +112,13 @@
       proof.otsReceipts = [];
       proof.otsStatus = 'unavailable';
       proof.otsError = String(e && e.message || e);
+    }
+    try {
+      proof.signature = await signCertificate(proof);
+      proof.signatureStatus = 'signed';
+    } catch (e) {
+      proof.signatureStatus = 'unavailable';
+      proof.signatureError = String(e && e.message || e);
     }
     await putStore('proofs', proof);
     if (typeof window.renderProofs === 'function') window.renderProofs().catch(()=>{});
@@ -163,17 +163,17 @@
   }
   async function runC2paCheck() {
     const statusEl = document.getElementById('c2pa-status');
-    if (!window.currentScan || !window.currentScan.file) {
+    if (!window.__shieldProofCurrentScan || !window.__shieldProofCurrentScan.file) {
       if (statusEl) statusEl.textContent = 'Scanne d’abord une image.';
       return;
     }
     if (statusEl) statusEl.textContent = 'Lecture des Content Credentials C2PA…';
     try {
-      const result = await inspectC2PA(window.currentScan.file);
-      window.currentScan.c2paStatus = result;
+      const result = await inspectC2PA(window.__shieldProofCurrentScan.file);
+      window.__shieldProofCurrentScan.c2paStatus = result;
       if (statusEl) statusEl.textContent = result.summary + (result.validationStatus && result.validationStatus.length ? ' Statuts : ' + result.validationStatus.map(x => x.code || x).join(', ') : '');
     } catch (e) {
-      window.currentScan.c2paStatus = {error:String(e && e.message || e)};
+      window.__shieldProofCurrentScan.c2paStatus = {error:String(e && e.message || e)};
       if (statusEl) statusEl.textContent = 'Vérification C2PA indisponible : ' + String(e && e.message || e);
     }
   }
