@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#050814">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self' https://gumroad.com https://*.gumroad.com; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://esm.sh https://cdn.jsdelivr.net; worker-src 'self' blob:; connect-src 'self' https://esm.sh https://cdn.jsdelivr.net https://alice.btc.calendar.opentimestamps.org https://bob.btc.calendar.opentimestamps.org https://finney.calendar.eternitywall.com;">
   <meta name="description" content="Protégez cautions, contrats et abonnements pièges. Scellage SHA-256 100 % local + détection d'images IA (Midjourney, DALL-E, Stable Diffusion).">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="SHIELDPROOF — Scellage SHA-256 & Détection IA">
@@ -297,6 +298,10 @@
         </details>
       </div>
 
+      <div class="card" style="margin-top:10px;padding:12px;">
+        <button type="button" class="btn btn-tonal btn-sm" onclick="runC2paCheck()">Vérifier les Content Credentials (C2PA)</button>
+        <div id="c2pa-status" class="muted" role="status" aria-live="polite" style="margin-top:8px;font-size:12px;">C2PA : vérification non lancée.</div>
+      </div>
       <div class="mode-switch">
         <div class="mode-btn active" id="mode-sub-btn" onclick="switchDetectedMode('SUB')">🛡️ <span id="lbl-mode-sub"></span></div>
         <div class="mode-btn" id="mode-proof-btn" onclick="switchDetectedMode('PROOF')">📸 <span id="lbl-mode-proof"></span></div>
@@ -525,6 +530,7 @@
 <div id="print-cert"></div>
 <div id="toast"></div>
 
+<script src="./shieldproof-v10.js" defer></script>
 <script>
   // ===== CONFIG =====
   const GUMROAD_CONFIG = {
@@ -540,7 +546,7 @@
     b2bFleetUrl: 'https://aitechpro2.gumroad.com/l/b2b-fleet',
     b2bFleetProductId: 'vjUu13AoxfGNLo9xSK4nxQ=='
   };
-  const APP_VERSION = '9.0.0';
+  const APP_VERSION = '10.0.0';
 
   // ⚠️ IMPORTANT : Charge ces libs LOCALEMENT (pas de CDN).
   // Instructions en fin de fichier.
@@ -551,11 +557,12 @@
   // ===== INDEXEDDB =====
   function openDb() {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open('shieldproof_db', 1);
+      const req = indexedDB.open('shieldproof_db', 2);
       req.onupgradeneeded = (e) => {
         const db = e.target.result;
         if (!db.objectStoreNames.contains('subs')) db.createObjectStore('subs', { keyPath: 'id' });
         if (!db.objectStoreNames.contains('proofs')) db.createObjectStore('proofs', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('keys')) db.createObjectStore('keys', { keyPath: 'id' });
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -1548,101 +1555,86 @@ const I18N = {
     const localTime = formatLocalDateTime(nowObj);
     const prog = document.getElementById('scan-progress');
     const fill = document.getElementById('progress-fill');
+    const withTimeout = (promise, ms, label) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(label + '_TIMEOUT')), ms))
+    ]);
+    if (!file || !file.type || !file.type.startsWith('image/')) { toast('Choisis un fichier image valide.'); return; }
+    if (file.size > 25 * 1024 * 1024) { toast('Image trop volumineuse (maximum 25 Mo).'); return; }
     document.getElementById('lbl-ocr-status').textContent = t.ocrRunning;
     prog.classList.remove('hidden');
     document.getElementById('home-hud').classList.add('hidden');
     document.getElementById('scan-result').classList.add('hidden');
-    fill.style.width = '10%';
-
-    // Hash SHA-256
-    const arrayBuffer = await file.arrayBuffer();
-    const hash = await sha256Hex(arrayBuffer);
-    fill.style.width = '25%';
-
-    // Miniature
-    const thumb = await makeThumb(file);
-    fill.style.width = '40%';
-
-    // 🤖 DÉTECTION IA (avant l'OCR, pour afficher rapidement)
-    let aiDetection = null;
+    fill.style.width = '5%';
+    let hash = '', thumb = '', aiDetection = null, ocrText = '';
     try {
-      aiDetection = await detectAIImage(file, (p) => {
-        fill.style.width = `${40 + Math.round(p * 0.2)}%`;
-      });
-    } catch (_) { aiDetection = null; }
-    fill.style.width = '65%';
-
-    // OCR (Tesseract) — facultatif
-    let ocrText = '';
-    try {
-      if (typeof Tesseract !== 'undefined') {
-        const ocrInput = await prepareOcrImage(file);
-        const res = await Tesseract.recognize(ocrInput, getOcrLangs(), {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              fill.style.width = `${65 + Math.round(m.progress * 30)}%`;
+      const arrayBuffer = await withTimeout(file.arrayBuffer(), 10000, 'FILE_READ');
+      hash = await withTimeout(sha256Hex(arrayBuffer), 10000, 'SHA256');
+      if (!/^[a-f0-9]{64}$/i.test(hash)) throw new Error('SHA256_UNAVAILABLE');
+      fill.style.width = '25%';
+      try { thumb = await withTimeout(makeThumb(file), 8000, 'THUMBNAIL'); }
+      catch (e) { console.warn('Thumbnail unavailable', e); thumb = ''; }
+      fill.style.width = '40%';
+      try {
+        aiDetection = await withTimeout(detectAIImage(file, p => {
+          fill.style.width = String(40 + Math.round(p * 0.2)) + '%';
+        }), 6000, 'AI_HEURISTIC');
+      } catch (e) { console.warn('AI heuristic timeout/error', e); aiDetection = null; }
+      fill.style.width = '65%';
+      try {
+        if (typeof Tesseract !== 'undefined' && typeof Tesseract.recognize === 'function') {
+          const ocrInput = await withTimeout(prepareOcrImage(file), 5000, 'OCR_PREPARE');
+          const res = await withTimeout(Tesseract.recognize(ocrInput, getOcrLangs(), {
+            logger: m => {
+              if (m.status === 'recognizing text') fill.style.width = String(65 + Math.round(m.progress * 30)) + '%';
             }
-          }
-        });
-        ocrText = res.data.text || '';
-      }
-    } catch (_) { ocrText = ''; }
-    fill.style.width = '100%';
-    prog.classList.add('hidden');
-
-    // Analyse texte
-    const ai = analyzeOcrText(ocrText);
-    const safeName = file.name || `capture_${nowIso.slice(0,10)}.jpg`;
-    currentScan = {
-      file, fileName: safeName, hash, thumb, nowIso, localTime,
-      ai, ocrText, isDemo: Boolean(isDemo), aiDetection
-    };
-
-    const thumbEl = document.getElementById('scan-thumb');
-    thumbEl.src = thumb;
-    thumbEl.classList.remove('hidden');
-    document.getElementById('demo-dl-wrap').classList.toggle('hidden', !isDemo);
-
-    // Remplissage formulaire SUB
-    document.getElementById('sub-name').value = ai.serviceName;
-    document.getElementById('sub-price').value = ai.price;
-    document.getElementById('sub-curr').value = ai.curr;
-    document.getElementById('sub-date').value = ai.targetDate;
-    updateAnnualCost();
-    document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate);
-
-    const traps = [];
-    if (ai.hasAutoRenew) traps.push(`<span class="badge badge-err">${esc(t.trapAutoRenew)}</span>`);
-    if (ai.hasTrial) traps.push(`<span class="badge badge-warn">${esc(t.trapTrial)}</span>`);
-    document.getElementById('trap-alerts').innerHTML = traps.join(' ');
-
-    const linkWrap = document.getElementById('official-cancel-wrap');
-    if (ai.cancelUrl) {
-      document.getElementById('official-cancel-link').href = ai.cancelUrl;
-      linkWrap.classList.remove('hidden');
-    } else linkWrap.classList.add('hidden');
-
-    // Formulaire PROOF
-    document.getElementById('proof-title').value = safeName.replace(/\.[^.]+$/, '') || `Preuve ${localTime.slice(0,10)}`;
-    if (presetCat && presetCat !== 'SUB') document.getElementById('proof-cat').value = presetCat;
-    else if (ai.proofCat !== 'OTHER') document.getElementById('proof-cat').value = ai.proofCat;
-    const brand = getB2bBrand();
-    document.getElementById('proof-company').value = brand.name || '';
-    document.getElementById('proof-local-time').value = localTime;
-    document.getElementById('proof-hash-preview').textContent = hash;
-    document.getElementById('proof-time').value = nowIso;
-
-    refreshB2bUi();
-
-    // 🎯 Affichage du panneau de détection IA
-    if (aiDetection) {
-      renderAIDetectionPanel(aiDetection);
-    } else {
-      document.getElementById('ai-detection-card').classList.add('hidden');
+          }), 15000, 'OCR');
+          ocrText = res && res.data ? (res.data.text || '') : '';
+        }
+      } catch (e) { console.warn('OCR skipped', e); ocrText = ''; }
+      fill.style.width = '100%';
+      const ai = analyzeOcrText(ocrText);
+      const safeName = file.name || ('capture_' + nowIso.slice(0,10) + '.jpg');
+      currentScan = { file, fileName: safeName, hash, thumb, nowIso, localTime, ai, ocrText, isDemo: Boolean(isDemo), aiDetection, c2paStatus: null };
+      const thumbEl = document.getElementById('scan-thumb');
+      if (thumb) { thumbEl.src = thumb; thumbEl.classList.remove('hidden'); }
+      else { thumbEl.removeAttribute('src'); thumbEl.classList.add('hidden'); }
+      document.getElementById('demo-dl-wrap').classList.toggle('hidden', !isDemo);
+      document.getElementById('sub-name').value = ai.serviceName || '';
+      document.getElementById('sub-price').value = ai.price || '';
+      document.getElementById('sub-curr').value = ai.curr || 'EUR';
+      document.getElementById('sub-date').value = ai.targetDate || '';
+      updateAnnualCost();
+      document.getElementById('sub-letter').value = t.letterTemplate(ai.serviceName || 'Service', ai.targetDate || '');
+      const traps = [];
+      if (ai.hasAutoRenew) traps.push('<span class="badge badge-err">' + esc(t.trapAutoRenew) + '</span>');
+      if (ai.hasTrial) traps.push('<span class="badge badge-warn">' + esc(t.trapTrial) + '</span>');
+      document.getElementById('trap-alerts').innerHTML = traps.join(' ');
+      const linkWrap = document.getElementById('official-cancel-wrap');
+      if (ai.cancelUrl) { document.getElementById('official-cancel-link').href = ai.cancelUrl; linkWrap.classList.remove('hidden'); }
+      else linkWrap.classList.add('hidden');
+      document.getElementById('proof-title').value = safeName.replace(/\.[^.]+$/, '') || ('Preuve ' + localTime.slice(0,10));
+      if (presetCat && presetCat !== 'SUB') document.getElementById('proof-cat').value = presetCat;
+      else if (ai.proofCat && ai.proofCat !== 'OTHER') document.getElementById('proof-cat').value = ai.proofCat;
+      try { const brand = getB2bBrand(); document.getElementById('proof-company').value = brand.name || ''; } catch (_) {}
+      document.getElementById('proof-local-time').value = localTime;
+      document.getElementById('proof-hash-preview').textContent = hash;
+      document.getElementById('proof-time').value = nowIso;
+      try { refreshB2bUi(); } catch (_) {}
+      if (aiDetection) { try { renderAIDetectionPanel(aiDetection); } catch (e) { console.warn(e); document.getElementById('ai-detection-card').classList.add('hidden'); } }
+      else document.getElementById('ai-detection-card').classList.add('hidden');
+      const c2paStatus = document.getElementById('c2pa-status');
+      if (c2paStatus) c2paStatus.textContent = 'C2PA : vérification non lancée.';
+      switchDetectedMode(forceMode || (ai.isSub ? 'SUB' : 'PROOF'));
+      document.getElementById('scan-result').classList.remove('hidden');
+    } catch (fatalError) {
+      console.error('SHIELDPROOF scan error', fatalError);
+      toast('Analyse interrompue : ' + (fatalError.message || 'erreur inconnue') + '. Essaie une image plus petite.');
+    } finally {
+      prog.classList.add('hidden');
+      fill.style.width = '0%';
+      document.getElementById('home-hud').classList.remove('hidden');
     }
-
-    switchDetectedMode(forceMode || (ai.isSub ? 'SUB' : 'PROOF'));
-    document.getElementById('scan-result').classList.remove('hidden');
   }
 
   function switchDetectedMode(mode) {
@@ -1729,8 +1721,11 @@ const I18N = {
       hash: currentScan.hash, timestamp: currentScan.nowIso, localTime: currentScan.localTime,
       thumb: currentScan.thumb, fileName: currentScan.fileName, fileSize: currentScan.file.size,
       aiScore: currentScan.aiDetection?.score || 0,
-      aiReasons: currentScan.aiDetection?.reasons || []
+      aiReasons: currentScan.aiDetection?.reasons || [],
+      c2paStatus: currentScan.c2paStatus || null,
+      signature: null, otsReceipts: [], otsStatus: 'not_requested'
     });
+    if (window.shieldProofV10) window.shieldProofV10.enrichSavedProof(id).catch(e => console.warn('Proof enrichment', e));
     closeScanResult();
     toast(I18N[lang].savedToast);
     switchTab('proofs', 2);
@@ -1824,7 +1819,7 @@ const I18N = {
     ctx.fillStyle = '#f1f5f9'; ctx.fillRect(60, 520, canvas.width - 120, 145);
     ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.strokeRect(60, 520, canvas.width - 120, 145);
     ctx.fillStyle = '#0f172a'; ctx.font = 'bold 22px sans-serif';
-    ctx.fillText('EMPREINTE CRYPTOGRAPHIQUE SHA-256 (0 PIXEL MODIFIÉ) :', 84, 560);
+    ctx.fillText('EMPREINTE SHA-256 — IDENTIFIANT DU FICHIER SCELLÉ :', 84, 560);
     ctx.fillStyle = '#0369a1'; ctx.font = 'bold 26px monospace';
     ctx.fillText(p.hash.slice(0,32), 84, 604); ctx.fillText(p.hash.slice(32), 84, 644);
 
@@ -2329,6 +2324,8 @@ const I18N = {
 
   function setLang(l) {
     lang = l;
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
     localStorage.setItem('sp_lang', l);
     document.documentElement.lang = l;
     document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
