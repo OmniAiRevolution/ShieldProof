@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shieldproof-v11-license-fix-2';
+const CACHE_NAME = 'shieldproof-v11-csp-license-fix-3';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon.svg', './shieldproof-v10.js', './shieldproof-v11.js', './app.js'];
 
 self.addEventListener('install', (event) => {
