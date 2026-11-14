@@ -1,5 +1,5 @@
-const CACHE_NAME = 'shieldproof-v1';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
+const CACHE_NAME = 'shieldproof-v2';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon.svg', './forensics.html'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(APP_SHELL)));

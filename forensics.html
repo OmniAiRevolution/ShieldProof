@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>SHIELDPROOF — Forensic & Seal</title>
+<style>
+:root{color-scheme:dark;--bg:#07111f;--panel:#101d30;--line:#263b56;--cyan:#45d9ee;--text:#eef7ff;--muted:#9cb1c8;--green:#55d69e;--amber:#ffc76b;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#07111f,#0b1728 55%,#07111f);color:var(--text);font:15px system-ui,Arial,sans-serif}main{max-width:900px;margin:auto;padding:22px 16px 60px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}.shield{width:44px;height:44px;border:1px solid var(--cyan);border-radius:14px;display:grid;place-items:center;color:var(--cyan);font-size:24px}.sub{color:var(--muted);font-size:13px}.panel{background:#101d30eF;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 10px 35px #0003}h1{font-size:23px;margin:0}h2{font-size:18px;margin:0 0 12px}.drop{border:1px dashed #4a7894;border-radius:14px;padding:22px;text-align:center;background:#0b1929}.drop input{display:block;width:100%;margin-top:12px;color:var(--muted)}button,.btn{border:0;border-radius:11px;padding:12px 15px;background:var(--cyan);color:#03202b;font-weight:750;cursor:pointer}button.secondary{background:#20344b;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.5;cursor:wait}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.metric{background:#0a1727;border:1px solid var(--line);padding:12px;border-radius:12px}.metric b{display:block;color:var(--cyan);font-size:13px;margin-bottom:5px}.metric span{overflow-wrap:anywhere}.status{padding:13px;border-radius:12px;margin:10px 0;font-weight:700}.good{background:#103329;color:#a9f4d2}.warn{background:#3b2c12;color:#ffe0a0}.bad{background:#401e27;color:#ffc0c0}.muted{color:var(--muted)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#071321;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12px}.hidden{display:none!important}img.preview{max-width:100%;max-height:320px;display:block;margin:12px auto;border-radius:12px}label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}input[type=text],textarea,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#071321;color:var(--text)}textarea{min-height:76px}.small{font-size:12px;color:var(--muted);line-height:1.5}a{color:var(--cyan)}footer{margin-top:25px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body><main>
+<header class="brand"><div class="shield">⬡</div><div><h1>SHIELDPROOF</h1><div class="sub">AITECHPRO · Analyse forensique & scellé numérique local</div></div></header>
+<section class="panel">
+<h2>1. Analyser une image</h2>
+<div class="drop"><strong>Sélectionne la photo originale</strong><div class="sub">L'image reste sur cet appareil. Formats usuels JPEG, PNG, WebP, AVIF/HEIC selon le navigateur.</div><input id="file" type="file" accept="image/*"></div>
+<div id="analysis" class="hidden"><img id="preview" class="preview" alt="Aperçu de l'image"><div id="verdict"></div><div id="metrics" class="grid"></div><h3>Indices techniques</h3><div id="indicators"></div><h3>Limites et avertissements</h3><div id="warnings"></div>
+<div class="actions"><button id="sealBtn">Sceller le fichier original SHA-256</button><button id="resetBtn" class="secondary">Nouvelle analyse</button></div></div>
+</section>
+<section class="panel">
+<h2>2. Validation C2PA cryptographique</h2><p class="small">Le SDK officiel vérifie le manifeste et son état de confiance. Connexion requise au premier chargement.</p><div class="actions"><button id="c2paBtn" class="secondary">Valider le C2PA du fichier sélectionné</button></div><div id="c2paResult"></div><h2>3. Vérifier une empreinte ou un certificat</h2>
+<label for="expected">Empreinte SHA-256 ou certificat JSON</label><input id="expected" type="text" placeholder="Coller les 64 caractères SHA-256">
+<input id="certFile" type="file" accept=".json,application/json">
+<div class="actions"><button id="verifyBtn" class="secondary">Comparer avec le fichier sélectionné</button></div><div id="verifyResult"></div>
+</section>
+<section class="panel">
+<h2>3. Mes scellés sur cet appareil</h2><div class="small">Les certificats et les originaux enregistrés restent dans le stockage local de ce navigateur. Exportez les certificats et conservez aussi une copie indépendante.</div><div id="vault"></div>
+</section>
+<section class="panel">
+<h2>4. Dossier immobilier / automobile</h2>
+<label for="category">Type de constat</label><select id="category"><option value="IMMOBILIER">Immobilier — état des lieux</option><option value="AUTOMOBILE">Automobile — état du véhicule</option><option value="SINISTRE">Sinistre / assurance</option><option value="COLIS">Colis / livraison</option><option value="AUTRE">Autre preuve</option></select>
+<label for="title">Titre du constat</label><input id="title" type="text" placeholder="Ex. État des lieux entrée — appartement">
+<label for="reference">Référence non sensible</label><input id="reference" type="text" placeholder="Ex. Dossier 2026-001 (éviter les données personnelles inutiles)">
+<label for="notes">Observations</label><textarea id="notes" placeholder="Kilométrage, pièce, rayure visible, compteur…"></textarea>
+<p class="small">Les champs de dossier sont ajoutés au certificat lors du prochain scellement. Ils ne prouvent pas à eux seuls l'identité, la propriété, la date réelle de prise de vue ou la véracité du constat.</p>
+</section>
+<footer>SHIELDPROOF Forensic module · Analyse locale. SHA-256 prouve l'identité binaire d'un fichier par rapport à une empreinte de référence, pas que son contenu est vrai ni qu'il n'a jamais été généré ou retouché.</footer>
+</main>
+<script src="./shieldproof-crypto-c2pa.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let selectedFile=null,lastHash='',lastReport=null,certImport=null;
+const DB_NAME='shieldproof-forensic-v1',STORE='seals';
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function bytesToHex(b){return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function sha256(file){if(!crypto?.subtle)throw Error('SHA-256 indisponible : ouvre l’application en HTTPS.');return bytesToHex(await crypto.subtle.digest('SHA-256',await file.arrayBuffer()));}
+function openDB(){return new Promise((resolve,reject)=>{const q=indexedDB.open(DB_NAME,1);q.onupgradeneeded=()=>q.result.createObjectStore(STORE,{keyPath:'id'});q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});}
+async function dbPut(v){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(v);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
+async function dbAll(){const db=await openDB();return new Promise((resolve,reject)=>{const q=db.transaction(STORE).objectStore(STORE).getAll();q.onsuccess=()=>resolve(q.result.sort((a,b)=>b.createdAt.localeCompare(a.createdAt)));q.onerror=()=>reject(q.error);});}
+async function dbGet(id){const db=await openDB();return new Promise((resolve,reject)=>{const q=db.transaction(STORE).objectStore(STORE).get(id);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});}
+function detectFormat(b){if(b[0]===255&&b[1]===216&&b[2]===255)return'JPEG';if(b[0]===137&&b[1]===80&&b[2]===78&&b[3]===71)return'PNG';if(String.fromCharCode(...b.slice(0,4))==='RIFF'&&String.fromCharCode(...b.slice(8,12))==='WEBP')return'WEBP';if(String.fromCharCode(...b.slice(4,8))==='ftyp')return'HEIF/AVIF/MP4';return'INCONNU';}
+function extractStrings(buffer){const b=new Uint8Array(buffer.slice(0,Math.min(buffer.byteLength,8*1024*1024)));let s='';for(let i=0;i<b.length;i++){const c=b[i];if(c>=32&&c<=126)s+=String.fromCharCode(c);else s+=' ';}return s.toLowerCase();}
+function occurrences(text,terms){return terms.filter(t=>text.includes(t));}
+async function inspectImage(file){const buffer=await file.arrayBuffer(),raw=extractStrings(buffer),bytes=new Uint8Array(buffer);let width=0,height=0;try{const bitmap=await createImageBitmap(file);width=bitmap.width;height=bitmap.height;bitmap.close();}catch(_){}
+const aiTerms=['midjourney','stable diffusion','stablediffusion','automatic1111','comfyui','adobe firefly','trainedalgorithmicmedia','dall-e','dalle','ideogram','leonardo.ai','generative ai','made with ai','openai image'];
+const editTerms=['photoshop','lightroom','gimp','canva','picsart','snapseed','facetune','capcut','remini','affinity photo'];
+const c2paTerms=['c2pa','content credentials','contentcredentials','c2pa_manifest'];
+const cameraTerms=['datetimeoriginal','exposuretime','isospeedratings','focallength','canon','nikon','sony','fujifilm','iphone','samsung','huawei','xiaomi','oppo'];
+const ai=occurrences(raw,aiTerms),edit=occurrences(raw,editTerms),c2pa=occurrences(raw,c2paTerms),camera=occurrences(raw,cameraTerms);
+const report={format:detectFormat(bytes),width,height,size:file.size,mime:file.type||'inconnu',ai,edit,c2pa,camera,hasExif:raw.includes('exif')||raw.includes('datetimeoriginal'),hash:lastHash};
+report.status=ai.length?'SIGNATURE_IA_ASSOCIÉE_TROUVÉE':'ORIGINE_NON_DÉTERMINÉE';
+return report;}
+function metric(k,v){return'<div class="metric"><b>'+esc(k)+'</b><span>'+esc(v)+'</span></div>';}
+function renderReport(r){$('analysis').classList.remove('hidden');$('verdict').innerHTML=r.ai.length?'<div class="status bad">Signature technique associée à un outil IA trouvée. Cela constitue un indice, pas une preuve définitive.</div>':'<div class="status warn">Origine non déterminée. Aucune signature IA connue n’a été trouvée ; cela ne signifie pas que l’image est authentique.</div>';
+$('metrics').innerHTML=[metric('Format',r.format),metric('Dimensions',r.width+' × '+r.height),metric('Taille',r.size+' octets'),metric('SHA-256',r.hash),metric('Métadonnées EXIF',r.hasExif?'Indice trouvé':'Non détectées')].join('');
+const rows=[['Signatures IA',r.ai],['Logiciels de retouche',r.edit],['Marqueurs C2PA',r.c2pa],['Indices caméra',r.camera]];
+$('indicators').innerHTML=rows.map(([k,v])=>'<p><b>'+esc(k)+' :</b> '+(v.length?esc(v.join(', ')):'aucun indice identifié')+'</p>').join('');
+$('warnings').innerHTML='<ul><li>Les métadonnées peuvent être supprimées, ajoutées ou modifiées.</li><li>Les marqueurs C2PA détectés ici ne sont pas validés cryptographiquement.</li><li>Une photo authentique peut être retouchée ; une image IA peut ne laisser aucune signature.</li><li>Ce module n’embarque pas encore de modèle de classification IA entraîné : aucun score IA pixel par pixel n’est affiché.</li><li>L’absence d’EXIF ou de marqueur caméra n’est jamais une preuve de génération IA.</li></ul>';
+}
+function download(name,blob){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+async function renderVault(){const list=await dbAll();$('vault').innerHTML=list.length?list.map(x=>'<div class="metric" style="margin:9px 0"><b>'+esc(x.title||x.fileName)+'</b><span>'+esc(x.certId)+' · '+esc(x.category)+'<br><code>'+esc(x.hash)+'</code><br>'+esc(x.createdAt)+'<br><span class="small">Original conservé : '+(x.original?'oui':'non')+'</span><br><button class="secondary" data-export="'+esc(x.id)+'">Exporter certificat</button> <button class="secondary" data-original="'+esc(x.id)+'">Exporter original</button></span></div>').join(''):'<p class="muted">Aucun scellé sur cet appareil.</p>';
+$('vault').querySelectorAll('[data-export]').forEach(b=>b.onclick=async()=>{const x=await dbGet(b.dataset.export);download(x.certId+'.json',new Blob([JSON.stringify(x.certificate,null,2)],{type:'application/json'}));});
+$('vault').querySelectorAll('[data-original]').forEach(b=>b.onclick=async()=>{const x=await dbGet(b.dataset.original);if(x?.original)download(x.fileName,x.original);else alert('Original absent du coffre.');});}
+$('file').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;if(!f.type.startsWith('image/')){alert('Sélectionne un fichier image.');return;}selectedFile=f;$('preview').src=URL.createObjectURL(f);$('analysis').classList.remove('hidden');$('verdict').innerHTML='<div class="status warn">Analyse en cours…</div>';try{lastHash=await sha256(f);lastReport=await inspectImage(f);renderReport(lastReport);}catch(err){$('verdict').innerHTML='<div class="status bad">'+esc(err.message)+'</div>';}});
+$('sealBtn').onclick=async()=>{if(!selectedFile||!lastHash)return;const certId='SP-'+crypto.randomUUID();const createdAt=new Date().toISOString();const record={schema:'shieldproof.seal.v1',application:'SHIELDPROOF',certId,algorithm:'SHA-256',hash:lastHash,fileName:selectedFile.name,fileSize:selectedFile.size,mimeType:selectedFile.type,category:$('category').value,title:$('title').value.trim()||selectedFile.name,reference:$('reference').value.trim(),notes:$('notes').value.trim(),createdAt,clockSource:'device-clock-untrusted',timestampAuthority:'none',aiAnalysis:lastReport,original:selectedFile};
+const certificate=await shieldProofSignCertificate({...record});delete certificate.original;record.certificate=certificate;await dbPut(record);download(certId+'.json',new Blob([JSON.stringify(certificate,null,2)],{type:'application/json'}));await renderVault();alert('Scellé local créé. L’heure vient de l’horloge de l’appareil et n’est pas certifiée par un tiers. Conserve le JSON et l’original.');};
+$('resetBtn').onclick=()=>{selectedFile=null;lastHash='';lastReport=null;$('file').value='';$('analysis').classList.add('hidden');};
+$('certFile').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{certImport=JSON.parse(await f.text());$('expected').value=certImport.hash||'';}catch(_){alert('Certificat JSON illisible.');}});
+$('verifyBtn').onclick=async()=>{if(!selectedFile){$('verifyResult').innerHTML='<div class="status warn">Sélectionne d’abord le fichier à contrôler dans la section 1.</div>';return;}if(certImport?.signature){const signatureOK=await shieldProofVerifyCertificate(certImport);if(!signatureOK){$('verifyResult').innerHTML='<div class="status bad">Signature invalide : certificat modifié ou signature incorrecte.</div>';return;}}const expected=($('expected').value.trim()||certImport?.hash||'').toLowerCase();if(!/^[a-f0-9]{64}$/.test(expected)){$('verifyResult').innerHTML='<div class="status warn">Empreinte SHA-256 de 64 caractères requise.</div>';return;}const actual=await sha256(selectedFile);$('verifyResult').innerHTML=actual===expected?'<div class="status good">Empreinte identique : les octets du fichier correspondent à l’empreinte fournie.</div><pre>'+esc(actual)+'</pre>':'<div class="status bad">Empreinte différente : le fichier ne correspond pas à l’empreinte fournie.</div><pre>Attendue : '+esc(expected)+'\nCalculée : '+esc(actual)+'</pre>';};
+$('c2paBtn').onclick=async()=>{if(!selectedFile){alert('Sélectionne une image dans la section 1.');return;}const box=$('c2paResult');box.innerHTML='<div class="status warn">Validation C2PA en cours…</div>';try{const result=await shieldProofValidateC2PA(selectedFile);const state=result.state;const cls=state==='Trusted'?'good':state==='Invalid'?'bad':'warn';box.innerHTML='<div class="status '+cls+'">État C2PA : '+esc(state)+'</div><pre>'+esc(JSON.stringify(result,null,2))+'</pre>';}catch(err){box.innerHTML='<div class="status warn">Validation C2PA indisponible : '+esc(err.message)+'</div>';}};renderVault().catch(e=>console.error(e));
+</script></body></html>
