@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shieldproof-v11-local-backup-4';
+const CACHE_NAME = 'shieldproof-v11-reality-check-v3-1';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icon.svg', './shieldproof-v10.js', './shieldproof-v11.js', './app.js'];
 
 self.addEventListener('install', (event) => {
