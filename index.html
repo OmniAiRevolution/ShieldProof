@@ -449,7 +449,13 @@
     <div class="card">
       <div style="font-weight:800;font-size:15px;" id="lbl-export-title"></div>
       <div class="muted" style="margin:4px 0 10px;" id="lbl-export-sub"></div>
+      <div class="muted" style="margin:8px 0;">🔒 Les preuves sont conservées sur cet appareil. Effacer les données du navigateur peut les supprimer. Sauvegardez régulièrement vos preuves dans un fichier sur votre téléphone.</div>
+      <button class="btn btn-tonal" onclick="requestPersistentStorage()">📱 Protéger le stockage local</button>
+      <label style="display:block;margin:12px 0;"><input type="checkbox" id="save-original-locally" checked> Conserver aussi la photo originale dans les preuves (utilise plus d’espace)</label>
+      <div class="muted" style="margin:4px 0 8px;">La sauvegarde JSON inclut les photos originales conservées. Gardez-la en lieu sûr : elle peut contenir des documents sensibles.</div>
       <button class="btn btn-tonal" onclick="exportBackupJson()">⬇️ <span id="txt-exp-json"></span></button>
+      <button class="btn btn-tonal" onclick="document.getElementById('restore-backup-input').click()">📂 Restaurer une sauvegarde</button>
+      <input id="restore-backup-input" type="file" accept=".json,application/json" style="display:none" onchange="restoreBackupJson(event)">
       <button class="btn btn-danger" onclick="clearAllDb()">🗑️ <span id="txt-clear-all"></span></button>
     </div>
     <div class="card">
