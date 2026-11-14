@@ -1621,7 +1621,7 @@ const I18N = {
 
   // Verify without consuming an activation while searching product types.
   async function verifyKeyWithProduct(productId, key) {
-    if (!productId || !GUMROAD_CONFIG.verifyProxyUrl) return {ok:false, error:'configuration'};
+    if (!productId || !GUMROAD_CONFIG.verifyProxyUrl) return {ok:false,error:'configuration'};
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 12000);
@@ -1630,16 +1630,22 @@ const I18N = {
         res = await fetch(GUMROAD_CONFIG.verifyProxyUrl, {
           method:'POST',
           headers:{'Content-Type':'application/x-www-form-urlencoded'},
-          body:new URLSearchParams({product_id:productId,license_key:key,increment_uses_count:'false'}),
+          body:new URLSearchParams({product_id:productId,license_key:key.trim(),increment_uses_count:'false'}),
           signal:controller.signal
         });
       } finally { clearTimeout(timer); }
+      // Gumroad deliberately returns HTTP 404 for a key that does not belong
+      // to the requested product. It is not a Cloudflare/server outage.
+      if (res.status === 404) return {ok:false,error:'not_found'};
       if (!res.ok) return {ok:false,error:'server',status:res.status};
       const data = await res.json();
       if (!data || typeof data.success !== 'boolean') return {ok:false,error:'response'};
-      const p = data.purchase || {};
-      const active = data.success && !p.refunded && !p.chargebacked && !p.disputed && !p.subscription_cancelled_at;
-      return {ok:Boolean(active),uses:Number(data.uses || 0),error:active?null:'rejected'};
+      if (!data.success) return {ok:false,error:'rejected'};
+      const p = data.purchase;
+      if (!p || p.product_id !== productId) return {ok:false,error:'product_mismatch'};
+      const inactive = p.refunded || p.chargebacked || p.disputed ||
+        p.subscription_cancelled_at || p.subscription_ended_at || p.subscription_failed_at;
+      return {ok:!inactive,uses:Number(data.uses || 0),error:inactive?'rejected':null};
     } catch(e) {
       return {ok:false,error:e.name==='AbortError'?'timeout':'network'};
     }
@@ -1655,9 +1661,9 @@ const I18N = {
     const btn = document.getElementById('btn-activate-key');
     btn.disabled = true;
     const checks = [
-      {id:GUMROAD_CONFIG.proProductId,type:'pro'},
-      {id:GUMROAD_CONFIG.b2bFleetProductId,type:'fleet'},
       {id:GUMROAD_CONFIG.b2bStarterProductId,type:'starter'},
+      {id:GUMROAD_CONFIG.b2bFleetProductId,type:'fleet'},
+      {id:GUMROAD_CONFIG.proProductId,type:'pro'},
       {id:GUMROAD_CONFIG.pack10ProductId,type:'pack'}
     ];
     let failures = [];
