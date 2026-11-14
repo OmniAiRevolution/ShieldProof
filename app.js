@@ -1493,6 +1493,7 @@ const I18N = {
           ${aiBadge}</div>
         </div>
         <div class="actions">
+          ${p.originalData ? `<button class="btn btn-tonal btn-sm" onclick="downloadProofOriginal(${p.id})">⬇️ Photo originale</button>` : ''}
           <button class="btn btn-wa btn-sm" onclick="shareProofPdf(${p.id})">📲 ${esc(t.pdfShareBtn)}</button>
           <button class="btn btn-tonal btn-sm" onclick="shareProofImage(${p.id})">🖼️ ${esc(t.imgShareBtn)}</button>
           <button class="btn btn-tonal btn-sm" onclick="shareProofWhatsApp(${p.id})">💬 ${esc(t.waTextBtn)}</button>
@@ -1502,6 +1503,18 @@ const I18N = {
           <button class="btn btn-danger btn-sm" onclick="deleteProof(${p.id})">${esc(t.delBtn)}</button>
         </div></div>`;
     }).join('');
+  }
+
+  async function downloadProofOriginal(id) {
+    const p = (await dbAll('proofs')).find(item => item.id === id);
+    if (!p?.originalData || !p.originalData.startsWith('data:')) {
+      toast('Photo originale non disponible dans cette preuve.');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = p.originalData;
+    a.download = (p.fileName || 'preuve-originale').replace(/[\\/]/g,'_');
+    document.body.appendChild(a); a.click(); a.remove();
   }
 
   async function deleteProof(id) { await dbDel('proofs', id); renderProofs(); renderHomeHud(); }
