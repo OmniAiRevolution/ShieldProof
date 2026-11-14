@@ -10,7 +10,7 @@
   <meta property="og:title" content="SHIELDPROOF — Scellage SHA-256 & Détection IA">
   <meta property="og:description" content="Scellez vos photos en SHA-256 avec QR Code vérifiable. Détection locale des images générées par IA.">
   <meta property="og:type" content="website">
-  <title>SHIELDPROOF v9.0.0 — SHA-256 Proof & AI Image Detector</title>
+  <title>SHIELDPROOF v10.0.0 — SHA-256 Proof & AI Image Detector</title>
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <style>
@@ -735,17 +735,17 @@ const I18N = {
     hudSubs: 'Alertes actives', hudProofs: 'Preuves SHA-256',
     mod1Title: 'Détecteur OCR + IA Anti-Pièges', mod1Desc: 'Lit le prix, alerte 48h, détecte les fausses images générées.',
     mod2Title: 'Sceau SHA-256 + QR Code Vérifiable', mod2Desc: 'Certifie voitures, Airbnb, sinistres & colis contre retouche IA.',
-    mod3Title: "Vérificateur Public d'Authenticité", mod3Desc: 'Prouvez en 1 clic (ou via QR Code) que la photo est 100 % originale.',
+    mod3Title: "Vérificateur Public d'Authenticité", mod3Desc: 'Prouvez en 1 clic (ou via QR Code) que la photo est identique au fichier scellé.',
     faqTitle: 'FAQ — Questions fréquentes',
     updatedDate: 'Mise à jour : 13/11/2026',
     changelog: `• v${APP_VERSION} : Détection locale d'images IA (métadonnées + analyse pixel/bruit/saturation), badge d'alerte IA dans le scan, CSP renforcée, accessibilité SVG, typographie « 100 % » corrigée.`,
     faqs: [
       { q: 'Comment fonctionne la détection d\'images IA ?', a: "Trois analyses locales sont combinées : (1) recherche de signatures logicielles IA dans les métadonnées (Midjourney, Stable Diffusion, DALL-E, ComfyUI…), (2) analyse de la variance des pixels (les IA sur-lissent souvent les textures), (3) mesure du bruit et de la saturation. Un score de 0 à 100 % est calculé. ⚠️ C'est une heuristique : aucun détecteur n'est fiable à 100 %, et un retoucheur humain peut aussi déclencher de faux positifs." },
-      { q: 'Comment marche le QR Code + la page /verify ?', a: "Chaque certificat PDF/PNG génère un QR Code unique. Votre loueur, propriétaire ou assureur le scanne pour ouvrir /verify, glisse votre photo originale et voit instantanément ✅ AUTHENTIQUE (0 pixel modifié)." },
+      { q: 'Comment marche le QR Code + la page /verify ?', a: "Chaque certificat PDF/PNG génère un QR Code unique. Votre loueur, propriétaire ou assureur le scanne pour ouvrir /verify, glisse votre photo originale et voit instantanément ✅ AUTHENTIQUE (octets identiques au fichier scellé)." },
       { q: 'Pourquoi faut-il faire attention à WhatsApp / Messenger ?', a: "WhatsApp compresse les images envoyées en mode photo normal, ce qui modifie les octets et casse l’empreinte SHA-256. Gardez toujours la photo ORIGINALE dans votre galerie et envoyez le certificat via « Envoyer PDF » (ou la photo en tant que « Document »)." },
       { q: 'Que contient le Pack Entreprise Marque Blanche (99 € – 290 €/an) ?', a: "1 seul litige évité vous fait économiser 500 € à 3 000 €. Vous obtenez 5 à 20 licences employés, les champs Auto/Immo/Sinistre, et le bouton « + » pour afficher VOTRE logo d’entreprise sur tous les certificats PDF." },
       { q: 'Combien coûte l’application pour un particulier ?', a: `1ère certification SHA-256 + Scanner OCR gratuits (0 €). Ensuite : Pack 10 preuves à ${P10} ou Pass Illimité à vie à ${PPRO}.` },
-      { q: 'Est-ce que l’application envoie mes photos sur Internet ?', a: "Jamais. Tout tourne à 100 % sur votre téléphone (conforme RGPD & CCPA)." }
+      { q: 'Est-ce que l’application envoie mes photos sur Internet ?', a: "Jamais. Tout tourne à 100 % sur votre téléphone (traitement local ; la conformité juridique dépend du déploiement et de l’usage)." }
     ],
     modalTitle: 'Particuliers & Offre Entreprise B2B',
     modalSub: '1ère preuve SHA-256 offerte. Choisissez votre formule sans engagement :',
@@ -797,7 +797,7 @@ const I18N = {
     verifyBtn: 'Choisir la photo originale à vérifier',
     expTitle: 'Exports & Confidentialité', expSub: 'Stockage 100 % local sur votre téléphone, sans accès bancaire.',
     expJson: 'Exporter sauvegarde JSON', clearAll: 'Effacer toutes les données',
-    privacyFoot: 'OCR Tesseract.js local (FR/EN/AR/ZH) + SHA-256 Web Crypto + QR Code & PDF natifs + Détection IA locale. Conforme RGPD (UE) & CCPA (USA).',
+    privacyFoot: 'OCR Tesseract.js local (FR/EN/AR/ZH) + SHA-256 Web Crypto + QR Code & PDF natifs + Détection IA locale. Traitement local ; aucune conformité juridique automatique n’est garantie.',
     nav: ['Scanner IA', 'Alertes', 'Preuves', 'Export'],
     cancelBtn: 'Marquer résilié', copyBtn: 'Copier lettre', alarmBtn: 'Alarme .ics',
     pdfShareBtn: 'Envoyer PDF (WhatsApp/Mail)', imgShareBtn: 'Envoyer Image', waTextBtn: 'Texte', mailBtn: 'E-mail', delBtn: 'Supprimer',
@@ -805,7 +805,7 @@ const I18N = {
     emptyProofs: 'Aucune preuve photo scellée pour le moment.',
     trapAutoRenew: '⚠️ Renouvellement automatique détecté',
     trapTrial: '⏳ Essai gratuit détecté (risque d’oubli)',
-    authOk: '✅ AUTHENTIQUE : Photo 100 % identique à l’original (0 pixel modifié) !',
+    authOk: '✅ AUTHENTIQUE : Photo 100 % identique à l’original (octets identiques au fichier scellé) !',
     authFail: '❌ NON RECONNU : Image modifiée (retouche IA / compression WhatsApp) ou absente du certificat.',
     savedToast: 'Scellé avec QR Code ! Appuyez sur « Envoyer PDF ».', copiedToast: 'Copié !',
     confirmClear: 'Effacer vos preuves et abonnements locaux ?',
@@ -852,17 +852,17 @@ const I18N = {
     hudSubs: 'Active alerts', hudProofs: 'SHA-256 proofs',
     mod1Title: 'OCR Trap Detector + AI Image Scan', mod1Desc: 'Reads price, 48h alarm, detects AI-generated fakes.',
     mod2Title: 'SHA-256 Seal + Verifiable QR Code', mod2Desc: 'Certifies cars, Airbnb, claims & packages against AI edits.',
-    mod3Title: 'Public Authenticity Verifier', mod3Desc: 'Prove in 1 tap (or via QR Code) that a photo is 100% original.',
+    mod3Title: 'Public Authenticity Verifier', mod3Desc: 'Prove in 1 tap (or via QR Code) that a photo is identical to the sealed file.',
     faqTitle: 'FAQ — Frequently Asked Questions',
     updatedDate: 'Updated: 2026-11-13',
     changelog: `• v${APP_VERSION}: Local AI image detection (metadata + pixel/noise/saturation analysis), AI warning badge in scan view, strengthened CSP, SVG accessibility, "100 %" typography fix.`,
     faqs: [
       { q: 'How does AI image detection work?', a: "Three local checks are combined: (1) search for AI software signatures in metadata (Midjourney, Stable Diffusion, DALL-E, ComfyUI…), (2) pixel variance analysis (AI models often over-smooth textures), (3) noise and saturation measurement. A 0–100% suspicion score is computed. ⚠️ It's a heuristic: no detector is 100% reliable, and human retouching can trigger false positives." },
-      { q: 'How do the QR Code & /verify portal work?', a: 'Every PDF/PNG includes a QR Code. Your landlord, car rental agency, or insurer scans it to open /verify, picks your original photo, and immediately sees ✅ AUTHENTIC (0 pixels altered).' },
+      { q: 'How do the QR Code & /verify portal work?', a: 'Every PDF/PNG includes a QR Code. Your landlord, car rental agency, or insurer scans it to open /verify, picks your original photo, and immediately sees ✅ AUTHENTIC (same bytes as the sealed file).' },
       { q: 'Why warn about WhatsApp / Messenger compression?', a: 'Standard WhatsApp photo sending compresses the image and changes its bytes, breaking SHA-256. Keep the ORIGINAL file in your gallery and share via "Send PDF" (or send image as "Document").' },
       { q: 'What is inside the Business White-Label Pack (€99–€290/yr)?', a: 'Avoiding just 1 dispute saves €500–€3,000. You get 5–20 employee seats, Car/Property/Claim fields, and the "+" button to stamp YOUR company logo on all PDFs.' },
       { q: 'How much for individuals?', a: `1st SHA-256 proof + OCR scanner free (€0). Extra: 10-Proof Pack (${P10}) or Lifetime Unlimited (${PPRO}).` },
-      { q: 'Are photos uploaded to any server?', a: 'Never. 100% local processing (GDPR & CCPA compliant).' }
+      { q: 'Are photos uploaded to any server?', a: 'Never. 100% local processing (designed for local processing; legal compliance depends on deployment and use).' }
     ],
     modalTitle: 'Personal & Business B2B Plans',
     modalSub: 'Your 1st SHA-256 proof is free. Pick a plan:',
@@ -914,7 +914,7 @@ const I18N = {
     verifyBtn: 'Pick original photo to verify',
     expTitle: 'Exports & Privacy', expSub: '100% local on your phone. Zero bank login required.',
     expJson: 'Export JSON backup', clearAll: 'Erase all local data',
-    privacyFoot: 'Local Tesseract.js OCR (EN/FR/AR/ZH) + Web Crypto SHA-256 + native QR & PDF + Local AI detection. GDPR & CCPA compliant.',
+    privacyFoot: 'Local Tesseract.js OCR (EN/FR/AR/ZH) + Web Crypto SHA-256 + native QR & PDF + Local AI detection. designed for local processing; legal compliance depends on deployment and use.',
     nav: ['AI Scan', 'Alerts', 'Proofs', 'Export'],
     cancelBtn: 'Mark Cancelled', copyBtn: 'Copy email', alarmBtn: 'Alarm .ics',
     pdfShareBtn: 'Send PDF (WhatsApp/Mail)', imgShareBtn: 'Send Image', waTextBtn: 'Text', mailBtn: 'Email', delBtn: 'Delete',
@@ -922,7 +922,7 @@ const I18N = {
     emptyProofs: 'No sealed photo proofs yet.',
     trapAutoRenew: '⚠️ Auto-renewal clause detected',
     trapTrial: '⏳ Free trial trap detected',
-    authOk: '✅ AUTHENTIC: 100% identical to original (0 pixels altered)!',
+    authOk: '✅ AUTHENTIC: 100% identical to original (same bytes as the sealed file)!',
     authFail: '❌ NOT VERIFIED: Photo altered (AI edit / WhatsApp compression) or mismatch.',
     savedToast: 'Sealed with QR Code! Tap Send PDF to share.', copiedToast: 'Copied!',
     confirmClear: 'Permanently delete local proofs and alerts?',
@@ -1082,7 +1082,7 @@ const I18N = {
     hudSubs: '扣费预警', hudProofs: 'SHA-256 存证',
     mod1Title: '多语言 OCR + AI 图片检测', mod1Desc: '自动识别价格、48小时闹钟，并检测 AI 生成假图。',
     mod2Title: 'SHA-256 印章 + 核验二维码', mod2Desc: '为租车、民宿、理赔和快递提供防修图证明。',
-    mod3Title: '公开真伪核验门户 (/verify)', mod3Desc: '扫码或一键比对，证明照片 0 像素修改。',
+    mod3Title: '公开真伪核验门户 (/verify)', mod3Desc: '扫码或一键比对，证明照片 与封存文件的字节一致。',
     faqTitle: '常见问题',
     updatedDate: '更新日期：2026-11-13',
     changelog: `• v${APP_VERSION}：本地 AI 图像检测（元数据+像素/噪声/饱和度分析）、扫描界面 AI 警告标签、强化 CSP、SVG 可访问性。`,
@@ -1150,7 +1150,7 @@ const I18N = {
     emptyProofs: '暂无防伪存证。',
     trapAutoRenew: '⚠️ 检测到自动续费',
     trapTrial: '⏳ 检测到免费试用',
-    authOk: '✅ 验证通过：与原图 100% 一致（0 像素改动）！',
+    authOk: '✅ 验证通过：与原图 100% 一致（与封存文件的字节一致）！',
     authFail: '❌ 验证失败：图片已被修改或经 WhatsApp 压缩。',
     savedToast: '已封存并生成二维码！点击发送 PDF 即可分享。', copiedToast: '已复制！',
     confirmClear: '确定永久删除所有本地数据？',
