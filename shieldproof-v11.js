@@ -1,0 +1,26 @@
+/* ShieldProof V11: free, optional browser-side evidence tools. */
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hex=b=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
+const timeout=(p,ms)=>Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(Error('Délai dépassé')),ms))]);
+let locationRecord=null;
+function panel(){
+ if($('v11-panel'))return;
+ const el=document.createElement('section');el.id='v11-panel';el.className='card';el.style.cssText='margin:14px auto;max-width:660px';
+ el.innerHTML='<h2 style="margin:0 0 8px;color:#22d3ee">🛡️ ShieldProof V11 — outils gratuits</h2><p style="font-size:12px">Vérification locale, capture, localisation volontaire et export. Ces contrôles ne certifient pas la réalité d’une scène ni l’identité.</p>'+
+ '<label style="display:block;margin:10px 0">📷 Capture photo <input id="v11-camera" type="file" accept="image/*" capture="environment"></label>'+
+ '<button class="btn btn-tonal" id="v11-location">📍 Relever ma position (facultatif)</button><p id="v11-location-status" style="font-size:12px">Aucune position collectée.</p>'+
+ '<label style="display:block;margin:10px 0">🔍 Vérifier un fichier <input id="v11-file" type="file"></label>'+
+ '<label style="display:block;margin:10px 0">Empreinte SHA-256 attendue <input id="v11-hash" placeholder="64 caractères hexadécimaux" autocomplete="off"></label>'+
+ '<button class="btn btn-tonal" id="v11-check">Comparer les empreintes</button><p id="v11-result" role="status" style="font-size:12px;overflow-wrap:anywhere"></p>'+
+ '<button class="btn btn-tonal" id="v11-export">📦 Exporter mon dossier JSON local</button><p id="v11-export-status" role="status" style="font-size:12px"></p>';
+ const main=document.querySelector('main');if(main)main.prepend(el);else document.body.append(el);
+ $('v11-camera').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;const input=document.querySelector('input[type=file]:not(#v11-camera):not(#v11-file)');if(input){try{const dt=new DataTransfer();dt.items.add(f);input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}));$('v11-result').textContent='Photo transmise au parcours de scan.';}catch(_){$('v11-result').textContent='Capture disponible : sélectionne la photo dans le scanner principal.'}}});
+ $('v11-location').onclick=()=>{if(!navigator.geolocation){$('v11-location-status').textContent='Géolocalisation non disponible.';return;} $('v11-location-status').textContent='Demande de permission…';navigator.geolocation.getCurrentPosition(p=>{locationRecord={latitude:p.coords.latitude,longitude:p.coords.longitude,accuracyMeters:p.coords.accuracy,recordedAt:new Date().toISOString(),source:'browser-unverified'};$('v11-location-status').textContent='Position relevée (précision annoncée : '+Math.round(p.coords.accuracy)+' m). Non certifiée.';},e=>{$('v11-location-status').textContent='Position non disponible : '+e.message;},{enableHighAccuracy:true,timeout:12000,maximumAge:0});};
+ $('v11-check').onclick=async()=>{const f=$('v11-file').files?.[0], expected=$('v11-hash').value.trim().toLowerCase();if(!f){$('v11-result').textContent='Choisis un fichier.';return;}if(f.size>100*1024*1024){$('v11-result').textContent='Fichier trop volumineux (100 Mo maximum).';return;}if(expected&&!/^[a-f0-9]{64}$/.test(expected)){$('v11-result').textContent='Empreinte attendue invalide.';return;}try{$('v11-result').textContent='Calcul SHA-256…';const digest=hex(await timeout(crypto.subtle.digest('SHA-256',await timeout(f.arrayBuffer(),20000)),20000));$('v11-result').textContent='SHA-256 : '+digest+(expected?' — '+(digest===expected?'IDENTIQUE':'DIFFÉRENT'):'');}catch(e){$('v11-result').textContent='Échec : '+e.message;}};
+ $('v11-export').onclick=async()=>{try{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('shieldproof_db',2);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});const proofs=await new Promise((resolve,reject)=>{const t=db.transaction('proofs','readonly');const r=t.objectStore('proofs').getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});db.close();const data={format:'ShieldProof-V11-local-evidence-export',exportedAt:new Date().toISOString(),warning:'Données locales non certifiées par un tiers. Vérifier indépendamment les reçus OTS.',browserLocation:locationRecord,proofs:proofs.map(p=>({id:p.id,certId:p.certId,title:p.title,hash:p.hash,timestamp:p.timestamp,fileName:p.fileName,fileSize:p.fileSize,aiScore:p.aiScore,aiReasons:p.aiReasons,c2paStatus:p.c2paStatus,signature:p.signature,otsStatus:p.otsStatus,otsReceipts:p.otsReceipts}))};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='shieldproof-v11-evidence-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);$('v11-export-status').textContent=proofs.length+' preuve(s) exportée(s).';}catch(e){$('v11-export-status').textContent='Export indisponible : '+e.message;}};
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',panel);else panel();
+})();
