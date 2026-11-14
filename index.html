@@ -1751,6 +1751,8 @@ const I18N = {
       p.ref ? `Réf / Plaque / Adresse : ${p.ref}` : '',
       `Date & Heure : ${dt}`, `UTC : ${p.timestamp}`, `Fichier : ${p.fileName} (${p.fileSize} octets)`,
       `Empreinte SHA-256 : ${p.hash}`,
+      p.otsStatus ? `Horodatage OpenTimestamps : ${p.otsStatus}` : '',
+      p.signatureStatus ? `Signature du certificat : ${p.signatureStatus} (clé de cet appareil)` : '',
       p.aiScore > 0 ? `Analyse IA : ${Math.round(p.aiScore * 100)} % de suspicion` : '',
       `Vérifier l'original en 1 clic : ${getVerifyUrlForProof(p)}`
     ].filter(Boolean).join('\n');
@@ -1997,6 +1999,8 @@ const I18N = {
           <button class="btn btn-tonal btn-sm" onclick="shareProofImage(${p.id})">🖼️ ${esc(t.imgShareBtn)}</button>
           <button class="btn btn-tonal btn-sm" onclick="shareProofWhatsApp(${p.id})">💬 ${esc(t.waTextBtn)}</button>
           <button class="btn btn-tonal btn-sm" onclick="shareProofEmail(${p.id})">✉️ ${esc(t.mailBtn)}</button>
+          <button class="btn btn-tonal btn-sm" onclick="verifySavedProofSignature(${p.id})">Vérifier signature</button>
+          <button class="btn btn-tonal btn-sm" onclick="downloadOTSReceipt(${p.id})">Télécharger preuve .ots</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProof(${p.id})">${esc(t.delBtn)}</button>
         </div></div>`;
     }).join('');
