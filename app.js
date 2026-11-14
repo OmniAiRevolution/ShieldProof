@@ -1168,6 +1168,28 @@ const I18N = {
     switchTab('subs', 1);
   }
 
+  function readOriginalAsDataUrl(file) {
+    return new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function requestPersistentStorage() {
+    if (!navigator.storage?.persist) {
+      toast('Ce navigateur ne propose pas le stockage persistant. Exportez régulièrement vos sauvegardes.');
+      return;
+    }
+    try {
+      const ok = await navigator.storage.persist();
+      toast(ok ? 'Stockage persistant accordé par le navigateur.' : 'Stockage persistant non accordé. Pensez à exporter vos sauvegardes.');
+    } catch (_) {
+      toast('Stockage persistant indisponible. Utilisez la sauvegarde locale.');
+    }
+  }
+
   async function saveProof() {
     if (!currentScan) return;
     const lic = saveLicenseState({});
@@ -1179,6 +1201,15 @@ const I18N = {
     const id = Date.now();
     lastCreatedProofId = id;
     const brand = getB2bBrand();
+    let originalData = null;
+    const keepOriginal = document.getElementById('save-original-locally')?.checked !== false;
+    if (keepOriginal && currentScan.file) {
+      try {
+        originalData = await readOriginalAsDataUrl(currentScan.file);
+      } catch (_) {
+        toast('Photo originale non conservée. Exportez-la séparément.');
+      }
+    }
     await dbPut('proofs', {
       id, certId: 'SP-' + id.toString(36).toUpperCase(),
       title: document.getElementById('proof-title').value.trim() || 'Sealed Proof',
@@ -1188,7 +1219,7 @@ const I18N = {
       notes: document.getElementById('proof-notes').value.trim(),
       b2bLogo: lic.b2bPro ? (brand.logo || '') : '',
       hash: currentScan.hash, timestamp: currentScan.nowIso, localTime: currentScan.localTime,
-      thumb: currentScan.thumb, fileName: currentScan.fileName, fileSize: currentScan.file.size,
+      thumb: currentScan.thumb, originalData, fileName: currentScan.fileName, fileSize: currentScan.file.size,
       aiScore: currentScan.aiDetection?.score || 0,
       aiReasons: currentScan.aiDetection?.reasons || [],
       c2paStatus: currentScan.c2paStatus || null,
@@ -1549,10 +1580,48 @@ const I18N = {
 
   async function exportBackupJson() {
     const subs = await dbAll('subs');
-    const proofs = (await dbAll('proofs')).map(({ thumb, ...rest }) => rest);
-    const url = URL.createObjectURL(new Blob([JSON.stringify({ app: `SHIELDPROOF v${APP_VERSION}`, subs, proofs }, null, 2)], { type: 'application/json' }));
-    const a = document.createElement('a'); a.href = url; a.download = 'shieldproof_backup.json'; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    const proofs = await dbAll('proofs');
+    const payload = { format:'shieldproof-local-backup', version:1, exportedAt:new Date().toISOString(), subs, proofs };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload)], {type:'application/json'}));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'shieldproof_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  }
+
+  async function restoreBackupJson(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!confirm('Importer cette sauvegarde sur ce téléphone ? Les preuves existantes seront conservées.')) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || !Array.isArray(data.proofs) || !Array.isArray(data.subs) ||
+          (data.format && data.format !== 'shieldproof-local-backup')) throw Error('format');
+      if (data.proofs.length > 10000 || data.subs.length > 10000) throw Error('size');
+      for (const p of data.proofs) {
+        if (!p || !Number.isSafeInteger(p.id) || typeof p.hash !== 'string' ||
+            !/^[a-f0-9]{64}$/i.test(p.hash) || typeof p.title !== 'string') throw Error('proof');
+      }
+      for (const sub of data.subs) {
+        if (!sub || !Number.isSafeInteger(sub.id)) throw Error('sub');
+      }
+      const db = await openDb();
+      await new Promise((resolve,reject) => {
+        const tx = db.transaction(['proofs','subs'],'readwrite');
+        data.proofs.forEach(p => tx.objectStore('proofs').put(p));
+        data.subs.forEach(sub => tx.objectStore('subs').put(sub));
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      renderProofs(); renderSubs(); renderHomeHud();
+      toast('Sauvegarde restaurée sur cet appareil.');
+    } catch(e) {
+      console.warn('Backup restore failed',e);
+      toast('Sauvegarde invalide ou stockage insuffisant.');
+    }
   }
 
   async function clearAllDb() {
