@@ -1,5 +1,5 @@
-const CACHE_NAME = 'shieldproof-v1';
-const APP_SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
+const CACHE_NAME = 'shieldproof-v11';
+const APP_SHELL = ['./', './index.html', './manifest.json', './icon.svg', './shieldproof-v10.js', './shieldproof-v11.js'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((c) => c.addAll(APP_SHELL)));
@@ -27,19 +27,6 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => caches.match(event.request).then((c) => c || caches.match('./index.html')))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(event.request).then((res) => {
-          if (res && res.status === 200) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
-          }
-          return res;
-        });
-      })
     );
   }
 });
