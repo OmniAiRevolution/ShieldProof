@@ -1619,19 +1619,30 @@ const I18N = {
   // 🔑 LICENCES GUMROAD
   // ============================================================
 
-  async function verifyKeyWithProduct(productId, key, increment) {
-    if (!productId || productId.startsWith('REPLACE_') || !GUMROAD_CONFIG.verifyProxyUrl) return { ok: false };
+  // Verify without consuming an activation while searching product types.
+  async function verifyKeyWithProduct(productId, key) {
+    if (!productId || !GUMROAD_CONFIG.verifyProxyUrl) return {ok:false, error:'configuration'};
     try {
-      const res = await fetch(GUMROAD_CONFIG.verifyProxyUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ product_id: productId, license_key: key, increment_uses_count: increment ? 'true' : 'false' })
-      });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000);
+      let res;
+      try {
+        res = await fetch(GUMROAD_CONFIG.verifyProxyUrl, {
+          method:'POST',
+          headers:{'Content-Type':'application/x-www-form-urlencoded'},
+          body:new URLSearchParams({product_id:productId,license_key:key,increment_uses_count:'false'}),
+          signal:controller.signal
+        });
+      } finally { clearTimeout(timer); }
+      if (!res.ok) return {ok:false,error:'server',status:res.status};
       const data = await res.json();
+      if (!data || typeof data.success !== 'boolean') return {ok:false,error:'response'};
       const p = data.purchase || {};
-      const active = Boolean(data.success) && !p.refunded && !p.chargebacked && !p.disputed && !p.subscription_cancelled_at;
-      return { ok: active, uses: data.uses || 1 };
-    } catch (_) { return { ok: false }; }
+      const active = data.success && !p.refunded && !p.chargebacked && !p.disputed && !p.subscription_cancelled_at;
+      return {ok:Boolean(active),uses:Number(data.uses || 0),error:active?null:'rejected'};
+    } catch(e) {
+      return {ok:false,error:e.name==='AbortError'?'timeout':'network'};
+    }
   }
 
   async function activateGumroadKey() {
@@ -1643,29 +1654,39 @@ const I18N = {
     if (lic.activatedKeys.includes(key)) { toast(t.keyAlreadyUsed); return; }
     const btn = document.getElementById('btn-activate-key');
     btn.disabled = true;
-
-    const b2bFleetCheck = await verifyKeyWithProduct(GUMROAD_CONFIG.b2bFleetProductId, key, true);
-    if (b2bFleetCheck.ok && b2bFleetCheck.uses <= 20) {
-      saveLicenseState({ proUnlimited: true, b2bPro: true, b2bSeats: 20, activatedKeys: [...lic.activatedKeys, key] });
-      btn.disabled = false; closeProModal(); refreshB2bUi(); renderHomeHud(); toast(t.keySuccessB2b); return;
-    }
-    const b2bStarterCheck = await verifyKeyWithProduct(GUMROAD_CONFIG.b2bStarterProductId, key, true);
-    if (b2bStarterCheck.ok && b2bStarterCheck.uses <= 5) {
-      saveLicenseState({ proUnlimited: true, b2bPro: true, b2bSeats: 5, activatedKeys: [...lic.activatedKeys, key] });
-      btn.disabled = false; closeProModal(); refreshB2bUi(); renderHomeHud(); toast(t.keySuccessB2b); return;
-    }
-    const proCheck = await verifyKeyWithProduct(GUMROAD_CONFIG.proProductId, key, false);
-    if (proCheck.ok) {
-      saveLicenseState({ proUnlimited: true, activatedKeys: [...lic.activatedKeys, key] });
-      btn.disabled = false; closeProModal(); renderHomeHud(); toast(t.keySuccessPro); return;
-    }
-    const packCheck = await verifyKeyWithProduct(GUMROAD_CONFIG.pack10ProductId, key, true);
-    btn.disabled = false;
-    if (packCheck.ok && packCheck.uses <= 2) {
-      saveLicenseState({ credits: (lic.credits || 0) + 10, activatedKeys: [...lic.activatedKeys, key] });
-      closeProModal(); renderHomeHud(); toast(t.keySuccessPack); return;
-    }
-    toast(t.keyInvalid);
+    const checks = [
+      {id:GUMROAD_CONFIG.proProductId,type:'pro'},
+      {id:GUMROAD_CONFIG.b2bFleetProductId,type:'fleet'},
+      {id:GUMROAD_CONFIG.b2bStarterProductId,type:'starter'},
+      {id:GUMROAD_CONFIG.pack10ProductId,type:'pack'}
+    ];
+    let failures = [];
+    try {
+      for (const item of checks) {
+        const check = await verifyKeyWithProduct(item.id,key);
+        if (!check.ok) {failures.push(check.error);continue;}
+        if (item.type==='pro') {
+          saveLicenseState({proUnlimited:true,activatedKeys:[...lic.activatedKeys,key]});
+          closeProModal();renderHomeHud();toast(t.keySuccessPro);return;
+        }
+        if (item.type==='fleet' || item.type==='starter') {
+          const seats=item.type==='fleet'?20:5;
+          // Do not treat an untrusted or already-exhausted activation count as available.
+          if (check.uses>seats) {toast('Limite de licences atteinte. Contactez le support.');return;}
+          saveLicenseState({proUnlimited:true,b2bPro:true,b2bSeats:seats,activatedKeys:[...lic.activatedKeys,key]});
+          closeProModal();refreshB2bUi();renderHomeHud();toast(t.keySuccessB2b);return;
+        }
+        if (item.type==='pack') {
+          saveLicenseState({credits:(lic.credits||0)+10,activatedKeys:[...lic.activatedKeys,key]});
+          closeProModal();renderHomeHud();toast(t.keySuccessPack);return;
+        }
+      }
+      if (failures.some(e=>['network','timeout','server','response'].includes(e))) {
+        toast('Vérification Gumroad indisponible (réseau ou serveur). Réessayez plus tard ; aucun nouvel achat nécessaire.');
+      } else {
+        toast(t.keyInvalid);
+      }
+    } finally {btn.disabled=false;}
   }
 
   // ============================================================
