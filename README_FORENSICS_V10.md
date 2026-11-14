@@ -36,3 +36,18 @@ Tester sur Android et ordinateur avec :
 7. Mode hors ligne après première visite.
 
 Ne pas fusionner dans `main` avant revue, tests et validation du parcours utilisateur.
+
+
+## Évolutions V10.1
+- Intégration expérimentale du SDK navigateur officiel `@contentauth/c2pa-web@0.15.4` pour lire et valider les manifestes C2PA.
+- Signature ECDSA P-256 / SHA-256 locale des certificats, avec vérification de la signature à l'import.
+- La clé privée est générée et conservée dans IndexedDB sur l'appareil. La clé publique est jointe au certificat.
+- Cette signature protège l'intégrité du certificat mais ne prouve pas l'identité civile du titulaire : la clé est auto-générée, sans autorité de certification.
+- La validation C2PA nécessite une connexion pour charger le SDK/WASM lors du premier usage.
+
+## Fonctions toujours non livrées
+- Aucun modèle IA de classification visuelle des pixels n'est inclus à ce stade. Le module ne peut pas annoncer un score fiable d'image IA.
+- Aucun horodatage indépendant (RFC 3161 / OpenTimestamps) n'est encore attaché aux empreintes.
+- La clé ECDSA auto-générée n'est pas une signature d'organisation reconnue par un tiers.
+- Le module forensique reste une page séparée `forensics.html` ; l'intégration native dans les écrans et parcours de `index.html` reste à faire.
+- Le SDK C2PA et son chargement CDN doivent être testés sur Android/Chrome et GitHub Pages avant usage réel.
