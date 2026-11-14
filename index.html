@@ -645,7 +645,7 @@
 
   let lang = localStorage.getItem('sp_lang') || 'fr';
   let proofsCache = [];
-  let currentScan = null;
+  let currentScan = null;\n    window.__shieldProofCurrentScan = null;
   let lastCreatedProofId = null;
   let currentLegalTab = 'mentions';
   let pendingPresetCat = '';
@@ -1595,7 +1595,7 @@ const I18N = {
       fill.style.width = '100%';
       const ai = analyzeOcrText(ocrText);
       const safeName = file.name || ('capture_' + nowIso.slice(0,10) + '.jpg');
-      currentScan = { file, fileName: safeName, hash, thumb, nowIso, localTime, ai, ocrText, isDemo: Boolean(isDemo), aiDetection, c2paStatus: null };
+      currentScan = { file, fileName: safeName, hash, thumb, nowIso, localTime, ai, ocrText, isDemo: Boolean(isDemo), aiDetection, c2paStatus: null };\n      window.__shieldProofCurrentScan = currentScan;
       const thumbEl = document.getElementById('scan-thumb');
       if (thumb) { thumbEl.src = thumb; thumbEl.classList.remove('hidden'); }
       else { thumbEl.removeAttribute('src'); thumbEl.classList.add('hidden'); }
