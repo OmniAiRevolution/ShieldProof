@@ -430,6 +430,12 @@
       <div class="wa-warning" id="lbl-wa-warning-verify"></div>
       <div id="verify-result" class="hidden" style="margin-top:10px;"></div>
     </div>
+    <div class="card" id="reality-reports-card">
+      <div style="font-weight:800;font-size:16px;">🔎 Analyses Reality Check 3.0</div>
+      <p class="muted" style="margin:8px 0;">Rapports enregistrés localement sur ce téléphone. Ils sont distincts des preuves photo et ne figurent pas dans la sauvegarde JSON classique.</p>
+      <button class="btn btn-tonal btn-sm" onclick="loadRealityReports()">🔄 Actualiser les analyses</button>
+      <div id="reality-reports-list" class="muted">Chargement des rapports…</div>
+    </div>
     <div id="proofs-list"></div>
   </section>
 
@@ -536,6 +542,27 @@
 <div id="print-cert"></div>
 <div id="toast"></div>
 
+<script>
+async function loadRealityReports(){
+  const box=document.getElementById('reality-reports-list');if(!box)return;
+  try{
+    const db=await new Promise((resolve,reject)=>{const req=indexedDB.open('shieldproof_reality_reports',1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('reports'))req.result.createObjectStore('reports',{keyPath:'id'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+    const rows=await new Promise((resolve,reject)=>{const tx=db.transaction('reports','readonly');const req=tx.objectStore('reports').getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();
+    box.replaceChildren();
+    if(!rows.length){box.textContent='Aucune analyse enregistrée.';return;}
+    rows.sort((a,b)=>b.createdAt.localeCompare(a.createdAt)).forEach(r=>{
+      const item=document.createElement('div');item.style.cssText='padding:12px 0;border-bottom:1px solid #334155;';
+      const title=document.createElement('strong');title.textContent='Rapport '+new Date(r.createdAt).toLocaleString('fr-FR');
+      const content=document.createElement('pre');content.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;';content.textContent=r.text;
+      const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Voir le rapport';details.append(summary,content);
+      const button=document.createElement('button');button.className='btn btn-tonal btn-sm';button.textContent='⬇️ Télécharger le rapport JSON';button.onclick=()=>{const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='reality-check-'+r.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),15000);};
+      item.append(title,details,button);box.append(item);
+    });
+  }catch(e){box.textContent='Impossible de charger les rapports : '+e.message;}
+}
+document.addEventListener('DOMContentLoaded',loadRealityReports);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadRealityReports();});
+</script>
 <script src="./shieldproof-v10.js" defer></script>
 <script src="./shieldproof-v11.js" defer></script>
 <script src="./app.js"></script>
