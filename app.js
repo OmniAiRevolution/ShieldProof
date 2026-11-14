@@ -1684,7 +1684,9 @@ const I18N = {
       if (failures.some(e=>['network','timeout','server','response'].includes(e))) {
         toast('Vérification Gumroad indisponible (réseau ou serveur). Réessayez plus tard ; aucun nouvel achat nécessaire.');
       } else {
-        toast(t.keyInvalid);
+        // Gumroad may issue a valid key for a product whose configured product_id differs.
+        // Do not falsely claim the purchase was refunded or expired.
+        toast('Clé non reconnue pour les produits configurés. Vérifiez l’identifiant du produit Gumroad B2B et le serveur de licences.');
       }
     } finally {btn.disabled=false;}
   }
