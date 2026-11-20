@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [design/v10-modern-ui]
+    branches: [design/v10-3d-spatial]
 jobs:
   preserve-functional-contract:
     runs-on: ubuntu-latest
@@ -21,6 +21,11 @@ jobs:
           base = subprocess.check_output(['git','show',f'{base_ref}:index.html'],text=True)
           updated = pathlib.Path('index.html').read_text()
           assert pathlib.Path('modern-ui.css').exists(), 'modern-ui.css missing'
+          assert pathlib.Path('spatial-ui.css').exists(), 'spatial-ui.css missing'
+          assert pathlib.Path('spatial-ui.js').exists(), 'spatial-ui.js missing'
+          assert 'href="./spatial-ui.css"' in updated, 'Spatial CSS not linked'
+          assert 'src="./spatial-ui.js"' in updated, 'Spatial script not linked'
+          assert 'id="spatial-canvas"' in updated, 'Spatial canvas missing'
           assert 'href="./modern-ui.css"' in updated, 'Modern UI stylesheet missing'
           def counts(pattern, source):
               return collections.Counter(re.findall(pattern,source))
@@ -34,8 +39,11 @@ jobs:
               for item,number in original.items():
                   assert changed[item] >= number, f'{label} removed/changed: {item}'
           scripts = r'<script\b[^>]*>[\s\S]*?</script>'
-          assert re.findall(scripts,base) == re.findall(scripts,updated), 'JavaScript changed'
+          original_scripts = re.findall(scripts,base)
+          updated_scripts = re.findall(scripts,updated)
+          it=iter(updated_scripts)
+          assert all(any(s == original for s in it) for original in original_scripts), 'Existing JavaScript changed'
           style = r'<style\b[^>]*>[\s\S]*?</style>'
           assert re.findall(style,base) == re.findall(style,updated), 'Original embedded CSS changed'
           assert '<main>' in updated and '</main>' in updated
-          print('PASS: existing scripts, handlers, IDs, form names and inline styles preserved')
+          print('PASS: existing scripts, handlers, IDs, form names, styles intact, spatial assets linked')
