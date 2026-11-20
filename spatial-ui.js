@@ -11,12 +11,14 @@
   const host = canvas.closest('.v10-sell-hero, .v10-security-overview');
   if (!host) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const coarse = matchMedia('(pointer: coarse)');
+  const lowEnd = ((navigator.hardwareConcurrency || 8) <= 4) || ((navigator.deviceMemory || 8) <= 4);
+  const targetFPS = lowEnd ? 24 : 30;
+  const frameGap = 1000 / targetFPS;
   const tint = shield ? '#53efc0' : '#b98aff';
   const second = shield ? '#62c6ff' : '#f1a1e7';
   let state = 'idle', nextState = null, until = 0, raf = 0, width = 0, height = 0, pixelRatio = 1;
   let time = 0, pointer = [0, 0], target = [0, 0], visible = true, lastFrame = 0;
-  const pointCount = shield ? 32 : 25;
+  const pointCount = lowEnd ? 16 : (shield ? 32 : 25);
   const nodes = Array.from({length:pointCount}, (_,i) => {
     const y = 1 - (i / (pointCount - 1)) * 2, r = Math.sqrt(Math.max(0, 1-y*y)), a = i*2.3999632297;
     return [Math.cos(a)*r, y, Math.sin(a)*r];
@@ -30,7 +32,7 @@
   function measure() {
     const b = host.getBoundingClientRect();
     if (!b.width || !b.height) return;
-    pixelRatio = Math.min(devicePixelRatio || 1, 1.5);
+    pixelRatio = Math.min(devicePixelRatio || 1, lowEnd ? 1 : 1.5);
     width = Math.max(1, Math.round(b.width));
     height = Math.max(1, Math.round(b.height));
     canvas.width = Math.round(width * pixelRatio);
@@ -86,7 +88,7 @@
   function step(ts) {
     raf=0;
     if (!visible || reduce.matches || document.hidden) return;
-    if (ts-lastFrame<30){start();return;}
+    if (ts-lastFrame<frameGap){start();return;}
     lastFrame=ts;
     if(until && ts>until){state='idle';until=0;}
     time += state==='scanning'?.055:.012;
