@@ -1,0 +1,24 @@
+name: V10 browser smoke
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [design/v10-unslop-20261120]
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser test runner
+        run: |
+          npm install --no-save playwright@1.56.1
+      - name: Run offline mobile and desktop smoke tests
+        run: node .github/tests/v10-browser-smoke.cjs
