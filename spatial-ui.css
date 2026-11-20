@@ -8,7 +8,7 @@ html[data-theme="shieldproof"] #spatial-canvas{opacity:.72;filter:drop-shadow(0 
 .glass-card-3d:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(300px circle at var(--spatial-x,50%) var(--spatial-y,50%),rgba(255,255,255,.055),transparent 72%);z-index:0}
 .glass-card-3d:focus-within{transform:none}
 .glass-card-3d>*{position:relative;z-index:1}
-@media(hover:none),(pointer:coarse){.glass-card-3d{transform:none!important;transition:none}.glass-card-3d:before{display:none}}
+@media(hover:none),(pointer:coarse){.glass-card-3d{transform:perspective(900px) rotateX(var(--spatial-rx,0deg)) rotateY(var(--spatial-ry,0deg));transition:transform .25s ease}.glass-card-3d:before{opacity:.55}}
 @media(prefers-reduced-motion:reduce){.glass-card-3d{transform:none!important;transition:none!important}#spatial-canvas{opacity:.22}}
 @media(max-width:740px){#spatial-canvas{opacity:.37}html[data-theme="shieldproof"] #spatial-canvas{opacity:.42}}
 
@@ -44,3 +44,6 @@ html[data-theme="shieldproof"] #spatial-canvas{opacity:.72;filter:drop-shadow(0 
  nav.floating-dock .nav-pill,.top-dock nav.floating-dock .nav-pill{padding:2px 8px}
 }
 @media print{#spatial-canvas,.floating-dock{display:none!important}}
+
+.v10-motion-toggle[hidden]{display:none!important}
+html[data-theme="shieldproof"] .v10-meter-ring{background:rgba(76,171,152,.15);border:2px dashed rgba(115,226,188,.4)}
