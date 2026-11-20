@@ -1,11 +1,11 @@
-name: V10 CSS-only guard
+name: V10 functional integrity guard
 on:
   pull_request:
     branches: [main]
   push:
-    branches: [design/v10-unslop-20261120]
+    branches: [design/v10-modern-ui]
 jobs:
-  css-only:
+  preserve-functional-contract:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -13,18 +13,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify additive CSS and unchanged HTML and scripts
+      - name: Verify IDs, form names and JavaScript unchanged
         shell: python
         run: |
-          import pathlib, subprocess, re, sys
+          import pathlib, subprocess, re, collections
           base_ref = subprocess.check_output(['git','merge-base','HEAD','origin/main'],text=True).strip()
           base = subprocess.check_output(['git','show',f'{base_ref}:index.html'],text=True)
-          new = pathlib.Path('index.html').read_text()
-          pattern = r'\n/\* AITECHPRO V10 Unslop —.*?\*/.*?(?=</style>)'
-          match = re.search(pattern,new,flags=re.S)
-          assert match, 'Missing V10 CSS marker'
-          assert new[:match.start()]+new[match.end():] == base, 'Non-CSS changes detected'
-          assert new.count('<style>')==base.count('<style>')
-          assert new.count('</style>')==base.count('</style>')
-          assert new.count('<script')==base.count('<script')
-          print('PASS: original content and scripts unchanged, CSS addition isolated')
+          updated = pathlib.Path('index.html').read_text()
+          assert pathlib.Path('modern-ui.css').exists(), 'modern-ui.css missing'
+          assert 'href="./modern-ui.css"' in updated, 'Modern UI stylesheet missing'
+          def counts(pattern, source):
+              return collections.Counter(re.findall(pattern,source))
+          for label, pattern in [
+              ('id',r'\bid="([^"]+)"'), ('name',r'\bname="([^"]+)"'),
+              ('data attributes',r'\b(data-[a-z-]+)="([^"]*)"'),
+              ('onclick handlers',r'\bonclick="([^"]+)"'),
+              ('onchange handlers',r'\bonchange="([^"]+)"')
+          ]:
+              original=counts(pattern,base); changed=counts(pattern,updated)
+              for item,number in original.items():
+                  assert changed[item] >= number, f'{label} removed/changed: {item}'
+          scripts = r'<script\b[^>]*>[\s\S]*?</script>'
+          assert re.findall(scripts,base) == re.findall(scripts,updated), 'JavaScript changed'
+          style = r'<style\b[^>]*>[\s\S]*?</style>'
+          assert re.findall(style,base) == re.findall(style,updated), 'Original embedded CSS changed'
+          assert '<main>' in updated and '</main>' in updated
+          print('PASS: existing scripts, handlers, IDs, form names and inline styles preserved')
