@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="shieldproof">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -181,6 +181,7 @@ header { gap: 12px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } .orb { animation: none !important; } }
 </style>
   <link rel="stylesheet" href="./modern-ui.css">
+  <link rel="stylesheet" href="./spatial-ui.css">
 </head>
 <body>
 <div class="cyber-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
@@ -198,7 +199,7 @@ header { gap: 12px; }
       <button class="lang-pill" data-lang="zh" onclick="setLang('zh')">中文</button>
     </div>
   </header>
-  <nav>
+  <nav class="floating-dock">
     <div class="nav-item active" onclick="switchTab('scan', 0)"><div class="nav-pill"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div><span id="nav-scan"></span></div>
     <div class="nav-item" onclick="switchTab('subs', 1)"><div class="nav-pill"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><span id="nav-subs"></span></div>
     <div class="nav-item" onclick="switchTab('proofs', 2)"><div class="nav-pill"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><span id="nav-proofs"></span></div>
@@ -209,6 +210,7 @@ header { gap: 12px; }
 <main>
   <section id="view-landing" class="anim">
 <section class="v10-security-overview" aria-labelledby="v10-security-title">
+  <canvas id="spatial-canvas" aria-hidden="true"></canvas>
   <div class="v10-security-copy">
     <div class="v10-security-label">SHIELDPROOF / SECURITY CENTER</div>
     <h1 id="v10-security-title">Vos fichiers. <span>Des preuves vérifiables.</span></h1>
@@ -241,17 +243,17 @@ header { gap: 12px; }
     </div>
 
     <div class="usecase-grid">
-      <div class="usecase-card" onclick="enterApp('scan', 'RENTAL_CAR')">
+      <div class="usecase-card glass-card-3d" onclick="enterApp('scan', 'RENTAL_CAR')">
         <div class="usecase-icon" aria-hidden="true">🚗</div>
         <div class="usecase-title" id="lbl-uc1-title"></div>
         <div class="usecase-desc" id="lbl-uc1-desc"></div>
       </div>
-      <div class="usecase-card" onclick="enterApp('scan', 'APARTMENT')">
+      <div class="usecase-card glass-card-3d" onclick="enterApp('scan', 'APARTMENT')">
         <div class="usecase-icon" aria-hidden="true">🏠</div>
         <div class="usecase-title" id="lbl-uc2-title"></div>
         <div class="usecase-desc" id="lbl-uc2-desc"></div>
       </div>
-      <div class="usecase-card" onclick="enterApp('scan', 'SUB')">
+      <div class="usecase-card glass-card-3d" onclick="enterApp('scan', 'SUB')">
         <div class="usecase-icon" aria-hidden="true">💳</div>
         <div class="usecase-title" id="lbl-uc3-title"></div>
         <div class="usecase-desc" id="lbl-uc3-desc"></div>
@@ -274,7 +276,7 @@ header { gap: 12px; }
     </div>
   </section>
     <section id="view-scan" class="anim hidden">
-    <div class="card" style="padding:12px;">
+    <div class="card glass-card-3d" style="padding:12px;">
       <label class="hero-scan" for="scan-input">
         <div class="scan-laser"></div>
         <div class="radar-wrap">
@@ -327,7 +329,7 @@ header { gap: 12px; }
         </details>
       </div>
 
-      <div class="card" style="margin-top:10px;padding:12px;">
+      <div class="card glass-card-3d" style="margin-top:10px;padding:12px;">
         <button type="button" class="btn btn-tonal btn-sm" onclick="runC2paCheck()">Vérifier les Content Credentials (C2PA)</button>
         <div id="c2pa-status" class="muted" role="status" aria-live="polite" style="margin-top:8px;font-size:12px;">C2PA : vérification non lancée.</div>
       </div>
@@ -441,7 +443,7 @@ header { gap: 12px; }
   </section>
 
   <section id="view-proofs" class="anim hidden">
-    <div class="card" id="public-verify-card" style="border-color:rgba(34,211,238,0.45);">
+    <div class="card glass-card-3d" id="public-verify-card" style="border-color:rgba(34,211,238,0.45);">
       <div class="flex" style="justify-content:space-between;">
         <div style="font-weight:800;font-size:15px;color:var(--cyan);" id="lbl-pub-verify-title"></div>
         <span class="badge badge-ok">/verify</span>
@@ -459,30 +461,30 @@ header { gap: 12px; }
       <div class="wa-warning" id="lbl-wa-warning-verify"></div>
       <div id="verify-result" class="hidden" style="margin-top:10px;"></div>
     </div>
-    <div class="card" id="reality-reports-card">
+    <div class="card glass-card-3d" id="reality-reports-card">
       <div style="font-weight:800;font-size:16px;">🔎 Analyses Reality Check 3.0</div>
       <p class="muted" style="margin:8px 0;">Rapports enregistrés localement sur ce téléphone. Ils sont distincts des preuves photo et ne figurent pas dans la sauvegarde JSON classique.</p>
       <button class="btn btn-tonal btn-sm" onclick="loadRealityReports()">🔄 Actualiser les analyses</button>
       <div id="reality-reports-list" class="muted">Chargement des rapports…</div>
     </div>
-    <div class="card"><strong>🔎 Reality Check 3.0 — Analyse de documents</strong><p class="muted" style="margin:8px 0;">PDF, images, OCR local, rapport PDF SHA-256 et sauvegarde locale. Prototype : documents fictifs uniquement.</p><a class="btn btn-tonal" style="display:block;text-align:center;text-decoration:none;" href="./preview/reality-check.html">Ouvrir Reality Check 3.0</a></div>
+    <div class="card glass-card-3d"><strong>🔎 Reality Check 3.0 — Analyse de documents</strong><p class="muted" style="margin:8px 0;">PDF, images, OCR local, rapport PDF SHA-256 et sauvegarde locale. Prototype : documents fictifs uniquement.</p><a class="btn btn-tonal" style="display:block;text-align:center;text-decoration:none;" href="./preview/reality-check.html">Ouvrir Reality Check 3.0</a></div>
     <div id="proofs-list"></div>
   </section>
 
   <section id="view-settings" class="anim hidden">
-    <div class="card">
+    <div class="card glass-card-3d">
       <div style="font-weight:800;font-size:15px;" id="lbl-packs-title"></div>
       <div class="muted" style="margin:4px 0 10px;" id="lbl-packs-desc"></div>
       <button class="btn" onclick="openProModal()">💎 <span id="txt-open-packs"></span></button>
     </div>
-    <div class="card">
+    <div class="card glass-card-3d">
       <div style="font-weight:800;font-size:15px;" id="lbl-b2b-set-title"></div>
       <div class="muted" style="margin:4px 0 10px;" id="lbl-b2b-set-desc"></div>
       <div class="field"><label id="lbl-b2b-comp-name"></label><input type="text" id="in-b2b-company" placeholder="Ex: Prestige Auto Location / Agence Immo"></div>
       <button class="btn btn-tonal" onclick="saveB2bCompanyName()">💾 <span id="txt-save-b2b-name"></span></button>
       <button class="btn btn-warn" onclick="triggerB2bLogoUpload()">➕ <span id="txt-upload-b2b-logo"></span></button>
     </div>
-    <div class="card">
+    <div class="card glass-card-3d">
       <div style="font-weight:800;font-size:15px;" id="lbl-export-title"></div>
       <div class="muted" style="margin:4px 0 10px;" id="lbl-export-sub"></div>
       <div class="muted" style="margin:8px 0;">🔒 Les preuves sont conservées sur cet appareil. Effacer les données du navigateur peut les supprimer. Sauvegardez régulièrement vos preuves dans un fichier sur votre téléphone.</div>
@@ -494,7 +496,7 @@ header { gap: 12px; }
       <input id="restore-backup-input" type="file" accept=".json,application/json" style="display:none" onchange="restoreBackupJson(event)">
       <button class="btn btn-danger" onclick="clearAllDb()">🗑️ <span id="txt-clear-all"></span></button>
     </div>
-    <div class="card">
+    <div class="card glass-card-3d">
       <div style="font-weight:800;font-size:15px;" id="lbl-legal-card-title"></div>
       <div class="muted" style="margin:4px 0 10px;" id="lbl-legal-card-sub"></div>
       <div class="actions">
@@ -504,7 +506,7 @@ header { gap: 12px; }
         <button class="btn btn-tonal btn-sm" onclick="openLegalModal('ccpa')" id="btn-set-ccpa"></button>
       </div>
     </div>
-    <div class="card">
+    <div class="card glass-card-3d">
       <div style="font-weight:800;font-size:15px;">SHIELDPROOF v9.0.0 — by AITECHPRO</div>
       <div class="muted" style="margin-top:6px;" id="lbl-privacy-foot"></div>
     </div>
@@ -596,5 +598,6 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadRealit
 <script src="./shieldproof-v10.js" defer></script>
 <script src="./shieldproof-v11.js" defer></script>
 <script src="./app.js"></script>
+<script src="./spatial-ui.js" defer></script>
 </body>
 </html>
