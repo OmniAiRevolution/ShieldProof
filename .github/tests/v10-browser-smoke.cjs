@@ -18,11 +18,12 @@ const { pathToFileURL } = require('url');
         bodyText:document.body.innerText.trim().length,
         buttons:document.querySelectorAll('button').length,
         overflow:document.documentElement.scrollWidth-innerWidth,
-        cssMarker:Array.from(document.styleSheets).some(s => {try{return Array.from(s.cssRules).some(r=>r.cssText.includes('AITECHPRO V10'))}catch{return false}}),
+        cssMarker:Array.from(document.querySelectorAll('style')).some(s => s.textContent.includes('AITECHPRO V10 Unslop')),
         mainVisible:!!document.body && getComputedStyle(document.body).display!=='none'
       }));
       console.log(width,JSON.stringify(data),'pageerrors:',exceptions.slice(0,4));
       if (!data.title || data.bodyText<30 || !data.buttons || !data.mainVisible) failures.push(width+': missing UI');
+      if (!data.cssMarker) failures.push(width+': V10 CSS not loaded');
       if (data.overflow>20) failures.push(width+': horizontal overflow '+data.overflow);
       await page.screenshot({path:'v10-'+width+'.png',fullPage:true});
     } catch(e) {failures.push(width+': '+e.message)}
