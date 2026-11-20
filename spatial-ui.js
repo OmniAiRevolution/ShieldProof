@@ -137,17 +137,20 @@
   const cards=Array.from(document.querySelectorAll('.glass-card-3d'));
   cards.forEach(card=>{
     card.addEventListener('pointermove',e=>{
-      if(reduce.matches||e.pointerType==='touch')return;
+      if(reduce.matches)return;
       const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
       card.style.setProperty('--spatial-x',Math.round(x*100)+'%');
       card.style.setProperty('--spatial-y',Math.round(y*100)+'%');
-      card.style.setProperty('--spatial-rx',((.5-y)*4).toFixed(2)+'deg');
-      card.style.setProperty('--spatial-ry',((x-.5)*4).toFixed(2)+'deg');
+      card.style.setProperty('--spatial-rx',((.5-y)*(e.pointerType==='touch'?2:4)).toFixed(2)+'deg');
+      card.style.setProperty('--spatial-ry',((x-.5)*(e.pointerType==='touch'?2:4)).toFixed(2)+'deg');
     },{passive:true});
-    card.addEventListener('pointerleave',()=>{
+    const resetTilt=()=>{
       card.style.removeProperty('--spatial-rx');card.style.removeProperty('--spatial-ry');
       card.style.removeProperty('--spatial-x');card.style.removeProperty('--spatial-y');
-    },{passive:true});
+    };
+    card.addEventListener('pointerleave',resetTilt,{passive:true});
+    card.addEventListener('pointerup',resetTilt,{passive:true});
+    card.addEventListener('pointercancel',resetTilt,{passive:true});
   });
   // In-app UI signals are non-invasive: do not alter existing callbacks or promise results.
   if(!shield) {
