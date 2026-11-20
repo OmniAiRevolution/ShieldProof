@@ -103,11 +103,37 @@
   observer.observe(host);
   const resizeObserver=new ResizeObserver(measure);resizeObserver.observe(host);
   host.addEventListener('pointermove',e=>{
-    if(e.pointerType==='touch'||reduce.matches)return;
+    if(reduce.matches)return;
     const r=host.getBoundingClientRect();
     target=[Math.max(-1,Math.min(1,((e.clientX-r.left)/r.width-.5)*2)),Math.max(-1,Math.min(1,((e.clientY-r.top)/r.height-.5)*2))];
   },{passive:true});
   host.addEventListener('pointerleave',()=>{target=[0,0]},{passive:true});
+  // Sensor access is opt-in. Mobile browsers may require HTTPS and a user gesture.
+  const sensorButton=document.getElementById('v10-motion-toggle');
+  if(sensorButton && 'DeviceOrientationEvent' in window) {
+    sensorButton.hidden=false;
+    sensorButton.addEventListener('click',async()=>{
+      try {
+        if(typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const permission=await DeviceOrientationEvent.requestPermission();
+          if(permission !== 'granted') throw new Error('permission denied');
+        }
+        window.addEventListener('deviceorientation',event=>{
+          if(document.hidden||reduce.matches||!visible)return;
+          if(typeof event.gamma!=='number'||typeof event.beta!=='number')return;
+          target=[
+            Math.max(-1,Math.min(1,event.gamma/30)),
+            Math.max(-1,Math.min(1,(event.beta-45)/40))
+          ];
+        },{passive:true});
+        sensorButton.textContent='Gyroscope activé';
+        sensorButton.disabled=true;
+      } catch {
+        sensorButton.textContent='Gyroscope indisponible';
+        sensorButton.disabled=true;
+      }
+    });
+  }
   const cards=Array.from(document.querySelectorAll('.glass-card-3d'));
   cards.forEach(card=>{
     card.addEventListener('pointermove',e=>{
