@@ -12,6 +12,21 @@ const {pathToFileURL}=require('url');
   try{
    await page.goto(pathToFileURL(process.cwd()+'/index.html').href,{waitUntil:'domcontentloaded',timeout:20000});
    await page.waitForTimeout(900);
+   if(motion==='reduce'){
+     await page.emulateMedia({reducedMotion:'reduce'});
+     const reduced=await page.evaluate(async()=>{
+       const canvas=document.getElementById('spatial-canvas');
+       const before=canvas?.toDataURL();
+       await new Promise(resolve=>setTimeout(resolve,210));
+       const after=canvas?.toDataURL();
+       const card=document.querySelector('.glass-card-3d');
+       const transform=card?getComputedStyle(card).transform:'none';
+       return {staticCanvas:before===after, cardTransform:transform};
+     });
+     console.log('REDUCED MOTION ASSERT',JSON.stringify(reduced));
+     if(!reduced.staticCanvas)failures.push(width+'/'+motion+' canvas animation did not stop');
+     if(reduced.cardTransform!=='none')failures.push(width+'/'+motion+' 3D card still tilts '+reduced.cardTransform);
+   }
    const data=await page.evaluate(()=>{
     const canvas=document.getElementById('spatial-canvas');
     const nav=document.querySelector('nav.floating-dock');
