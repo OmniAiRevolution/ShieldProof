@@ -1,0 +1,13 @@
+/* AITECHPRO V10 Spatial: optional procedural depth, isolated from application functionality */
+.v10-sell-hero,.v10-security-overview{isolation:isolate}
+#spatial-canvas{position:absolute;inset:0;z-index:0;width:100%;height:100%;pointer-events:none;opacity:.68;filter:drop-shadow(0 0 12px rgba(166,109,255,.12))}
+html[data-theme="shieldproof"] #spatial-canvas{opacity:.72;filter:drop-shadow(0 0 15px rgba(65,218,178,.16))}
+.v10-sell-hero-copy,.v10-sell-preview,.v10-security-copy,.v10-security-meter{position:relative;z-index:1}
+.v10-sell-hero-copy,.v10-security-copy{text-shadow:0 1px 10px rgba(0,0,0,.17)}
+.glass-card-3d{position:relative;transform:perspective(1100px) rotateX(var(--spatial-rx,0deg)) rotateY(var(--spatial-ry,0deg));transition:transform .18s ease-out,box-shadow .25s ease;background-clip:padding-box}
+.glass-card-3d:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(300px circle at var(--spatial-x,50%) var(--spatial-y,50%),rgba(255,255,255,.055),transparent 72%);z-index:0}
+.glass-card-3d:focus-within{transform:none}
+.glass-card-3d>*{position:relative;z-index:1}
+@media(hover:none),(pointer:coarse){.glass-card-3d{transform:none!important;transition:none}.glass-card-3d:before{display:none}}
+@media(prefers-reduced-motion:reduce){.glass-card-3d{transform:none!important;transition:none!important}#spatial-canvas{opacity:.22}}
+@media(max-width:740px){#spatial-canvas{opacity:.37}html[data-theme="shieldproof"] #spatial-canvas{opacity:.42}}
