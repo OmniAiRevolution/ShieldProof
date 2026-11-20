@@ -17,7 +17,8 @@ jobs:
         shell: python
         run: |
           import pathlib, subprocess, re, sys
-          base = subprocess.check_output(['git','show','HEAD~1:index.html'],text=True)
+          base_ref = subprocess.check_output(['git','merge-base','HEAD','origin/main'],text=True).strip()
+          base = subprocess.check_output(['git','show',f'{base_ref}:index.html'],text=True)
           new = pathlib.Path('index.html').read_text()
           pattern = r'\n/\* AITECHPRO V10 Unslop —.*?\*/.*?(?=</style>)'
           match = re.search(pattern,new,flags=re.S)
