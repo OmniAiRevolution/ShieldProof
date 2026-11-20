@@ -1,0 +1,29 @@
+name: V10 CSS-only guard
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [design/v10-unslop-20261120]
+jobs:
+  css-only:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify additive CSS and unchanged HTML and scripts
+        shell: python
+        run: |
+          import pathlib, subprocess, re, sys
+          base = subprocess.check_output(['git','show','HEAD~1:index.html'],text=True)
+          new = pathlib.Path('index.html').read_text()
+          pattern = r'\n/\* AITECHPRO V10 Unslop —.*?\*/.*?(?=</style>)'
+          match = re.search(pattern,new,flags=re.S)
+          assert match, 'Missing V10 CSS marker'
+          assert new[:match.start()]+new[match.end():] == base, 'Non-CSS changes detected'
+          assert new.count('<style>')==base.count('<style>')
+          assert new.count('</style>')==base.count('</style>')
+          assert new.count('<script')==base.count('<script')
+          print('PASS: original content and scripts unchanged, CSS addition isolated')
