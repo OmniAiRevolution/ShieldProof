@@ -1,0 +1,89 @@
+/* AITECHPRO V10 Modern UI — visual dashboard layer only; no scan/cryptography changes */
+:root{--v10-emerald:#51efbe;--v10-teal:#1dd9c3;--v10-muted:#b3c8d3;--v10-border:rgba(86,208,192,.22)}
+html,body{background:#050c14;color:#f3fafb}
+body{background-image:radial-gradient(ellipse 60% 35% at 86% -9%,rgba(22,164,143,.16),transparent 70%),radial-gradient(ellipse 65% 35% at -9% 85%,rgba(25,109,152,.12),transparent 75%)}
+.cyber-bg{opacity:.35;background-size:48px 48px}
+.orb{opacity:.12}
+.top-dock{background:rgba(5,13,21,.9);border-bottom:1px solid rgba(64,190,171,.14)}
+header{min-height:76px;padding:15px clamp(16px,2vw,34px);border-bottom:0}
+.logo{font-size:clamp(20px,2vw,25px);letter-spacing:-.065em}
+.logo span{color:var(--v10-emerald);text-shadow:none}
+.sub{color:var(--v10-emerald);font-size:10px}
+.lang-bar{gap:5px}
+.lang-pill{border:1px solid rgba(99,195,188,.19);border-radius:11px;background:#10202d;padding:9px 10px}
+.lang-pill.active{background:#1b645e;border-color:rgba(106,238,203,.58);box-shadow:none}
+main{max-width:1170px;padding:27px clamp(15px,3vw,42px) 70px}
+#view-landing,#view-scan,#view-subs,#view-proofs,#view-settings{min-width:0}
+.v10-security-overview{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:1fr 275px;gap:25px;align-items:center;padding:clamp(24px,4vw,46px);border:1px solid rgba(75,231,180,.26);border-radius:28px;margin-bottom:19px;background:linear-gradient(118deg,#11302f 0%,#0c202d 55%,#091725 100%);box-shadow:0 28px 90px rgba(0,0,0,.25)}
+.v10-security-overview:after{content:"";position:absolute;z-index:-1;right:-80px;top:-100px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(52,229,172,.23),transparent 68%)}
+.v10-security-label{font-size:10px;font-weight:900;letter-spacing:.15em;color:#8ef7d3;display:flex;align-items:center;gap:8px}
+.v10-security-label:before{content:"";width:8px;height:8px;border-radius:50%;background:#72ffcd;box-shadow:0 0 12px rgba(114,255,205,.65)}
+.v10-security-overview h1{font-size:clamp(31px,4vw,53px);line-height:1.08;letter-spacing:-.06em;font-weight:900;margin:18px 0 12px;max-width:660px}
+.v10-security-overview h1 span{color:#74e5c3}
+.v10-security-overview p{color:#b9d3d6;font-size:14px;line-height:1.7;max-width:515px;margin:0 0 23px}
+.v10-security-actions{display:flex;flex-wrap:wrap;gap:10px}
+.v10-security-action{min-height:47px;border:1px solid rgba(118,225,201,.33);border-radius:13px;padding:11px 19px;background:rgba(215,255,248,.06);color:#ecfffa;font-size:13px;font-weight:800;cursor:pointer}
+.v10-security-action.primary{background:linear-gradient(105deg,#36cba6,#168e90);border:1px solid rgba(161,255,221,.39);color:#031d1d;box-shadow:0 12px 30px rgba(27,211,163,.15)}
+.v10-security-meter{min-height:255px;border:1px solid rgba(148,239,216,.21);border-radius:22px;padding:20px 15px;background:rgba(5,21,27,.67);display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.v10-meter-ring{width:160px;height:160px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#31cba3 0deg,#31cba3 108deg,rgba(129,232,213,.14) 108deg,rgba(129,232,213,.14) 360deg);position:relative}
+.v10-meter-ring:before{content:"";position:absolute;inset:12px;background:#0b252b;border-radius:50%}
+.v10-meter-value{position:relative;z-index:1;text-align:center}
+.v10-meter-value strong{display:block;font-size:40px;font-weight:900;letter-spacing:-.08em;color:#dbfff2;line-height:1.1}
+.v10-meter-value small{font-size:10px;letter-spacing:.05em;color:#a4c3c6}
+.v10-meter-caption{text-align:center;font-size:11px;line-height:1.5;margin-top:13px;color:#d2e7e8}
+.v10-security-severity{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.v10-severity{background:linear-gradient(145deg,rgba(23,39,49,.92),rgba(10,24,33,.92));border-radius:17px;padding:16px 17px;border:1px solid rgba(112,192,183,.15);display:flex;align-items:center;gap:11px}
+.v10-severity i{display:block;flex-shrink:0;width:10px;height:10px;border-radius:50%;background:var(--sev);box-shadow:0 0 17px var(--sev);font-style:normal}
+.v10-severity strong{display:block;font-size:13px;letter-spacing:-.01em}
+.v10-severity small{font-size:10px;color:#9cb7bd;line-height:1.6}
+.v10-severity-note{font-size:10px;color:#a6c4c3;margin:-6px 0 20px}
+.landing-hero{background:linear-gradient(140deg,rgba(22,53,58,.88),rgba(11,32,43,.92));border:1px solid rgba(81,202,182,.2);border-radius:23px;box-shadow:0 15px 40px rgba(0,0,0,.15);text-align:left;padding:clamp(20px,3vw,29px)}
+.landing-title{font-size:clamp(22px,2.5vw,32px);letter-spacing:-.05em}
+.landing-pill{background:rgba(62,203,172,.13);border-color:rgba(79,221,185,.25);color:#8ef7d3}
+.card{background:linear-gradient(150deg,rgba(18,37,47,.96),rgba(9,23,33,.97));border:1px solid rgba(107,197,186,.2);border-radius:23px;padding:clamp(16px,2.5vw,26px);box-shadow:0 16px 42px rgba(0,0,0,.19)}
+.usecase-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.usecase-card{border-radius:18px!important;background:linear-gradient(150deg,rgba(25,56,62,.92),rgba(12,31,44,.94))!important;border:1px solid rgba(109,209,191,.23)!important;padding:20px!important}
+.usecase-icon{filter:grayscale(.2)}
+.btn{border-radius:13px;min-height:47px}
+.btn-ok{background:linear-gradient(100deg,#28b995,#118b91)!important;color:#072224!important}
+.hero-scan{min-height:240px;background:linear-gradient(150deg,rgba(23,99,90,.21),rgba(18,63,91,.14));border:1.5px dashed rgba(75,229,188,.59);border-radius:20px}
+#view-scan>.card:first-child{border:1px solid rgba(66,211,171,.32);background:linear-gradient(142deg,#102e32,#0a1c2a)}
+.ai-detector-card{border:1px solid rgba(49,220,184,.29);border-radius:18px;background:rgba(15,49,53,.7)}
+.ai-score-bar,.progress-bar{border-radius:30px;overflow:hidden}
+.nav-item.active .nav-pill{background:rgba(50,210,167,.16);color:var(--v10-emerald)}
+nav{background:rgba(7,21,29,.96);border-bottom:1px solid rgba(91,198,183,.16)}
+@media(min-width:990px){
+ body{padding-left:226px}
+ .top-dock header{padding-left:40px}
+ .top-dock nav{position:fixed;left:0;top:0;bottom:0;width:226px;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:13px;padding:113px 13px 22px;background:linear-gradient(180deg,#10262c,#091821);border-right:1px solid rgba(95,216,186,.19);border-bottom:0;z-index:100}
+ .top-dock nav:before{content:"AITECHPRO  /  SECURITY";position:absolute;top:37px;left:16px;font-size:10px;letter-spacing:.13em;font-weight:900;color:#95e7c9}
+ .top-dock nav .nav-item{flex:0;flex-direction:row;gap:11px;justify-content:flex-start;min-height:58px;padding:11px;border-radius:13px;font-size:13px}
+ .top-dock nav .nav-pill{min-width:37px;padding:7px}
+ .top-dock nav .nav-item.active{background:rgba(55,199,163,.14)}
+ main{margin:0 auto;padding:32px clamp(22px,3vw,44px) 70px}
+ .v10-security-overview{grid-template-columns:minmax(0,1fr) 285px}
+}
+@media(max-width:740px){
+ body{padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+ main{padding:18px 14px 30px}
+ .top-dock nav{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:28;min-height:70px;padding:9px 4px calc(9px + env(safe-area-inset-bottom));border-bottom:0;border-top:1px solid rgba(87,203,184,.27);box-shadow:0 -13px 30px rgba(0,0,0,.31)}
+ .top-dock nav .nav-item{min-width:0;gap:5px;font-size:10px}
+ .top-dock nav .nav-pill{padding:6px 14px;border-radius:13px}
+ .top-dock nav .nav-pill svg{width:20px;height:20px}
+ header{padding:13px}
+ .lang-pill{padding:8px 7px;font-size:10px}
+ .v10-security-overview{grid-template-columns:1fr;border-radius:24px;gap:17px;padding:26px 22px}
+ .v10-security-overview h1{font-size:clamp(31px,8vw,43px)}
+ .v10-security-meter{min-height:200px;flex-direction:row;gap:17px;padding:17px}
+ .v10-meter-ring{width:132px;height:132px;min-width:132px}
+ .v10-meter-value strong{font-size:32px}
+ .v10-meter-caption{margin-top:0;text-align:left;max-width:120px}
+ .v10-security-severity{gap:7px}
+ .v10-severity{padding:12px 8px;gap:7px;border-radius:13px}
+ .v10-severity strong{font-size:11px}
+ .v10-severity small{font-size:9px}
+ .v10-severity i{width:7px;height:7px}
+ .usecase-grid{grid-template-columns:1fr}
+ .landing-hero{text-align:left}
+}
+@media print{.v10-security-overview,.v10-security-severity,.v10-severity-note{display:none!important}}
