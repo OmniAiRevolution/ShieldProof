@@ -180,6 +180,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 header { gap: 12px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } .orb { animation: none !important; } }
 </style>
+  <link rel="stylesheet" href="./modern-ui.css">
 </head>
 <body>
 <div class="cyber-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
@@ -207,6 +208,27 @@ header { gap: 12px; }
 
 <main>
   <section id="view-landing" class="anim">
+<section class="v10-security-overview" aria-labelledby="v10-security-title">
+  <div class="v10-security-copy">
+    <div class="v10-security-label">SHIELDPROOF / SECURITY CENTER</div>
+    <h1 id="v10-security-title">Vos fichiers. <span>Des preuves vérifiables.</span></h1>
+    <p>Scellez vos documents et analysez vos images depuis un espace conçu pour la confiance. Les résultats réels apparaissent après analyse, jamais avant.</p>
+    <div class="v10-security-actions">
+      <button type="button" class="v10-security-action primary" onclick="enterApp('scan')">＋ Lancer une analyse</button>
+      <button type="button" class="v10-security-action" onclick="enterApp('verify')">Vérifier une preuve ↗</button>
+    </div>
+  </div>
+  <div class="v10-security-meter" aria-label="Aucune analyse réalisée dans cet aperçu">
+    <div class="v10-meter-ring"><div class="v10-meter-value"><strong>—</strong><small>NO SCAN YET</small></div></div>
+    <div class="v10-meter-caption">État du scan<br><strong>En attente d'un fichier</strong></div>
+  </div>
+</section>
+<div class="v10-security-severity" aria-label="Légende des niveaux de sévérité, sans résultat de scan">
+  <div class="v10-severity" style="--sev:#fa7b85"><i></i><div><strong>Critique</strong><small>Classification indicative</small></div></div>
+  <div class="v10-severity" style="--sev:#f5ba6a"><i></i><div><strong>Élevé</strong><small>Classification indicative</small></div></div>
+  <div class="v10-severity" style="--sev:#7bddd2"><i></i><div><strong>Moyen</strong><small>Classification indicative</small></div></div>
+</div>
+<p class="v10-severity-note">Légende visuelle uniquement — aucune détection ni niveau de risque ne sont calculés ici.</p>
     <div class="landing-hero">
       <div class="landing-pill">🛡️ <span id="lbl-land-pill"></span></div>
       <h1 class="landing-title" id="lbl-land-title"></h1>
